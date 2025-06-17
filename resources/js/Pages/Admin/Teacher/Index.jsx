@@ -109,6 +109,8 @@ const TeachersIndex = ({ teachers, pagination, filters, flash }) => {
         pagination?.last_page || 1
     );
 
+    console.log(teachers);
+
     // Update currentPage when pagination changes
     useEffect(() => {
         if (pagination?.current_page) {

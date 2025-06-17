@@ -22,6 +22,8 @@ const TeacherShow = ({ teacher, flash }) => {
         }
     };
 
+    console.log(teacher);
+
     return (
         <AuthenticatedLayout title="Teacher Details">
             {/* Flash message */}
@@ -197,9 +199,9 @@ const TeacherShow = ({ teacher, flash }) => {
                                                                     }
                                                                 </td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                    {subject.class
+                                                                    {subject.classroom
                                                                         ? subject
-                                                                              .class
+                                                                              .classroom
                                                                               .name
                                                                         : "-"}
                                                                 </td>

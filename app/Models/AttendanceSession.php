@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class AttendanceSession extends Model
 {
@@ -19,6 +19,8 @@ class AttendanceSession extends Model
         'pin',
         'date',
         'semester_id',
+        'class_id',
+        'subject_id',
         'expires_at',
     ];
 
@@ -33,7 +35,7 @@ class AttendanceSession extends Model
     ];
 
     /**
-     * Get the semester that the attendance session belongs to.
+     * Get the semester that owns the attendance session.
      */
     public function semester()
     {
@@ -41,26 +43,64 @@ class AttendanceSession extends Model
     }
 
     /**
-     * Get the attendance records for the session.
+     * Get the class that owns the attendance session.
      */
-    public function attendanceRecords()
+    public function classroom()
     {
-        return $this->hasMany(Attendance::class);
+        return $this->belongsTo(Classroom::class, 'class_id');
     }
 
     /**
-     * Check if attendance session is active.
+     * Get the subject that owns the attendance session.
+     */
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
+    /**
+     * Get the attendances for the session.
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'attendance_sessions_id');
+    }
+
+    /**
+     * Check if the session is active.
      */
     public function isActive()
     {
-        return now()->lt($this->expires_at);
+        return Carbon::parse($this->expires_at)->isFuture();
     }
 
     /**
-     * Generate a random PIN.
+     * Get the remaining time until expiration in minutes.
      */
-    public static function generatePin()
+    public function getRemainingTimeAttribute()
     {
-        return str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $expiresAt = Carbon::parse($this->expires_at);
+
+        if ($expiresAt->isPast()) {
+            return 0;
+        }
+
+        return now()->diffInMinutes($expiresAt);
+    }
+
+    /**
+     * Scope a query to only include active sessions.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('expires_at', '>', now());
+    }
+
+    /**
+     * Scope a query to only include expired sessions.
+     */
+    public function scopeExpired($query)
+    {
+        return $query->where('expires_at', '<=', now());
     }
 }

@@ -9,13 +9,13 @@ import {
     Logout,
     Book1,
     CalendarCircle,
+    Personalcard,
 } from "iconsax-reactjs";
 import SidebarItem from "./SidebarItem";
 import { usePage } from "@inertiajs/react";
 
 const Sidebar = () => {
     const { url } = usePage();
-    console.log("Current URL path:", url);
 
     const menuItems = [
         {
@@ -45,8 +45,8 @@ const Sidebar = () => {
         {
             label: "Class",
             icon: Briefcase,
-            active: url === "/admin/class",
-            path: "/admin/class",
+            active: url === "/admin/classrooms",
+            path: "/admin/classrooms",
         },
         {
             label: "Subject",
@@ -61,10 +61,16 @@ const Sidebar = () => {
             path: "/admin/semesters",
         },
         {
-            label: "Logs",
+            label: "Students Enrollment",
+            icon: Personalcard,
+            active: url === "/admin/enrollments",
+            path: "/admin/enrollments",
+        },
+        {
+            label: "Activity Logs",
             icon: Activity,
-            active: url === "/admin/logs",
-            path: "/admin/logs",
+            active: url === "/admin/activity-logs",
+            path: "/admin/activity-logs",
         },
         {
             label: "Log out",

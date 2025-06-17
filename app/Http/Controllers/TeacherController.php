@@ -29,7 +29,7 @@ class TeacherController extends Controller
 
         // Query teacher dengan relasi user
         $query = Teacher::query()
-            ->with(['user', 'subjects.class']);
+            ->with(['user', 'subjects.classroom']);
 
         // Apply search filters
         if (!empty($search)) {
@@ -55,7 +55,7 @@ class TeacherController extends Controller
         $formattedTeachers = $teachers->map(function ($teacher) {
             // Ambil daftar kelas yang diajar
             $classes = $teacher->subjects->flatMap(function ($subject) {
-                return $subject->class ? [$subject->class->name] : [];
+                return $subject->classroom ? [$subject->classroom->name] : [];
             })->unique()->implode(', ');
 
             // Ambil daftar mata pelajaran
@@ -135,7 +135,7 @@ class TeacherController extends Controller
      */
     public function show(Teacher $teacher)
     {
-        $teacher->load(['user', 'subjects.class']);
+        $teacher->load(['user', 'subjects.classroom']);
 
         return Inertia::render('Admin/Teacher/Show', [
             'teacher' => [
@@ -152,9 +152,9 @@ class TeacherController extends Controller
                     return [
                         'id' => $subject->id,
                         'name' => $subject->name,
-                        'class' => $subject->class ? [
-                            'id' => $subject->class->id,
-                            'name' => $subject->class->name,
+                        'classroom' => $subject->classroom ? [
+                            'id' => $subject->classroom->id,
+                            'name' => $subject->classroom->name,
                         ] : null,
                     ];
                 }),

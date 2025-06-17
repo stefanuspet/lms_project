@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
@@ -23,15 +22,15 @@ class Subject extends Model
     ];
 
     /**
-     * Get the class that the subject belongs to.
+     * Get the class that owns the subject.
      */
-    public function class()
+    public function classroom()
     {
         return $this->belongsTo(Classroom::class, 'class_id');
     }
 
     /**
-     * Get the teacher that created the subject.
+     * Get the teacher that owns the subject.
      */
     public function teacher()
     {
@@ -55,22 +54,35 @@ class Subject extends Model
     }
 
     /**
-     * Get the teachers assigned to the subject through teacher_subjects.
+     * Search subjects by name or description.
      */
-    public function assignedTeachers()
+    public function scopeSearch($query, $search)
     {
-        return $this->belongsToMany(Teacher::class, 'teacher_subjects')
-            ->withPivot('semester_id')
-            ->withTimestamps();
+        if (!empty($search)) {
+            return $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
     }
 
     /**
-     * Get the semesters the subject is taught in.
+     * Filter subjects by class.
      */
-    public function semesters()
+    public function scopeFilterByClass($query, $classId)
     {
-        return $this->belongsToMany(Semester::class, 'teacher_subjects')
-            ->withPivot('teacher_id')
-            ->withTimestamps();
+        if (!empty($classId)) {
+            return $query->where('class_id', $classId);
+        }
+    }
+
+    /**
+     * Filter subjects by teacher.
+     */
+    public function scopeFilterByTeacher($query, $teacherId)
+    {
+        if (!empty($teacherId)) {
+            return $query->where('teacher_id', $teacherId);
+        }
     }
 }

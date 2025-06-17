@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('pin', 6);
             $table->date('date');
             $table->foreignId('semester_id')->constrained('semesters')->onDelete('cascade');
+            $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
+            $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });

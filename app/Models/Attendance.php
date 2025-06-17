@@ -2,20 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\Model;
 
 class Attendance extends Model
 {
     use HasFactory;
-
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'attendance';
 
     /**
      * The attributes that are mass assignable.
@@ -23,7 +15,7 @@ class Attendance extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'attendance_session_id',
+        'attendance_sessions_id',
         'student_id',
         'status',
         'submitted_at',
@@ -39,15 +31,15 @@ class Attendance extends Model
     ];
 
     /**
-     * Get the attendance session for the attendance record.
+     * Get the session that owns the attendance.
      */
-    public function attendanceSession()
+    public function session()
     {
-        return $this->belongsTo(AttendanceSession::class);
+        return $this->belongsTo(AttendanceSession::class, 'attendance_sessions_id');
     }
 
     /**
-     * Get the student for the attendance record.
+     * Get the student that owns the attendance.
      */
     public function student()
     {
@@ -55,10 +47,34 @@ class Attendance extends Model
     }
 
     /**
-     * Check if the student is present.
+     * Scope a query to only include present attendances.
      */
-    public function isPresent()
+    public function scopePresent($query)
     {
-        return $this->status === 'hadir';
+        return $query->where('status', 'hadir');
+    }
+
+    /**
+     * Scope a query to only include sick attendances.
+     */
+    public function scopeSick($query)
+    {
+        return $query->where('status', 'sakit');
+    }
+
+    /**
+     * Scope a query to only include excused attendances.
+     */
+    public function scopeExcused($query)
+    {
+        return $query->where('status', 'izin');
+    }
+
+    /**
+     * Scope a query to only include absent attendances.
+     */
+    public function scopeAbsent($query)
+    {
+        return $query->where('status', 'alpha');
     }
 }

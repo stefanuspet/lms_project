@@ -2,8 +2,6 @@ import React from "react";
 import { Link } from "@inertiajs/react";
 
 const SidebarItem = ({ icon: Icon, label, active = false, path }) => {
-    console.log("path", path);
-
     return (
         <Link
             href={path}
