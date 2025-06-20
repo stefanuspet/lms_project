@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -124,6 +125,62 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
         Route::post('/clear-old', [ActivityLogController::class, 'clearOldLogs'])->name('clear-old');
         Route::post('/export', [ActivityLogController::class, 'export'])->name('export');
     });
+});
+
+Route::prefix('teacher')->middleware(['auth', 'role:guru'])->name("teacher.")->group(function () {
+    // Dashboard
+    Route::get('dashboard', [App\Http\Controllers\Teacher\DashboardController::class, 'index'])->name('dashboard');
+
+    // Subject routes
+    Route::get('subjects', [App\Http\Controllers\Teacher\SubjectController::class, 'index'])->name('subjects.index');
+    Route::get('subjects/{subject}', [App\Http\Controllers\Teacher\SubjectController::class, 'show'])->name('subjects.show');
+
+    // Subject-specific materials & assignments
+    Route::get('subjects/{subject}/materials', [App\Http\Controllers\Teacher\MaterialController::class, 'subjectMaterials'])->name('subjects.materials');
+    Route::get('subjects/{subject}/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'subjectAssignments'])->name('subjects.assignments');
+
+    // Material routes - optionally pass subject_id in query parameter
+    Route::get('materials', [App\Http\Controllers\Teacher\MaterialController::class, 'index'])->name('materials.index');
+    Route::get('materials/create', [App\Http\Controllers\Teacher\MaterialController::class, 'create'])->name('materials.create');
+    Route::post('materials', [App\Http\Controllers\Teacher\MaterialController::class, 'store'])->name('materials.store');
+    Route::get('materials/{material}', [App\Http\Controllers\Teacher\MaterialController::class, 'show'])->name('materials.show');
+    Route::get('materials/{material}/edit', [App\Http\Controllers\Teacher\MaterialController::class, 'edit'])->name('materials.edit');
+    Route::put('materials/{material}', [App\Http\Controllers\Teacher\MaterialController::class, 'update'])->name('materials.update');
+    Route::delete('materials/{material}', [App\Http\Controllers\Teacher\MaterialController::class, 'destroy'])->name('materials.destroy');
+
+    // Assignment routes - optionally pass subject_id in query parameter
+    Route::get('assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'index'])->name('assignments.index');
+    Route::get('assignments/create', [App\Http\Controllers\Teacher\AssignmentController::class, 'create'])->name('assignments.create');
+    Route::post('assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'store'])->name('assignments.store');
+    Route::get('assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'show'])->name('assignments.show');
+    Route::get('assignments/{assignment}/edit', [App\Http\Controllers\Teacher\AssignmentController::class, 'edit'])->name('assignments.edit');
+    Route::put('assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'update'])->name('assignments.update');
+    Route::delete('assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'destroy'])->name('assignments.destroy');
+
+    // Submission grading routes
+    Route::get('assignments/{assignment}/submissions', [App\Http\Controllers\Teacher\SubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('submissions/{submission}', [App\Http\Controllers\Teacher\SubmissionController::class, 'show'])->name('submissions.show');
+    Route::post('submissions/{submission}/grade', [App\Http\Controllers\Teacher\SubmissionController::class, 'grade'])->name('submissions.grade');
+    Route::get('submissions/export/{assignment}', [App\Http\Controllers\Teacher\SubmissionController::class, 'export'])->name('submissions.export');
+
+    // Attendance routes
+    Route::get('attendance', [TeacherAttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('attendance/daily', [TeacherAttendanceController::class, 'dailyView'])->name('attendance.daily');
+    Route::get('attendance/active-sessions', [TeacherAttendanceController::class, 'activeSessions'])->name('attendance.active_sessions');
+
+    // Student Progress routes
+    Route::get('progress', [App\Http\Controllers\Teacher\ProgressController::class, 'index'])->name('progress.index');
+    Route::get('progress/subjects/{subject}', [App\Http\Controllers\Teacher\ProgressController::class, 'subjectProgress'])->name('progress.subject');
+    Route::get('progress/students/{student}', [App\Http\Controllers\Teacher\ProgressController::class, 'studentProgress'])->name('progress.student');
+
+    // Profile route
+    Route::get('profile', [App\Http\Controllers\Teacher\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [App\Http\Controllers\Teacher\ProfileController::class, 'update'])->name('profile.update');
+
+    // Notifications
+    Route::get('notifications', [App\Http\Controllers\Teacher\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/mark-read', [App\Http\Controllers\Teacher\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::delete('notifications/{notification}', [App\Http\Controllers\Teacher\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 Route::middleware('auth')->group(function () {

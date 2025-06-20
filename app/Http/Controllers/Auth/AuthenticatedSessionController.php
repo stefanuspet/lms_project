@@ -52,8 +52,8 @@ class AuthenticatedSessionController extends Controller
             // Redirect berdasarkan role
             return redirect()->intended(match ($user->role) {
                 'admin' => route('admin.dashboard'),
-                'teacher' => route('teacher.dashboard'),
-                'student' => route('student.dashboard'),
+                'guru' => route('teacher.dashboard'),
+                'siswa' => route('student.dashboard'),
                 default => route('dashboard'),
             });
         } catch (ValidationException $e) {

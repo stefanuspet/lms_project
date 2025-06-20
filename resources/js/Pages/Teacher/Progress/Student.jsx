@@ -1,0 +1,792 @@
+import React, { useState } from "react";
+import { Link } from "@inertiajs/react";
+import TeacherLayout from "@/Layouts/TeacherLayout";
+import {
+    ArrowLeft2,
+    BookSquare,
+    People,
+    ClipboardTick,
+    DocumentText,
+    TickCircle,
+    CloseCircle,
+    InfoCircle,
+    Clock,
+    Eye,
+    Teacher,
+    Chart,
+    ArrowUp,
+    UserOctagon,
+    Calendar,
+    ChartSuccess,
+    MessageText,
+} from "iconsax-reactjs";
+
+const TeacherProgressStudent = ({
+    student,
+    subjects,
+    attendance_stats,
+    overall_stats,
+}) => {
+    const [activeTab, setActiveTab] = useState("overview");
+
+    // Get status indicator for submission
+    const getSubmissionStatus = (submitted, graded, late) => {
+        if (!submitted) {
+            return (
+                <CloseCircle
+                    size="16"
+                    className="text-red-500"
+                    title="Not Submitted"
+                />
+            );
+        } else if (graded) {
+            return (
+                <TickCircle
+                    size="16"
+                    className="text-green-500"
+                    title="Graded"
+                />
+            );
+        } else if (late) {
+            return (
+                <Clock
+                    size="16"
+                    className="text-orange-500"
+                    title="Late Submission"
+                />
+            );
+        } else {
+            return (
+                <InfoCircle
+                    size="16"
+                    className="text-blue-500"
+                    title="Pending Grading"
+                />
+            );
+        }
+    };
+
+    // Get grade display with color
+    const getGradeDisplay = (grade) => {
+        if (grade === null) return "-";
+
+        let colorClass;
+        if (grade >= 90) colorClass = "text-green-600";
+        else if (grade >= 75) colorClass = "text-blue-600";
+        else if (grade >= 60) colorClass = "text-yellow-600";
+        else colorClass = "text-red-600";
+
+        return <span className={`font-bold ${colorClass}`}>{grade}</span>;
+    };
+
+    // Get progress color based on rate
+    const getProgressColor = (rate) => {
+        if (rate >= 90) return "bg-green-500";
+        if (rate >= 75) return "bg-blue-500";
+        if (rate >= 50) return "bg-yellow-500";
+        return "bg-red-500";
+    };
+
+    return (
+        <TeacherLayout title={`Student Progress: ${student.name}`}>
+            <div className="py-8 w-full">
+                <div className="w-full bg-white rounded-xl shadow-sm">
+                    {/* Header */}
+                    <div className="flex justify-between items-center px-6 py-5 border-b">
+                        <div className="flex items-center gap-4">
+                            <Link
+                                href={route("teacher.progress.index")}
+                                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <ArrowLeft2
+                                    size="24"
+                                    className="text-gray-600"
+                                />
+                            </Link>
+                            <h1 className="font-bold text-xl text-gray-800">
+                                Student Progress
+                            </h1>
+                        </div>
+                    </div>
+
+                    {/* Student Profile */}
+                    <div className="p-6 border-b">
+                        <div className="flex flex-col md:flex-row gap-6 items-start">
+                            {/* Student Info */}
+                            <div className="w-full md:w-1/3">
+                                <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                                    <div className="flex items-center justify-center mb-4">
+                                        <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+                                            <UserOctagon
+                                                variant="Bold"
+                                                size="48"
+                                                className="text-gray-500"
+                                            />
+                                        </div>
+                                    </div>
+                                    <h2 className="text-xl font-bold text-gray-800 text-center">
+                                        {student.name}
+                                    </h2>
+                                    <p className="text-gray-500 text-center mb-4">
+                                        NISN: {student.nisn}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-2 text-center">
+                                        <div className="bg-blue-50 p-2 rounded">
+                                            <p className="text-xs text-blue-600">
+                                                Gender
+                                            </p>
+                                            <p className="text-sm font-medium text-blue-800">
+                                                {student.gender === "male"
+                                                    ? "Male"
+                                                    : "Female"}
+                                            </p>
+                                        </div>
+                                        <div className="bg-purple-50 p-2 rounded">
+                                            <p className="text-xs text-purple-600">
+                                                Class
+                                            </p>
+                                            <p className="text-sm font-medium text-purple-800">
+                                                {student.classes.length > 0
+                                                    ? student.classes[0].name
+                                                    : "Not Assigned"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Overall Stats */}
+                            <div className="w-full md:w-2/3">
+                                <div className="bg-blue-50 p-4 rounded-lg">
+                                    <h3 className="text-sm font-medium text-blue-700 mb-3">
+                                        Academic Performance
+                                    </h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="bg-white p-3 rounded border border-blue-100">
+                                            <p className="text-xs text-gray-500">
+                                                Average Grade
+                                            </p>
+                                            <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                                <ChartSuccess
+                                                    size="20"
+                                                    className={`
+                                                    ${
+                                                        overall_stats.average_grade >=
+                                                        90
+                                                            ? "text-green-600"
+                                                            : overall_stats.average_grade >=
+                                                              75
+                                                            ? "text-blue-600"
+                                                            : overall_stats.average_grade >=
+                                                              60
+                                                            ? "text-yellow-600"
+                                                            : "text-red-600"
+                                                    }`}
+                                                />
+                                                {overall_stats.average_grade ||
+                                                    0}
+                                            </p>
+                                        </div>
+                                        <div className="bg-white p-3 rounded border border-blue-100">
+                                            <p className="text-xs text-gray-500">
+                                                Completion Rate
+                                            </p>
+                                            <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                                <Chart
+                                                    size="20"
+                                                    className="text-blue-600"
+                                                />
+                                                {overall_stats.completion_rate ||
+                                                    0}
+                                                %
+                                            </p>
+                                        </div>
+                                        <div className="bg-white p-3 rounded border border-blue-100">
+                                            <p className="text-xs text-gray-500">
+                                                Assignments
+                                            </p>
+                                            <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                                <ClipboardTick
+                                                    size="20"
+                                                    className="text-purple-600"
+                                                />
+                                                {overall_stats.submitted_assignments ||
+                                                    0}
+                                                /
+                                                {overall_stats.total_assignments ||
+                                                    0}
+                                            </p>
+                                        </div>
+                                        <div className="bg-white p-3 rounded border border-blue-100">
+                                            <p className="text-xs text-gray-500">
+                                                Graded
+                                            </p>
+                                            <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                                <MessageText
+                                                    size="20"
+                                                    className="text-amber-600"
+                                                />
+                                                {overall_stats.graded_submissions ||
+                                                    0}
+                                                /
+                                                {overall_stats.submitted_assignments ||
+                                                    0}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Navigation Tabs */}
+                    <div className="px-6 pt-4 border-b">
+                        <div className="flex space-x-6">
+                            <button
+                                onClick={() => setActiveTab("overview")}
+                                className={`pb-3 ${
+                                    activeTab === "overview"
+                                        ? "border-b-2 border-blue-500 text-blue-600 font-medium"
+                                        : "text-gray-500 hover:text-gray-700"
+                                }`}
+                            >
+                                Overview
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("assignments")}
+                                className={`pb-3 ${
+                                    activeTab === "assignments"
+                                        ? "border-b-2 border-blue-500 text-blue-600 font-medium"
+                                        : "text-gray-500 hover:text-gray-700"
+                                }`}
+                            >
+                                Assignments
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("attendance")}
+                                className={`pb-3 ${
+                                    activeTab === "attendance"
+                                        ? "border-b-2 border-blue-500 text-blue-600 font-medium"
+                                        : "text-gray-500 hover:text-gray-700"
+                                }`}
+                            >
+                                Attendance
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="p-6">
+                        {/* Overview Tab */}
+                        {activeTab === "overview" && (
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                                    Subject Performance Overview
+                                </h2>
+
+                                {subjects.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {subjects.map((subject) => (
+                                            <div
+                                                key={subject.id}
+                                                className="bg-gray-50 p-4 rounded-lg"
+                                            >
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div>
+                                                        <h3 className="font-medium text-gray-800">
+                                                            {subject.name}
+                                                        </h3>
+                                                        <p className="text-sm text-gray-500">
+                                                            {subject.class_name}
+                                                        </p>
+                                                    </div>
+                                                    <Link
+                                                        href={route(
+                                                            "teacher.progress.subject",
+                                                            subject.id
+                                                        )}
+                                                        className="text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        <Eye size="20" />
+                                                    </Link>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4 mb-3">
+                                                    <div>
+                                                        <p className="text-xs text-gray-500">
+                                                            Assignment
+                                                            Completion
+                                                        </p>
+                                                        <div className="flex items-center justify-between mt-1">
+                                                            <span className="text-sm font-medium text-gray-700">
+                                                                {
+                                                                    subject.submitted_assignments
+                                                                }
+                                                                /
+                                                                {
+                                                                    subject.total_assignments
+                                                                }
+                                                            </span>
+                                                            <span className="text-sm font-medium text-gray-700">
+                                                                {
+                                                                    subject.completion_rate
+                                                                }
+                                                                %
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-1.5 w-full bg-gray-200 rounded-full mt-1">
+                                                            <div
+                                                                className={`${getProgressColor(
+                                                                    subject.completion_rate
+                                                                )} h-1.5 rounded-full`}
+                                                                style={{
+                                                                    width: `${subject.completion_rate}%`,
+                                                                }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-xs text-gray-500">
+                                                            Average Grade
+                                                        </p>
+                                                        <p
+                                                            className={`text-xl font-bold ${
+                                                                subject.average_grade >=
+                                                                90
+                                                                    ? "text-green-600"
+                                                                    : subject.average_grade >=
+                                                                      75
+                                                                    ? "text-blue-600"
+                                                                    : subject.average_grade >=
+                                                                      60
+                                                                    ? "text-yellow-600"
+                                                                    : "text-red-600"
+                                                            }`}
+                                                        >
+                                                            {subject.average_grade ||
+                                                                "-"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {attendance_stats[
+                                                    subject.id
+                                                ] && (
+                                                    <div className="mt-4 pt-3 border-t border-gray-200">
+                                                        <p className="text-xs text-gray-500 mb-2">
+                                                            Attendance
+                                                        </p>
+                                                        <div className="grid grid-cols-4 gap-2 text-center">
+                                                            <div className="bg-white p-1 rounded text-xs">
+                                                                <span className="text-gray-500">
+                                                                    Present
+                                                                </span>
+                                                                <p className="font-medium text-green-600">
+                                                                    {
+                                                                        attendance_stats[
+                                                                            subject
+                                                                                .id
+                                                                        ]
+                                                                            .present_count
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                            <div className="bg-white p-1 rounded text-xs">
+                                                                <span className="text-gray-500">
+                                                                    Absent
+                                                                </span>
+                                                                <p className="font-medium text-red-600">
+                                                                    {
+                                                                        attendance_stats[
+                                                                            subject
+                                                                                .id
+                                                                        ]
+                                                                            .absent_count
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                            <div className="bg-white p-1 rounded text-xs">
+                                                                <span className="text-gray-500">
+                                                                    Excused
+                                                                </span>
+                                                                <p className="font-medium text-orange-600">
+                                                                    {
+                                                                        attendance_stats[
+                                                                            subject
+                                                                                .id
+                                                                        ]
+                                                                            .excused_count
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                            <div className="bg-white p-1 rounded text-xs">
+                                                                <span className="text-gray-500">
+                                                                    Rate
+                                                                </span>
+                                                                <p className="font-medium text-blue-600">
+                                                                    {
+                                                                        attendance_stats[
+                                                                            subject
+                                                                                .id
+                                                                        ]
+                                                                            .attendance_rate
+                                                                    }
+                                                                    %
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-gray-50 p-8 rounded-lg text-center">
+                                        <BookSquare
+                                            size="48"
+                                            className="text-gray-300 mx-auto mb-2"
+                                        />
+                                        <p className="text-gray-600 font-medium">
+                                            No subject data available
+                                        </p>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            This student is not enrolled in any
+                                            of your subjects.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Assignments Tab */}
+                        {activeTab === "assignments" && (
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                                    Assignments Detail
+                                </h2>
+
+                                {subjects.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {subjects.map((subject) => (
+                                            <div
+                                                key={subject.id}
+                                                className="border border-gray-200 rounded-lg overflow-hidden"
+                                            >
+                                                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                                    <h3 className="font-medium text-gray-800">
+                                                        {subject.name} -{" "}
+                                                        {subject.class_name}
+                                                    </h3>
+                                                </div>
+
+                                                {subject.assignment_details
+                                                    .length > 0 ? (
+                                                    <div className="overflow-x-auto">
+                                                        <table className="min-w-full divide-y divide-gray-200">
+                                                            <thead className="bg-gray-50">
+                                                                <tr>
+                                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Assignment
+                                                                    </th>
+                                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Deadline
+                                                                    </th>
+                                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Status
+                                                                    </th>
+                                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Submitted
+                                                                    </th>
+                                                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                        Grade
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                                {subject.assignment_details.map(
+                                                                    (
+                                                                        assignment
+                                                                    ) => (
+                                                                        <tr
+                                                                            key={
+                                                                                assignment.id
+                                                                            }
+                                                                            className="hover:bg-gray-50"
+                                                                        >
+                                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                                                {
+                                                                                    assignment.title
+                                                                                }
+                                                                            </td>
+                                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                                {
+                                                                                    assignment.deadline
+                                                                                }
+                                                                            </td>
+                                                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                                                {assignment.has_submitted ? (
+                                                                                    assignment.is_late ? (
+                                                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+                                                                                            Late
+                                                                                        </span>
+                                                                                    ) : (
+                                                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                                                                            Submitted
+                                                                                        </span>
+                                                                                    )
+                                                                                ) : (
+                                                                                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                                                                                        Not
+                                                                                        Submitted
+                                                                                    </span>
+                                                                                )}
+                                                                            </td>
+                                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                                                                                {assignment.submitted_at ||
+                                                                                    "-"}
+                                                                            </td>
+                                                                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                                                {assignment.grade !==
+                                                                                null ? (
+                                                                                    <span
+                                                                                        className={`text-lg font-bold ${
+                                                                                            assignment.grade >=
+                                                                                            90
+                                                                                                ? "text-green-600"
+                                                                                                : assignment.grade >=
+                                                                                                  75
+                                                                                                ? "text-blue-600"
+                                                                                                : assignment.grade >=
+                                                                                                  60
+                                                                                                ? "text-yellow-600"
+                                                                                                : "text-red-600"
+                                                                                        }`}
+                                                                                    >
+                                                                                        {
+                                                                                            assignment.grade
+                                                                                        }
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    <span className="text-sm text-gray-400">
+                                                                                        -
+                                                                                    </span>
+                                                                                )}
+                                                                            </td>
+                                                                        </tr>
+                                                                    )
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-6 text-center text-gray-500">
+                                                        No assignments available
+                                                        for this subject.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-gray-50 p-8 rounded-lg text-center">
+                                        <ClipboardTick
+                                            size="48"
+                                            className="text-gray-300 mx-auto mb-2"
+                                        />
+                                        <p className="text-gray-600 font-medium">
+                                            No assignment data available
+                                        </p>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            This student is not enrolled in any
+                                            of your subjects.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Attendance Tab */}
+                        {activeTab === "attendance" && (
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-700 mb-4">
+                                    Attendance Record
+                                </h2>
+
+                                {Object.keys(attendance_stats).length > 0 ? (
+                                    <div className="space-y-6">
+                                        {subjects
+                                            .filter(
+                                                (subject) =>
+                                                    attendance_stats[subject.id]
+                                            )
+                                            .map((subject) => (
+                                                <div
+                                                    key={subject.id}
+                                                    className="border border-gray-200 rounded-lg overflow-hidden"
+                                                >
+                                                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                                        <h3 className="font-medium text-gray-800">
+                                                            {subject.name} -{" "}
+                                                            {subject.class_name}
+                                                        </h3>
+                                                    </div>
+
+                                                    <div className="p-4">
+                                                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                                                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                                                <div>
+                                                                    <p className="text-xs text-gray-500">
+                                                                        Total
+                                                                        Sessions
+                                                                    </p>
+                                                                    <p className="text-lg font-medium text-gray-900">
+                                                                        {
+                                                                            attendance_stats[
+                                                                                subject
+                                                                                    .id
+                                                                            ]
+                                                                                .total_sessions
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs text-gray-500">
+                                                                        Present
+                                                                    </p>
+                                                                    <p className="text-lg font-medium text-green-600">
+                                                                        {
+                                                                            attendance_stats[
+                                                                                subject
+                                                                                    .id
+                                                                            ]
+                                                                                .present_count
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs text-gray-500">
+                                                                        Absent
+                                                                    </p>
+                                                                    <p className="text-lg font-medium text-red-600">
+                                                                        {
+                                                                            attendance_stats[
+                                                                                subject
+                                                                                    .id
+                                                                            ]
+                                                                                .absent_count
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs text-gray-500">
+                                                                        Excused
+                                                                    </p>
+                                                                    <p className="text-lg font-medium text-orange-600">
+                                                                        {
+                                                                            attendance_stats[
+                                                                                subject
+                                                                                    .id
+                                                                            ]
+                                                                                .excused_count
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs text-gray-500">
+                                                                        Attendance
+                                                                        Rate
+                                                                    </p>
+                                                                    <p className="text-lg font-medium text-blue-600">
+                                                                        {
+                                                                            attendance_stats[
+                                                                                subject
+                                                                                    .id
+                                                                            ]
+                                                                                .attendance_rate
+                                                                        }
+                                                                        %
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="mt-4">
+                                                                <div className="h-2 w-full bg-gray-200 rounded-full">
+                                                                    <div
+                                                                        className={`${getProgressColor(
+                                                                            attendance_stats[
+                                                                                subject
+                                                                                    .id
+                                                                            ]
+                                                                                .attendance_rate
+                                                                        )} h-2 rounded-full`}
+                                                                        style={{
+                                                                            width: `${
+                                                                                attendance_stats[
+                                                                                    subject
+                                                                                        .id
+                                                                                ]
+                                                                                    .attendance_rate
+                                                                            }%`,
+                                                                        }}
+                                                                    ></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="mt-4 flex justify-end">
+                                                            <Link
+                                                                href={route(
+                                                                    "teacher.attendance.report",
+                                                                    subject.id
+                                                                )}
+                                                                className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                                                            >
+                                                                <Calendar size="16" />
+                                                                <span>
+                                                                    View
+                                                                    Detailed
+                                                                    Attendance
+                                                                    Report
+                                                                </span>
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                ) : (
+                                    <div className="bg-gray-50 p-8 rounded-lg text-center">
+                                        <Calendar
+                                            size="48"
+                                            className="text-gray-300 mx-auto mb-2"
+                                        />
+                                        <p className="text-gray-600 font-medium">
+                                            No attendance data available
+                                        </p>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            No attendance records found for this
+                                            student.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="mt-6 flex justify-end">
+                            <Link
+                                href={route("teacher.progress.index")}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                Back to Progress Overview
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </TeacherLayout>
+    );
+};
+
+export default TeacherProgressStudent;
