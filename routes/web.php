@@ -183,6 +183,44 @@ Route::prefix('teacher')->middleware(['auth', 'role:guru'])->name("teacher.")->g
     Route::delete('notifications/{notification}', [App\Http\Controllers\Teacher\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
+Route::prefix('student')->middleware(['auth', 'role:siswa'])->name("student.")->group(function () {
+    // Dashboard
+    Route::get('dashboard', [App\Http\Controllers\Student\DashboardController::class, 'index'])->name('dashboard');
+
+    // Profile
+    Route::get('profile', [App\Http\Controllers\Student\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('profile', [App\Http\Controllers\Student\ProfileController::class, 'update'])->name('profile.update');
+
+    // Mata Pelajaran
+    Route::get('subjects', [App\Http\Controllers\Student\SubjectController::class, 'index'])->name('subjects.index');
+    Route::get('subjects/{subject}', [App\Http\Controllers\Student\SubjectController::class, 'show'])->name('subjects.show');
+
+    // Materi Pembelajaran
+    Route::get('materials', [App\Http\Controllers\Student\MaterialController::class, 'index'])->name('materials.index');
+    Route::get('materials/{material}', [App\Http\Controllers\Student\MaterialController::class, 'show'])->name('materials.show');
+    Route::get('materials/download/{material}', [App\Http\Controllers\Student\MaterialController::class, 'download'])->name('materials.download');
+
+    // Tugas
+    Route::get('assignments', [App\Http\Controllers\Student\AssignmentController::class, 'index'])->name('assignments.index');
+    Route::get('assignments/{assignment}', [App\Http\Controllers\Student\AssignmentController::class, 'show'])->name('assignments.show');
+    Route::get('assignments/{assignment}/submit', [App\Http\Controllers\Student\SubmissionController::class, 'create'])->name('assignments.submit');
+    Route::post('assignments/{assignment}/submit', [App\Http\Controllers\Student\SubmissionController::class, 'store'])->name('submissions.store');
+    Route::get('submissions/{submission}', [App\Http\Controllers\Student\SubmissionController::class, 'show'])->name('submissions.show');
+
+    // Presensi/Absensi
+    Route::get('attendance', [App\Http\Controllers\Student\AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('attendance/history', [App\Http\Controllers\Student\AttendanceController::class, 'history'])->name('attendance.history');
+
+    // Notifikasi
+    Route::get('notifications', [App\Http\Controllers\Student\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/mark-read', [App\Http\Controllers\Student\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::delete('notifications/{notification}', [App\Http\Controllers\Student\NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    // Laporan Nilai
+    Route::get('grades', [App\Http\Controllers\Student\GradeController::class, 'index'])->name('grades.index');
+    Route::get('grades/subjects/{subject}', [App\Http\Controllers\Student\GradeController::class, 'subjectGrades'])->name('grades.subject');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
