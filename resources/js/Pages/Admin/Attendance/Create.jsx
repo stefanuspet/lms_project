@@ -1,54 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
+import TextArea from "@/Components/TextArea";
 import SelectInput from "@/Components/SelectInput";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
-const AttendanceCreate = ({ semesters, classes, subjects }) => {
+const AttendanceCreate = ({ semesters }) => {
     const { data, setData, post, processing, errors } = useForm({
+        title: "",
+        description: "",
         date: new Date().toISOString().substr(0, 10), // Today's date
         semester_id: semesters.length > 0 ? semesters[0].id : "",
-        class_id: classes.length > 0 ? classes[0].id : "",
-        subject_id: subjects.length > 0 ? subjects[0].id : "",
         duration: "60", // Default 60 minutes
     });
 
-    const [availableSubjects, setAvailableSubjects] = useState(subjects);
-
-    useEffect(() => {
-        // When class_id changes, fetch subjects for that class
-        if (data.class_id) {
-            fetch(
-                route("admin.attendance.get-subjects-for-class", data.class_id)
-            )
-                .then((response) => response.json())
-                .then((subjectsData) => {
-                    setAvailableSubjects(subjectsData);
-
-                    // If current subject_id is not in the new list, reset it
-                    if (subjectsData.length > 0) {
-                        const subjectExists = subjectsData.some(
-                            (subject) => subject.id == data.subject_id
-                        );
-                        if (!subjectExists) {
-                            setData("subject_id", subjectsData[0].id);
-                        }
-                    } else {
-                        setData("subject_id", "");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Error fetching subjects:", error);
-                });
-        }
-    }, [data.class_id]);
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("admin.attendance.store"));
+
+        // Log data yang akan dikirim untuk debugging
+        console.log("Submitting data:", data);
+
+        post(route("admin.attendance.store"), {
+            onSuccess: (page) => {
+                console.log("Success:", page);
+            },
+            onError: (errors) => {
+                console.error("Error submitting form:", errors);
+            },
+        });
     };
 
     const handleChange = (e) => {
@@ -87,6 +69,49 @@ const AttendanceCreate = ({ semesters, classes, subjects }) => {
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
                                         Attendance Session Details
                                     </h2>
+                                </div>
+
+                                {/* Title */}
+                                <div className="md:col-span-2">
+                                    <InputLabel
+                                        htmlFor="title"
+                                        value="Session Title"
+                                    />
+                                    <TextInput
+                                        id="title"
+                                        type="text"
+                                        name="title"
+                                        value={data.title}
+                                        className="mt-1 block w-full"
+                                        onChange={handleChange}
+                                        placeholder="Enter a descriptive title for this attendance session (e.g., 'Morning Assembly', 'Class Meeting')"
+                                        required
+                                    />
+                                    <InputError
+                                        message={errors.title}
+                                        className="mt-2"
+                                    />
+                                </div>
+
+                                {/* Description */}
+                                <div className="md:col-span-2">
+                                    <InputLabel
+                                        htmlFor="description"
+                                        value="Description (Optional)"
+                                    />
+                                    <TextArea
+                                        id="description"
+                                        name="description"
+                                        value={data.description}
+                                        className="mt-1 block w-full"
+                                        onChange={handleChange}
+                                        placeholder="Add additional information about this attendance session"
+                                        rows={3}
+                                    />
+                                    <InputError
+                                        message={errors.description}
+                                        className="mt-2"
+                                    />
                                 </div>
 
                                 {/* Date */}
@@ -139,78 +164,6 @@ const AttendanceCreate = ({ semesters, classes, subjects }) => {
                                     />
                                 </div>
 
-                                {/* Class */}
-                                <div>
-                                    <InputLabel
-                                        htmlFor="class_id"
-                                        value="Class"
-                                    />
-                                    <SelectInput
-                                        id="class_id"
-                                        name="class_id"
-                                        value={data.class_id}
-                                        className="mt-1 block w-full"
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="">Select Class</option>
-                                        {classes.map((classItem) => (
-                                            <option
-                                                key={classItem.id}
-                                                value={classItem.id}
-                                            >
-                                                {classItem.name}
-                                            </option>
-                                        ))}
-                                    </SelectInput>
-                                    <InputError
-                                        message={errors.class_id}
-                                        className="mt-2"
-                                    />
-                                </div>
-
-                                {/* Subject */}
-                                <div>
-                                    <InputLabel
-                                        htmlFor="subject_id"
-                                        value="Subject"
-                                    />
-                                    <SelectInput
-                                        id="subject_id"
-                                        name="subject_id"
-                                        value={data.subject_id}
-                                        className="mt-1 block w-full"
-                                        onChange={handleChange}
-                                        required
-                                        disabled={
-                                            availableSubjects.length === 0
-                                        }
-                                    >
-                                        <option value="">Select Subject</option>
-                                        {availableSubjects.map((subject) => (
-                                            <option
-                                                key={subject.id}
-                                                value={subject.id}
-                                            >
-                                                {subject.name}{" "}
-                                                {subject.teacher
-                                                    ? `(${subject.teacher})`
-                                                    : ""}
-                                            </option>
-                                        ))}
-                                    </SelectInput>
-                                    <InputError
-                                        message={errors.subject_id}
-                                        className="mt-2"
-                                    />
-                                    {availableSubjects.length === 0 && (
-                                        <p className="mt-1 text-xs text-red-500">
-                                            No subjects available for this
-                                            class. Please add subjects first.
-                                        </p>
-                                    )}
-                                </div>
-
                                 {/* Duration */}
                                 <div>
                                     <InputLabel
@@ -247,17 +200,21 @@ const AttendanceCreate = ({ semesters, classes, subjects }) => {
                                 {/* Note about PIN */}
                                 <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg mt-2">
                                     <h3 className="text-sm font-medium text-blue-800 mb-2">
-                                        How it works
+                                        Cara Penggunaan Absensi
                                     </h3>
                                     <p className="text-sm text-blue-600">
-                                        When you create an attendance session,
-                                        the system will generate a unique
-                                        6-digit PIN code. Students can use this
-                                        PIN to mark their attendance. The PIN
-                                        will be valid for the specified
-                                        duration. You can share the PIN with
-                                        students through the class or manually
-                                        mark attendance for them.
+                                        Sistem ini akan membuat kode PIN 6 digit
+                                        yang dapat digunakan oleh semua siswa
+                                        dari semua kelas untuk menandai
+                                        kehadiran mereka. Kode PIN ini aktif
+                                        selama durasi yang ditentukan. Anda
+                                        dapat membagikan PIN ini kepada siswa
+                                        melalui berbagai cara (pengumuman,
+                                        WhatsApp, dll) atau menandai kehadiran
+                                        mereka secara manual di sistem. Cocok
+                                        untuk kegiatan sekolah seperti upacara,
+                                        kegiatan ekstrakurikuler, atau pertemuan
+                                        umum.
                                     </p>
                                 </div>
                             </div>
@@ -268,17 +225,14 @@ const AttendanceCreate = ({ semesters, classes, subjects }) => {
                                     href={route("admin.attendance.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </Link>
                                 <button
                                     type="submit"
-                                    disabled={
-                                        processing ||
-                                        availableSubjects.length === 0
-                                    }
+                                    disabled={processing}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
                                 >
-                                    Create Session
+                                    Buat Sesi Absensi
                                 </button>
                             </div>
                         </form>

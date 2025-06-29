@@ -4,18 +4,23 @@ import TeacherLayout from "@/Layouts/TeacherLayout";
 import {
     ArrowLeft2,
     Calendar,
-    Clock,
-    BookSquare,
-    People,
+    DocumentText,
+    TickCircle,
     Timer1,
-    Lock1,
-    NotificationBing,
+    People,
+    Copy,
     Eye,
 } from "iconsax-reactjs";
 
-const TeacherActiveSessionsView = ({ active_sessions, today_date, flash }) => {
+const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
+    // Function to copy PIN to clipboard
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert(`PIN ${text} berhasil disalin!`);
+    };
+
     return (
-        <TeacherLayout title="Active Attendance Sessions">
+        <TeacherLayout title="Sesi Absensi Aktif">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -35,9 +40,9 @@ const TeacherActiveSessionsView = ({ active_sessions, today_date, flash }) => {
                 </div>
             )}
 
-            <div className="py-8 w-full">
-                <div className="w-full bg-white rounded-xl shadow-sm">
-                    {/* Header */}
+            <div className="py-6 w-full">
+                {/* Header */}
+                <div className="w-full bg-white rounded-xl shadow-sm mb-6">
                     <div className="flex justify-between items-center px-6 py-5 border-b">
                         <div className="flex items-center gap-4">
                             <Link
@@ -51,173 +56,221 @@ const TeacherActiveSessionsView = ({ active_sessions, today_date, flash }) => {
                             </Link>
                             <div>
                                 <h1 className="font-bold text-xl text-gray-800">
-                                    Active Attendance Sessions
+                                    Sesi Absensi Aktif
                                 </h1>
                                 <p className="text-sm text-gray-600">
-                                    {today_date}
+                                    Menampilkan semua sesi absensi yang sedang
+                                    berjalan
                                 </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Information Alert */}
-                    <div className="p-6 border-b bg-blue-50">
-                        <div className="flex items-start">
-                            <div className="flex-shrink-0">
-                                <NotificationBing
-                                    size="24"
-                                    className="text-blue-500"
-                                />
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-blue-800">
-                                    About Active Attendance Sessions
-                                </h3>
-                                <div className="mt-2 text-sm text-blue-700">
-                                    <p>
-                                        Active sessions have PIN codes that
-                                        students can use to mark their
-                                        attendance. These sessions are created
-                                        by administrators and will expire based
-                                        on the set time limit.
-                                    </p>
-                                    <p className="mt-2">
-                                        Teachers can view the PIN codes and
-                                        monitor attendance in real-time, but
-                                        cannot create or modify sessions.
+                                <div>
+                                    <h1 className="font-bold text-xl text-gray-800">
+                                        Sesi Absensi Aktif
+                                    </h1>
+                                    <p className="text-sm text-gray-600">
+                                        Menampilkan semua sesi absensi yang
+                                        sedang berjalan
                                     </p>
                                 </div>
+                            </div>
+                            <div>
+                                <Link
+                                    href={route("teacher.attendance.daily")}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                                >
+                                    <Calendar size="20" />
+                                    <span>Absensi Harian</span>
+                                </Link>
                             </div>
                         </div>
                     </div>
 
                     {/* Active Sessions */}
-                    <div className="p-6">
-                        <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                            Today's Active Sessions
-                        </h2>
-
-                        {active_sessions && active_sessions.length > 0 ? (
+                    <div className="w-full">
+                        {activeSessions && activeSessions.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {active_sessions.map((session) => (
+                                {activeSessions.map((session) => (
                                     <div
                                         key={session.id}
-                                        className="border border-gray-200 rounded-lg overflow-hidden"
+                                        className="bg-white rounded-xl shadow-sm overflow-hidden"
                                     >
-                                        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                                            <h3 className="font-medium text-gray-800">
-                                                {session.class_name}
-                                            </h3>
-                                            <p className="text-sm text-gray-500">
-                                                {session.subject_name}
-                                            </p>
-                                        </div>
-                                        <div className="p-4">
-                                            <div className="mb-4">
-                                                <div className="bg-purple-100 p-6 rounded-lg text-center">
-                                                    <h4 className="text-sm font-medium text-purple-800 mb-2">
-                                                        Attendance PIN
-                                                    </h4>
-                                                    <p className="text-3xl font-bold text-purple-900 tracking-wider">
-                                                        {session.pin}
-                                                    </p>
-                                                    {session.time_remaining !==
-                                                        null && (
-                                                        <p className="text-xs text-purple-700 mt-2">
-                                                            <Clock
-                                                                size="14"
-                                                                className="inline mr-1"
-                                                            />
-                                                            Expires in{" "}
-                                                            {
-                                                                session.time_remaining
-                                                            }{" "}
-                                                            minutes
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-4">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <p className="text-xs text-gray-500">
-                                                            Present Students
-                                                        </p>
-                                                        <p className="text-lg font-medium text-gray-900">
-                                                            {
-                                                                session.present_count
-                                                            }
-                                                            /
-                                                            {
-                                                                session.total_students
-                                                            }
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs text-gray-500">
-                                                            Present Rate
-                                                        </p>
-                                                        <p className="text-lg font-medium text-gray-900">
-                                                            {
-                                                                session.present_rate
-                                                            }
-                                                            %
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="mt-2">
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div
-                                                            className="bg-green-500 h-2 rounded-full"
-                                                            style={{
-                                                                width: `${session.present_rate}%`,
-                                                            }}
-                                                        ></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-4">
-                                                <Link
-                                                    href={route(
-                                                        "teacher.attendance.daily",
-                                                        {
-                                                            date: session.date
-                                                                .split(" ")
-                                                                .slice(0, 3)
-                                                                .join(" "),
-                                                            class_id:
-                                                                session.class_id,
-                                                        }
-                                                    )}
-                                                    className="inline-flex items-center px-4 py-2 border border-blue-300 text-sm leading-5 font-medium rounded-md text-blue-700 bg-white hover:text-blue-500 focus:outline-none focus:border-blue-300 focus:shadow-outline-blue active:text-blue-800 active:bg-blue-50 transition ease-in-out duration-150"
-                                                >
-                                                    <Eye
-                                                        size="16"
-                                                        className="mr-2"
+                                        {/* Session Header */}
+                                        <div className="bg-blue-50 px-6 py-4 border-b">
+                                            <div className="flex justify-between items-center">
+                                                <h2 className="font-bold text-lg text-gray-800">
+                                                    {session.title}
+                                                </h2>
+                                                <div className="flex items-center gap-1">
+                                                    <Timer1
+                                                        size="18"
+                                                        className="text-blue-500"
                                                     />
-                                                    View Attendance Details
-                                                </Link>
+                                                    <span className="text-blue-700 font-medium text-sm">
+                                                        Tersisa:{" "}
+                                                        {session.remaining_time}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Session Content */}
+                                        <div className="p-6">
+                                            <div className="grid grid-cols-1 gap-4">
+                                                {/* PIN Code */}
+                                                <div className="bg-amber-50 p-4 rounded-lg flex justify-between items-center">
+                                                    <div>
+                                                        <p className="text-sm text-amber-700 font-medium">
+                                                            PIN Absensi
+                                                        </p>
+                                                        <p className="text-3xl font-bold font-mono text-amber-800 mt-1">
+                                                            {session.pin}
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() =>
+                                                            copyToClipboard(
+                                                                session.pin
+                                                            )
+                                                        }
+                                                        className="p-2 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
+                                                        title="Salin PIN"
+                                                    >
+                                                        <Copy
+                                                            size="24"
+                                                            className="text-amber-700"
+                                                        />
+                                                    </button>
+                                                </div>
+
+                                                {/* Session Info */}
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                                        <div className="flex items-center">
+                                                            <Calendar
+                                                                size="18"
+                                                                className="text-gray-500 mr-2"
+                                                            />
+                                                            <div>
+                                                                <p className="text-xs text-gray-500">
+                                                                    Tanggal
+                                                                </p>
+                                                                <p className="text-sm font-medium text-gray-800">
+                                                                    {
+                                                                        session.date
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                                        <div className="flex items-center">
+                                                            <DocumentText
+                                                                size="18"
+                                                                className="text-gray-500 mr-2"
+                                                            />
+                                                            <div>
+                                                                <p className="text-xs text-gray-500">
+                                                                    Semester
+                                                                </p>
+                                                                <p className="text-sm font-medium text-gray-800">
+                                                                    {
+                                                                        session.semester
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Attendance Stats */}
+                                                <div className="bg-blue-50 p-4 rounded-lg">
+                                                    <div className="flex items-center mb-2">
+                                                        <People
+                                                            size="18"
+                                                            className="text-blue-500 mr-2"
+                                                        />
+                                                        <p className="text-sm font-medium text-blue-800">
+                                                            Statistik Kehadiran
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <p className="text-3xl font-bold text-blue-700">
+                                                                {
+                                                                    session.present_count
+                                                                }
+                                                                <span className="text-sm text-blue-500 font-normal ml-1">
+                                                                    /{" "}
+                                                                    {
+                                                                        session.attendance_count
+                                                                    }
+                                                                </span>
+                                                            </p>
+                                                            <p className="text-xs text-blue-600">
+                                                                siswa telah
+                                                                mengisi absensi
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex flex-col items-end">
+                                                            <p className="text-sm font-medium text-blue-700">
+                                                                {
+                                                                    session.attendance_rate
+                                                                }
+                                                                %
+                                                            </p>
+                                                            <div className="w-24 bg-blue-200 rounded-full h-2 mt-1">
+                                                                <div
+                                                                    className="bg-blue-600 h-2 rounded-full"
+                                                                    style={{
+                                                                        width: `${session.attendance_rate}%`,
+                                                                    }}
+                                                                ></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Session Actions */}
+                                                <div className="flex justify-end">
+                                                    <Link
+                                                        href={route(
+                                                            "teacher.attendance.daily",
+                                                            {
+                                                                date: session.date,
+                                                                session_id:
+                                                                    session.id,
+                                                            }
+                                                        )}
+                                                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                                                    >
+                                                        <Eye size="18" />
+                                                        <span>
+                                                            Lihat Detail
+                                                        </span>
+                                                    </Link>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="bg-gray-50 p-8 rounded-lg text-center">
-                                <Lock1
-                                    size="48"
-                                    className="text-gray-300 mx-auto mb-2"
-                                />
-                                <p className="text-gray-600 font-medium">
-                                    No active sessions found
-                                </p>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    There are no active attendance sessions for
-                                    today.
-                                </p>
+                            <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                                <div className="py-12">
+                                    <div className="flex justify-center mb-4">
+                                        <Timer1
+                                            size="64"
+                                            className="text-gray-300"
+                                        />
+                                    </div>
+                                    <h3 className="text-xl font-medium text-gray-700 mb-2">
+                                        Tidak Ada Sesi Aktif
+                                    </h3>
+                                    <p className="text-gray-500 max-w-md mx-auto">
+                                        Saat ini tidak ada sesi absensi yang
+                                        aktif. Sesi absensi baru dapat dibuat
+                                        oleh administrator.
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -227,4 +280,4 @@ const TeacherActiveSessionsView = ({ active_sessions, today_date, flash }) => {
     );
 };
 
-export default TeacherActiveSessionsView;
+export default TeacherAttendanceActiveSessions;

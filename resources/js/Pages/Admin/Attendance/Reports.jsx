@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {
     ChartSuccess,
     Calendar,
     Profile2User,
-    ArrangeHorizontalSquare,
-    Book1,
+    DocumentText,
     DocumentDownload,
     TickCircle,
     CloseCircle,
@@ -22,50 +21,15 @@ const AttendanceReports = ({
     hasData,
 }) => {
     const [semesterId, setSemesterId] = useState(filters.semester_id || "");
-    const [classId, setClassId] = useState(filters.class_id || "");
     const [studentId, setStudentId] = useState(filters.student_id || "");
     const [dateFrom, setDateFrom] = useState(filters.date_from || "");
     const [dateTo, setDateTo] = useState(filters.date_to || "");
-    const [availableStudents, setAvailableStudents] = useState(
-        filterOptions.students || []
-    );
-
-    // Update student options when class or semester changes
-    useEffect(() => {
-        if (classId && semesterId) {
-            router.get(
-                route("admin.attendance.reports"),
-                {
-                    class_id: classId,
-                    semester_id: semesterId,
-                },
-                {
-                    preserveState: true,
-                    only: ["filterOptions"],
-                    onSuccess: (page) => {
-                        setAvailableStudents(page.props.filterOptions.students);
-                        if (
-                            studentId &&
-                            !page.props.filterOptions.students.some(
-                                (s) => s.id == studentId
-                            )
-                        ) {
-                            setStudentId("");
-                        }
-                    },
-                }
-            );
-        } else {
-            setAvailableStudents([]);
-        }
-    }, [classId, semesterId]);
 
     const handleGenerateReport = (e) => {
         e.preventDefault();
 
         router.get(route("admin.attendance.reports"), {
             semester_id: semesterId,
-            class_id: classId,
             student_id: studentId,
             date_from: dateFrom,
             date_to: dateTo,
@@ -75,7 +39,6 @@ const AttendanceReports = ({
     const handleExport = () => {
         router.post(route("admin.attendance.export-report"), {
             semester_id: semesterId,
-            class_id: classId,
             student_id: studentId,
             date_from: dateFrom,
             date_to: dateTo,
@@ -122,7 +85,7 @@ const AttendanceReports = ({
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">
-                            Student Attendance Report
+                            Laporan Kehadiran Siswa
                         </h2>
                         <p className="text-gray-500">
                             {attendanceData.student.name} (
@@ -134,7 +97,7 @@ const AttendanceReports = ({
                         className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
                     >
                         <DocumentDownload size="20" className="mr-2" />
-                        Export Report
+                        Ekspor Laporan
                     </button>
                 </div>
 
@@ -155,7 +118,7 @@ const AttendanceReports = ({
                     <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
                         <div>
                             <p className="text-xs text-green-500 uppercase font-semibold">
-                                Present
+                                Hadir
                             </p>
                             <p className="text-2xl font-bold text-green-700">
                                 {attendanceData.stats.present}
@@ -176,7 +139,7 @@ const AttendanceReports = ({
                     <div className="bg-orange-50 p-4 rounded-lg flex items-center justify-between">
                         <div>
                             <p className="text-xs text-orange-500 uppercase font-semibold">
-                                Sick
+                                Sakit
                             </p>
                             <p className="text-2xl font-bold text-orange-700">
                                 {attendanceData.stats.sick}
@@ -188,7 +151,7 @@ const AttendanceReports = ({
                     <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
                         <div>
                             <p className="text-xs text-blue-500 uppercase font-semibold">
-                                Excused
+                                Izin
                             </p>
                             <p className="text-2xl font-bold text-blue-700">
                                 {attendanceData.stats.excused}
@@ -200,7 +163,7 @@ const AttendanceReports = ({
                     <div className="bg-red-50 p-4 rounded-lg flex items-center justify-between">
                         <div>
                             <p className="text-xs text-red-500 uppercase font-semibold">
-                                Absent
+                                Tidak Hadir
                             </p>
                             <p className="text-2xl font-bold text-red-700">
                                 {attendanceData.stats.absent +
@@ -217,16 +180,16 @@ const AttendanceReports = ({
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Date
+                                    Tanggal
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Subject
+                                    Judul Kegiatan
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Submission Time
+                                    Waktu Pengisian
                                 </th>
                             </tr>
                         </thead>
@@ -241,7 +204,7 @@ const AttendanceReports = ({
                                             {attendance.date}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {attendance.subject}
+                                            {attendance.title}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             {attendance.status !==
@@ -262,7 +225,7 @@ const AttendanceReports = ({
                                                 </span>
                                             ) : (
                                                 <span className="text-gray-500">
-                                                    Not submitted
+                                                    Belum mengisi
                                                 </span>
                                             )}
                                         </td>
@@ -278,7 +241,7 @@ const AttendanceReports = ({
                                         colSpan="4"
                                         className="px-6 py-4 text-center text-gray-500"
                                     >
-                                        No attendance records found.
+                                        Tidak ada catatan kehadiran ditemukan.
                                     </td>
                                 </tr>
                             )}
@@ -289,9 +252,7 @@ const AttendanceReports = ({
         );
     };
 
-    const renderClassReport = () => {
-        // Find class and semester names
-        const classObj = filterOptions.classes.find((c) => c.id == classId);
+    const renderAllStudentsReport = () => {
         const semesterObj = filterOptions.semesters.find(
             (s) => s.id == semesterId
         );
@@ -301,11 +262,10 @@ const AttendanceReports = ({
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">
-                            Class Attendance Report
+                            Laporan Kehadiran Semua Siswa
                         </h2>
                         <p className="text-gray-500">
-                            {classObj?.name || "Class"} -{" "}
-                            {semesterObj?.name || "Semester"}
+                            Semester: {semesterObj?.name || "Semua Semester"}
                         </p>
                     </div>
                     <button
@@ -313,13 +273,13 @@ const AttendanceReports = ({
                         className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
                     >
                         <DocumentDownload size="20" className="mr-2" />
-                        Export Report
+                        Ekspor Laporan
                     </button>
                 </div>
 
                 <div className="mb-4">
                     <p className="text-sm text-gray-500">
-                        Total attendance sessions:{" "}
+                        Total sesi absensi:{" "}
                         <span className="font-semibold">
                             {attendanceData.session_count}
                         </span>
@@ -332,25 +292,25 @@ const AttendanceReports = ({
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Student
+                                    Siswa
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     NISN
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Present
+                                    Hadir
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Sick
+                                    Sakit
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Excused
+                                    Izin
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Absent
+                                    Tidak Hadir
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Attendance Rate
+                                    Tingkat Kehadiran
                                 </th>
                             </tr>
                         </thead>
@@ -445,7 +405,7 @@ const AttendanceReports = ({
                                         colSpan="7"
                                         className="px-6 py-4 text-center text-gray-500"
                                     >
-                                        No students found in this class.
+                                        Tidak ada siswa yang ditemukan.
                                     </td>
                                 </tr>
                             )}
@@ -457,7 +417,7 @@ const AttendanceReports = ({
     };
 
     return (
-        <AuthenticatedLayout title="Attendance Reports">
+        <AuthenticatedLayout title="Laporan Kehadiran">
             <div className="py-8">
                 {/* Filters Card */}
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
@@ -467,7 +427,7 @@ const AttendanceReports = ({
                             className="text-green-500 mr-2"
                         />
                         <h2 className="text-xl font-bold text-gray-800">
-                            Generate Attendance Report
+                            Buat Laporan Kehadiran
                         </h2>
                     </div>
 
@@ -485,7 +445,7 @@ const AttendanceReports = ({
                                     }
                                     className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                 >
-                                    <option value="">Select Semester</option>
+                                    <option value="">Pilih Semester</option>
                                     {filterOptions.semesters.map((semester) => (
                                         <option
                                             key={semester.id}
@@ -497,38 +457,10 @@ const AttendanceReports = ({
                                 </select>
                             </div>
 
-                            {/* Class filter */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Class
-                                </label>
-                                <select
-                                    value={classId}
-                                    onChange={(e) => setClassId(e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                    disabled={!semesterId}
-                                >
-                                    <option value="">Select Class</option>
-                                    {filterOptions.classes.map((classItem) => (
-                                        <option
-                                            key={classItem.id}
-                                            value={classItem.id}
-                                        >
-                                            {classItem.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {!semesterId && (
-                                    <p className="mt-1 text-xs text-red-500">
-                                        Please select a semester first
-                                    </p>
-                                )}
-                            </div>
-
                             {/* Student filter (optional) */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Student (Optional)
+                                    Siswa (Opsional)
                                 </label>
                                 <select
                                     value={studentId}
@@ -536,14 +468,9 @@ const AttendanceReports = ({
                                         setStudentId(e.target.value)
                                     }
                                     className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                                    disabled={
-                                        !classId ||
-                                        !semesterId ||
-                                        availableStudents.length === 0
-                                    }
                                 >
-                                    <option value="">All Students</option>
-                                    {availableStudents.map((student) => (
+                                    <option value="">Semua Siswa</option>
+                                    {filterOptions.students.map((student) => (
                                         <option
                                             key={student.id}
                                             value={student.id}
@@ -552,19 +479,12 @@ const AttendanceReports = ({
                                         </option>
                                     ))}
                                 </select>
-                                {classId &&
-                                    semesterId &&
-                                    availableStudents.length === 0 && (
-                                        <p className="mt-1 text-xs text-red-500">
-                                            No students enrolled in this class
-                                        </p>
-                                    )}
                             </div>
 
                             {/* Date From filter */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Date From (Optional)
+                                    Tanggal Dari (Opsional)
                                 </label>
                                 <input
                                     type="date"
@@ -575,16 +495,29 @@ const AttendanceReports = ({
                                     className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                                 />
                             </div>
+
+                            {/* Date To filter */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tanggal Hingga (Opsional)
+                                </label>
+                                <input
+                                    type="date"
+                                    value={dateTo}
+                                    onChange={(e) => setDateTo(e.target.value)}
+                                    className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex justify-end">
                             <button
                                 type="submit"
                                 className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center"
-                                disabled={!semesterId || !classId}
+                                disabled={!semesterId}
                             >
                                 <ChartSuccess size="20" className="mr-2" />
-                                Generate Report
+                                Buat Laporan
                             </button>
                         </div>
                     </form>
@@ -595,7 +528,7 @@ const AttendanceReports = ({
                     studentId ? (
                         renderStudentReport()
                     ) : (
-                        renderClassReport()
+                        renderAllStudentsReport()
                     )
                 ) : (
                     <div className="bg-white rounded-xl shadow-sm p-6 text-center">
@@ -605,13 +538,13 @@ const AttendanceReports = ({
                                 className="text-gray-300 mb-4"
                             />
                             <h3 className="text-xl font-medium text-gray-700 mb-2">
-                                No Report Generated Yet
+                                Belum Ada Laporan yang Dibuat
                             </h3>
                             <p className="text-gray-500 max-w-md">
-                                Select a semester and class, then click
-                                "Generate Report" to view attendance statistics.
-                                You can optionally select a specific student to
-                                see their detailed attendance records.
+                                Pilih semester dan klik "Buat Laporan" untuk
+                                melihat statistik kehadiran. Anda juga dapat
+                                memilih siswa tertentu untuk melihat catatan
+                                kehadiran detailnya.
                             </p>
                         </div>
                     </div>

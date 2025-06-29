@@ -4,8 +4,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {
     ArrowLeft2,
     Calendar,
-    Book1,
-    Teacher,
+    DocumentText,
     Timer1,
     ClipboardTick,
     People,
@@ -16,19 +15,11 @@ import {
 
 const AttendanceShow = ({ session, students, stats, flash }) => {
     const [selectedStatus, setSelectedStatus] = useState("hadir");
-    const [selectedStudent, setSelectedStudent] = useState(null);
     const [showExtendModal, setShowExtendModal] = useState(false);
     const [extendDuration, setExtendDuration] = useState("30");
     const [searchTerm, setSearchTerm] = useState("");
 
-    const { data, setData, post, processing, reset } = useForm({
-        student_id: "",
-        status: "hadir",
-    });
-
-    const { post: extendPost, processing: extendProcessing } = useForm({
-        minutes: "30",
-    });
+    const { post, processing } = useForm();
 
     // Function to update attendance
     const updateAttendance = (student, status) => {
@@ -38,15 +29,12 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                 status: status,
             },
             preserveScroll: true,
-            onSuccess: () => {
-                reset();
-            },
         });
     };
 
     // Function to extend session
     const handleExtendSession = () => {
-        extendPost(route("admin.attendance.extend-session", session.id), {
+        post(route("admin.attendance.extend-session", session.id), {
             data: {
                 minutes: extendDuration,
             },
@@ -61,7 +49,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
     const handleCloseSession = () => {
         if (
             confirm(
-                "Are you sure you want to close this attendance session? This will expire the PIN immediately."
+                "Apakah Anda yakin ingin menutup sesi absensi ini? Ini akan membuat PIN tidak berlaku lagi."
             )
         ) {
             post(route("admin.attendance.close-session", session.id), {
@@ -127,7 +115,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
     };
 
     return (
-        <AuthenticatedLayout title={`Attendance Session: ${session.pin}`}>
+        <AuthenticatedLayout title={`Sesi Absensi: ${session.pin}`}>
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -162,7 +150,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Attendance Session
+                                {session.title}
                             </h1>
                         </div>
 
@@ -173,18 +161,18 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                         onClick={() => setShowExtendModal(true)}
                                         className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                                     >
-                                        Extend Session
+                                        Perpanjang Sesi
                                     </button>
                                     <button
                                         onClick={handleCloseSession}
                                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                                     >
-                                        Close Session
+                                        Tutup Sesi
                                     </button>
                                 </>
                             ) : (
                                 <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">
-                                    Session Expired
+                                    Sesi Berakhir
                                 </span>
                             )}
                         </div>
@@ -195,7 +183,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                         <div className="flex flex-col md:flex-row md:space-x-6 mb-6">
                             <div className="flex-1 bg-amber-50 p-6 rounded-lg mb-4 md:mb-0">
                                 <h2 className="text-amber-800 text-xl font-bold mb-4">
-                                    PIN Code
+                                    Kode PIN
                                 </h2>
                                 <div className="bg-white p-4 rounded-lg text-center">
                                     <p className="font-mono text-4xl tracking-wider text-gray-900">
@@ -208,12 +196,12 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                                     size="16"
                                                     className="mr-1 text-green-500"
                                                 />
-                                                Active until{" "}
+                                                Aktif hingga{" "}
                                                 {session.expires_at}
                                             </span>
                                         ) : (
                                             <span className="text-red-500">
-                                                Expired
+                                                Berakhir
                                             </span>
                                         )}
                                     </p>
@@ -223,7 +211,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                             {/* Session Details */}
                             <div className="flex-1 bg-gray-50 p-6 rounded-lg">
                                 <h2 className="text-gray-800 text-xl font-bold mb-4">
-                                    Session Details
+                                    Detail Sesi
                                 </h2>
                                 <div className="space-y-3">
                                     <div className="flex items-center">
@@ -233,7 +221,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                         />
                                         <div>
                                             <p className="text-sm text-gray-500">
-                                                Date
+                                                Tanggal
                                             </p>
                                             <p className="text-gray-900">
                                                 {session.date}
@@ -241,36 +229,32 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                         </div>
                                     </div>
                                     <div className="flex items-center">
-                                        <Book1
+                                        <DocumentText
                                             size="20"
                                             className="text-amber-500 mr-3"
                                         />
                                         <div>
                                             <p className="text-sm text-gray-500">
-                                                Class
+                                                Deskripsi
                                             </p>
                                             <p className="text-gray-900">
-                                                {session.classroom
-                                                    ? session.classroom.name
-                                                    : "-"}
+                                                {session.description || "-"}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center">
-                                        <Teacher
+                                        <Timer1
                                             size="20"
                                             className="text-green-500 mr-3"
                                         />
                                         <div>
                                             <p className="text-sm text-gray-500">
-                                                Subject
+                                                Semester
                                             </p>
                                             <p className="text-gray-900">
-                                                {session.subject
-                                                    ? session.subject.name
+                                                {session.semester
+                                                    ? session.semester.name
                                                     : "-"}
-                                                {session.subject?.teacher &&
-                                                    ` (${session.subject.teacher})`}
                                             </p>
                                         </div>
                                     </div>
@@ -295,7 +279,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                             <div className="bg-green-50 p-4 rounded-lg flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-green-500 uppercase font-semibold">
-                                        Present
+                                        Hadir
                                     </p>
                                     <p className="text-2xl font-bold text-green-700">
                                         {stats.present}
@@ -310,7 +294,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                             <div className="bg-orange-50 p-4 rounded-lg flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-orange-500 uppercase font-semibold">
-                                        Sick
+                                        Sakit
                                     </p>
                                     <p className="text-2xl font-bold text-orange-700">
                                         {stats.sick}
@@ -322,7 +306,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                             <div className="bg-blue-50 p-4 rounded-lg flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-blue-500 uppercase font-semibold">
-                                        Excused
+                                        Izin
                                     </p>
                                     <p className="text-2xl font-bold text-blue-700">
                                         {stats.excused}
@@ -337,7 +321,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                             <div className="bg-red-50 p-4 rounded-lg flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-red-500 uppercase font-semibold">
-                                        Absent
+                                        Tidak Hadir
                                     </p>
                                     <p className="text-2xl font-bold text-red-700">
                                         {stats.absent + stats.not_submitted}
@@ -349,6 +333,18 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 />
                             </div>
                         </div>
+
+                        {/* Note about PIN usage */}
+                        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                            <p className="text-sm text-blue-700">
+                                <strong>Catatan:</strong> PIN ini dapat
+                                digunakan oleh semua siswa untuk mengisi
+                                absensi. PIN akan kedaluwarsa pada{" "}
+                                {session.expires_at}. Bagikan PIN ini kepada
+                                siswa melalui WhatsApp, pengumuman, atau media
+                                lainnya.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -356,14 +352,14 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     <div className="flex justify-between items-center px-6 py-5 border-b">
                         <h2 className="font-bold text-lg text-gray-800">
-                            Students Attendance
+                            Absensi Siswa
                         </h2>
 
                         {/* Search Box */}
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder="Search by name or NISN"
+                                placeholder="Cari berdasarkan nama atau NISN"
                                 className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -397,7 +393,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 }`}
                                 onClick={() => setSelectedStatus("all")}
                             >
-                                All ({filteredStudents.length})
+                                Semua ({filteredStudents.length})
                             </button>
                             <button
                                 className={`px-4 py-2 font-medium text-sm rounded-t-lg mr-2 ${
@@ -407,7 +403,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 }`}
                                 onClick={() => setSelectedStatus("hadir")}
                             >
-                                Present ({groupedStudents.present.length})
+                                Hadir ({groupedStudents.present.length})
                             </button>
                             <button
                                 className={`px-4 py-2 font-medium text-sm rounded-t-lg mr-2 ${
@@ -417,7 +413,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 }`}
                                 onClick={() => setSelectedStatus("sakit")}
                             >
-                                Sick ({groupedStudents.sick.length})
+                                Sakit ({groupedStudents.sick.length})
                             </button>
                             <button
                                 className={`px-4 py-2 font-medium text-sm rounded-t-lg mr-2 ${
@@ -427,7 +423,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 }`}
                                 onClick={() => setSelectedStatus("izin")}
                             >
-                                Excused ({groupedStudents.excused.length})
+                                Izin ({groupedStudents.excused.length})
                             </button>
                             <button
                                 className={`px-4 py-2 font-medium text-sm rounded-t-lg mr-2 ${
@@ -437,7 +433,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 }`}
                                 onClick={() => setSelectedStatus("alpha")}
                             >
-                                Absent ({groupedStudents.absent.length})
+                                Alpha ({groupedStudents.absent.length})
                             </button>
                             <button
                                 className={`px-4 py-2 font-medium text-sm rounded-t-lg ${
@@ -449,7 +445,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                     setSelectedStatus("not_submitted")
                                 }
                             >
-                                Not Submitted (
+                                Belum Mengisi (
                                 {groupedStudents.not_submitted.length})
                             </button>
                         </div>
@@ -462,7 +458,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Student
+                                            Siswa
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             NISN
@@ -471,10 +467,10 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                             Status
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Submission Time
+                                            Waktu Pengisian
                                         </th>
                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
+                                            Aksi
                                         </th>
                                     </tr>
                                 </thead>
@@ -522,7 +518,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                                         </span>
                                                     ) : (
                                                         <span className="text-gray-500">
-                                                            Not submitted
+                                                            Belum mengisi
                                                         </span>
                                                     )}
                                                 </td>
@@ -545,7 +541,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                                                     ? "bg-green-100"
                                                                     : "hover:bg-green-50"
                                                             }`}
-                                                            title="Mark as Present"
+                                                            title="Tandai Hadir"
                                                         >
                                                             <TickCircle
                                                                 size="20"
@@ -565,7 +561,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                                                     ? "bg-orange-100"
                                                                     : "hover:bg-orange-50"
                                                             }`}
-                                                            title="Mark as Sick"
+                                                            title="Tandai Sakit"
                                                         >
                                                             <Timer
                                                                 size="20"
@@ -585,7 +581,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                                                     ? "bg-blue-100"
                                                                     : "hover:bg-blue-50"
                                                             }`}
-                                                            title="Mark as Excused"
+                                                            title="Tandai Izin"
                                                         >
                                                             <ClipboardTick
                                                                 size="20"
@@ -605,7 +601,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                                                     ? "bg-red-100"
                                                                     : "hover:bg-red-50"
                                                             }`}
-                                                            title="Mark as Absent"
+                                                            title="Tandai Alpha"
                                                         >
                                                             <CloseCircle
                                                                 size="20"
@@ -629,8 +625,8 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                                 colSpan="5"
                                                 className="px-6 py-4 text-center text-gray-500"
                                             >
-                                                No students found with this
-                                                status.
+                                                Tidak ada siswa dengan status
+                                                ini
                                             </td>
                                         </tr>
                                     )}
@@ -646,11 +642,11 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
                     <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">
-                            Extend Attendance Session
+                            Perpanjang Sesi Absensi
                         </h3>
                         <p className="text-sm text-gray-500 mb-4">
-                            The current PIN ({session.pin}) will remain active
-                            for additional time.
+                            PIN saat ini ({session.pin}) akan tetap aktif untuk
+                            waktu tambahan.
                         </p>
 
                         <div className="mb-4">
@@ -658,7 +654,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 htmlFor="extendDuration"
                                 className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                                Extension Duration
+                                Durasi Perpanjangan
                             </label>
                             <select
                                 id="extendDuration"
@@ -668,10 +664,10 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 }
                                 className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                             >
-                                <option value="15">15 minutes</option>
-                                <option value="30">30 minutes</option>
-                                <option value="60">1 hour</option>
-                                <option value="120">2 hours</option>
+                                <option value="15">15 menit</option>
+                                <option value="30">30 menit</option>
+                                <option value="60">1 jam</option>
+                                <option value="120">2 jam</option>
                             </select>
                         </div>
 
@@ -680,16 +676,16 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                                 onClick={() => setShowExtendModal(false)}
                                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                             >
-                                Cancel
+                                Batal
                             </button>
                             <button
                                 onClick={handleExtendSession}
-                                disabled={extendProcessing}
+                                disabled={processing}
                                 className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
                             >
-                                {extendProcessing
-                                    ? "Processing..."
-                                    : "Extend Session"}
+                                {processing
+                                    ? "Memproses..."
+                                    : "Perpanjang Sesi"}
                             </button>
                         </div>
                     </div>

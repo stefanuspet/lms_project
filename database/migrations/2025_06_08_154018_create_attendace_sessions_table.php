@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('attendance_sessions', function (Blueprint $table) {
             $table->id();
             $table->string('pin', 6);
+            $table->string('title');
+            $table->text('description')->nullable();
             $table->date('date');
             $table->foreignId('semester_id')->constrained('semesters')->onDelete('cascade');
-            $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
-            $table->foreignId('subject_id')->constrained('subjects')->onDelete('cascade');
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });

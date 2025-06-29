@@ -17,10 +17,10 @@ class AttendanceSession extends Model
      */
     protected $fillable = [
         'pin',
+        'title',
+        'description',
         'date',
         'semester_id',
-        'class_id',
-        'subject_id',
         'expires_at',
     ];
 
@@ -40,22 +40,6 @@ class AttendanceSession extends Model
     public function semester()
     {
         return $this->belongsTo(Semester::class);
-    }
-
-    /**
-     * Get the class that owns the attendance session.
-     */
-    public function classroom()
-    {
-        return $this->belongsTo(Classroom::class, 'class_id');
-    }
-
-    /**
-     * Get the subject that owns the attendance session.
-     */
-    public function subject()
-    {
-        return $this->belongsTo(Subject::class);
     }
 
     /**
@@ -102,5 +86,15 @@ class AttendanceSession extends Model
     public function scopeExpired($query)
     {
         return $query->where('expires_at', '<=', now());
+    }
+
+    /**
+     * Get all students who have attended this session.
+     */
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'attendances', 'attendance_sessions_id', 'student_id')
+            ->withPivot('status', 'submitted_at')
+            ->withTimestamps();
     }
 }

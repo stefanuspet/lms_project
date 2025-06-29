@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Classroom;
 use App\Models\Student;
-use App\Models\Subject;
 use App\Models\Semester;
 use App\Models\AttendanceSession;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -29,7 +26,6 @@ class AttendanceController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100',
             'sort_by' => 'nullable|string|in:date,created_at',
             'sort_order' => 'nullable|string|in:asc,desc',
-            'filter_class' => 'nullable|integer',
             'filter_date_from' => 'nullable|date',
             'filter_date_to' => 'nullable|date|after_or_equal:filter_date_from',
             'filter_status' => 'nullable|string|in:active,expired',
@@ -40,31 +36,24 @@ class AttendanceController extends Controller
         $perPage = $request->input('per_page', 10);
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
-        $filterClass = $request->input('filter_class');
         $filterDateFrom = $request->input('filter_date_from');
         $filterDateTo = $request->input('filter_date_to');
         $filterStatus = $request->input('filter_status');
 
         // Query attendance sessions
-        $query = AttendanceSession::with(['semester', 'classroom', 'subject'])
+        $query = AttendanceSession::with(['semester'])
             ->withCount(['attendances']);
 
         // Apply search filters
         if (!empty($search)) {
-            $query->where('pin', 'like', "%{$search}%")
-                ->orWhereHas('classroom', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('subject', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                });
+            $query->where(function ($q) use ($search) {
+                $q->where('pin', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
         }
 
         // Apply additional filters
-        if ($filterClass) {
-            $query->where('class_id', $filterClass);
-        }
-
         if ($filterDateFrom) {
             $query->whereDate('date', '>=', $filterDateFrom);
         }
@@ -85,9 +74,6 @@ class AttendanceController extends Controller
         // Execute paginated query
         $sessions = $query->paginate($perPage)->withQueryString();
 
-        // Get classes for filter dropdown
-        $classes = Classroom::select('id', 'name')->orderBy('name')->get();
-
         // Format data for frontend
         $formattedSessions = $sessions->map(function ($session) {
             $isActive = Carbon::parse($session->expires_at)->isFuture();
@@ -99,9 +85,9 @@ class AttendanceController extends Controller
             return [
                 'id' => $session->id,
                 'pin' => $session->pin,
+                'title' => $session->title,
+                'description' => $session->description,
                 'date' => Carbon::parse($session->date)->format('d-m-Y'),
-                'class' => $session->classroom ? $session->classroom->name : '-',
-                'subject' => $session->subject ? $session->subject->name : '-',
                 'semester' => $session->semester ? $session->semester->name : '-',
                 'expires_at' => Carbon::parse($session->expires_at)->format('d-m-Y H:i'),
                 'is_active' => $isActive,
@@ -129,13 +115,9 @@ class AttendanceController extends Controller
                 'search' => $search,
                 'sort_by' => $sortBy,
                 'sort_order' => $sortOrder,
-                'filter_class' => $filterClass,
                 'filter_date_from' => $filterDateFrom,
                 'filter_date_to' => $filterDateTo,
                 'filter_status' => $filterStatus,
-            ],
-            'filterOptions' => [
-                'classes' => $classes,
             ],
         ]);
     }
@@ -149,39 +131,9 @@ class AttendanceController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
-        $classes = Classroom::orderBy('name')->get();
-
-        $subjects = [];
-        if (count($classes) > 0) {
-            $subjects = Subject::where('class_id', $classes[0]->id)
-                ->with('teacher')
-                ->get();
-        }
-
         return Inertia::render('Admin/Attendance/Create', [
             'semesters' => $semesters,
-            'classes' => $classes,
-            'subjects' => $subjects,
         ]);
-    }
-
-    /**
-     * Get subjects for a specific class.
-     */
-    public function getSubjectsForClass(Request $request, $classId)
-    {
-        $subjects = Subject::where('class_id', $classId)
-            ->with('teacher')
-            ->get()
-            ->map(function ($subject) {
-                return [
-                    'id' => $subject->id,
-                    'name' => $subject->name,
-                    'teacher' => $subject->teacher ? $subject->teacher->name : null,
-                ];
-            });
-
-        return response()->json($subjects);
     }
 
     /**
@@ -191,10 +143,10 @@ class AttendanceController extends Controller
     {
         // Validate input
         $validated = $request->validate([
+            'title' => 'required|string|max:100',
+            'description' => 'nullable|string|max:500',
             'date' => 'required|date',
             'semester_id' => 'required|exists:semesters,id',
-            'class_id' => 'required|exists:classes,id',
-            'subject_id' => 'required|exists:subjects,id',
             'duration' => 'required|integer|min:5|max:1440', // Durasi dalam menit
         ]);
 
@@ -204,19 +156,17 @@ class AttendanceController extends Controller
             // Generate random 6-digit PIN
             $pin = $this->generateUniquePin();
 
-            // Pastikan duration adalah integer
-            $duration = (int) $request->duration;
-
             // Calculate expiration time
+            $duration = (int) $request->duration;
             $expiresAt = now()->addMinutes($duration);
 
             // Create new attendance session
             $session = AttendanceSession::create([
                 'pin' => $pin,
+                'title' => $request->title,
+                'description' => $request->description,
                 'date' => $request->date,
                 'semester_id' => $request->semester_id,
-                'class_id' => $request->class_id,
-                'subject_id' => $request->subject_id,
                 'expires_at' => $expiresAt,
             ]);
 
@@ -242,13 +192,10 @@ class AttendanceController extends Controller
     public function show(AttendanceSession $session)
     {
         // Load relations
-        $session->load(['semester', 'classroom', 'subject.teacher']);
+        $session->load(['semester']);
 
-        // Get enrolled students
-        $enrolledStudents = Student::whereHas('classes', function ($query) use ($session) {
-            $query->where('class_id', $session->class_id)
-                ->where('semesters_id', $session->semester_id);
-        })->get();
+        // Get all students
+        $allStudents = Student::orderBy('name')->get();
 
         // Get attendances for this session
         $attendances = Attendance::where('attendance_sessions_id', $session->id)
@@ -256,7 +203,7 @@ class AttendanceController extends Controller
             ->get();
 
         // Prepare student attendance data
-        $studentAttendances = $enrolledStudents->map(function ($student) use ($attendances) {
+        $studentAttendances = $allStudents->map(function ($student) use ($attendances) {
             $attendance = $attendances->where('student_id', $student->id)->first();
 
             return [
@@ -272,28 +219,21 @@ class AttendanceController extends Controller
 
         // Count statistics
         $stats = [
-            'total' => $enrolledStudents->count(),
+            'total' => $allStudents->count(),
             'present' => $attendances->where('status', 'hadir')->count(),
             'sick' => $attendances->where('status', 'sakit')->count(),
             'excused' => $attendances->where('status', 'izin')->count(),
             'absent' => $attendances->where('status', 'alpha')->count(),
-            'not_submitted' => $enrolledStudents->count() - $attendances->count(),
+            'not_submitted' => $allStudents->count() - $attendances->count(),
         ];
 
         // Prepare data for frontend
         $formattedSession = [
             'id' => $session->id,
             'pin' => $session->pin,
+            'title' => $session->title,
+            'description' => $session->description,
             'date' => Carbon::parse($session->date)->format('d-m-Y'),
-            'classroom' => $session->classroom ? [
-                'id' => $session->classroom->id,
-                'name' => $session->classroom->name,
-            ] : null,
-            'subject' => $session->subject ? [
-                'id' => $session->subject->id,
-                'name' => $session->subject->name,
-                'teacher' => $session->subject->teacher ? $session->subject->teacher->name : null,
-            ] : null,
             'semester' => $session->semester ? [
                 'id' => $session->semester->id,
                 'name' => $session->semester->name,
@@ -443,7 +383,6 @@ class AttendanceController extends Controller
         // Validasi input
         $validated = $request->validate([
             'semester_id' => 'nullable|exists:semesters,id',
-            'class_id' => 'nullable|exists:classes,id',
             'student_id' => 'nullable|exists:students,id',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
@@ -451,26 +390,13 @@ class AttendanceController extends Controller
 
         // Get filter options
         $semesters = Semester::orderBy('start_date', 'desc')->get();
-        $classes = Classroom::orderBy('name')->get();
-        $students = [];
-
-        // If class is selected, get students from that class
-        if ($request->class_id && $request->semester_id) {
-            $students = Student::whereHas('classes', function ($query) use ($request) {
-                $query->where('class_id', $request->class_id)
-                    ->where('semesters_id', $request->semester_id);
-            })->orderBy('name')->get();
-        }
+        $students = Student::orderBy('name')->get();
 
         // Apply filters
-        $query = AttendanceSession::with(['classroom', 'subject', 'semester']);
+        $query = AttendanceSession::with(['semester']);
 
         if ($request->semester_id) {
             $query->where('semester_id', $request->semester_id);
-        }
-
-        if ($request->class_id) {
-            $query->where('class_id', $request->class_id);
         }
 
         if ($request->date_from) {
@@ -520,7 +446,8 @@ class AttendanceController extends Controller
 
                 $studentAttendances[] = [
                     'date' => $sessionDate,
-                    'subject' => $session->subject ? $session->subject->name : '-',
+                    'title' => $session->title,
+                    'description' => $session->description,
                     'status' => $status,
                     'submitted_at' => $attendance && $attendance->submitted_at ?
                         Carbon::parse($attendance->submitted_at)->format('d-m-Y H:i:s') : '-',
@@ -546,16 +473,11 @@ class AttendanceController extends Controller
                     'attendance_rate' => $attendanceRate,
                 ],
             ];
-        } else if ($request->class_id && $request->semester_id) {
-            // Report for a class
-            $enrolledStudents = Student::whereHas('classes', function ($query) use ($request) {
-                $query->where('class_id', $request->class_id)
-                    ->where('semesters_id', $request->semester_id);
-            })->orderBy('name')->get();
-
+        } else if ($request->semester_id) {
+            // Report for all students in a semester
             $studentStats = [];
 
-            foreach ($enrolledStudents as $student) {
+            foreach ($students as $student) {
                 $attendances = Attendance::whereIn('attendance_sessions_id', $sessions->pluck('id'))
                     ->where('student_id', $student->id)
                     ->get();
@@ -596,7 +518,6 @@ class AttendanceController extends Controller
             }
 
             $attendanceData = [
-                'class' => Classroom::find($request->class_id),
                 'semester' => Semester::find($request->semester_id),
                 'students' => $studentStats,
                 'session_count' => $sessions->count(),
@@ -606,14 +527,12 @@ class AttendanceController extends Controller
         return Inertia::render('Admin/Attendance/Reports', [
             'filters' => [
                 'semester_id' => $request->semester_id,
-                'class_id' => $request->class_id,
                 'student_id' => $request->student_id,
                 'date_from' => $request->date_from,
                 'date_to' => $request->date_to,
             ],
             'filterOptions' => [
                 'semesters' => $semesters,
-                'classes' => $classes,
                 'students' => $students,
             ],
             'attendanceData' => $attendanceData ?? [],

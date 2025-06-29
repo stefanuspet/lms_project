@@ -294,7 +294,7 @@ const StudentAttendanceIndex = ({
                             </div>
                         </div>
 
-                        {/* Attendance by Subject */}
+                        {/* Attendance by Session Title */}
                         <div className="bg-white rounded-xl shadow-sm">
                             <div className="px-6 py-4 border-b">
                                 <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -302,7 +302,7 @@ const StudentAttendanceIndex = ({
                                         size="20"
                                         className="text-blue-600"
                                     />
-                                    <span>Attendance by Subject</span>
+                                    <span>Attendance by Session</span>
                                 </h2>
                             </div>
                             <div className="px-6 py-4">
@@ -313,7 +313,7 @@ const StudentAttendanceIndex = ({
                                             <thead className="bg-gray-50">
                                                 <tr>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Subject
+                                                        Session Title
                                                     </th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         Sessions
@@ -331,12 +331,8 @@ const StudentAttendanceIndex = ({
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
                                                 {attendance_by_subject.map(
-                                                    (subject) => (
-                                                        <tr
-                                                            key={
-                                                                subject.subject_id
-                                                            }
-                                                        >
+                                                    (subject, index) => (
+                                                        <tr key={index}>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="text-sm font-medium text-gray-900">
                                                                     {
@@ -399,7 +395,7 @@ const StudentAttendanceIndex = ({
                                     <div className="text-center py-4 text-gray-500">
                                         <p>
                                             No attendance data available for
-                                            subjects.
+                                            sessions.
                                         </p>
                                     </div>
                                 )}
@@ -468,9 +464,16 @@ const StudentAttendanceIndex = ({
                                                                         attendance.status
                                                                     )}`}
                                                                 >
-                                                                    {
-                                                                        attendance.status
-                                                                    }
+                                                                    {attendance.status ===
+                                                                    "hadir"
+                                                                        ? "Present"
+                                                                        : attendance.status ===
+                                                                          "sakit"
+                                                                        ? "Sick"
+                                                                        : attendance.status ===
+                                                                          "izin"
+                                                                        ? "Excused"
+                                                                        : "Absent"}
                                                                 </span>
                                                             </div>
                                                             <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">

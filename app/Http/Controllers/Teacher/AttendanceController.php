@@ -3,365 +3,303 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Http\Controllers\Controller;
-use App\Models\Subject;
+use App\Models\AttendanceSession;
+use App\Models\Attendance;
 use App\Models\Teacher;
 use App\Models\Student;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class AttendanceController extends Controller
 {
     /**
-     * Display a listing of attendance by day.
+     * Display a listing of all attendance sessions.
      */
     public function index(Request $request)
     {
         try {
             // Validate request
             $validated = $request->validate([
-                'date' => 'nullable|date',
+                'search' => 'nullable|string|max:50',
                 'page' => 'nullable|integer|min:1',
                 'per_page' => 'nullable|integer|min:1|max:100',
+                'sort_by' => 'nullable|string|in:date,created_at',
+                'sort_order' => 'nullable|string|in:asc,desc',
+                'filter_date_from' => 'nullable|date',
+                'filter_date_to' => 'nullable|date|after_or_equal:filter_date_from',
+                'filter_status' => 'nullable|string|in:active,expired',
             ]);
 
-            // Get current teacher
-            $user = Auth::user();
-            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
-
-            // Get classes taught by this teacher
-            $classIds = Subject::where('teacher_id', $teacher->id)
-                ->distinct('class_id')
-                ->pluck('class_id');
-
-            // Set default date to today if not provided
-            $date = $request->input('date', now()->toDateString());
+            // Set default values if not provided
+            $search = $request->input('search', '');
             $perPage = $request->input('per_page', 10);
-            $page = $request->input('page', 1);
+            $sortBy = $request->input('sort_by', 'date');
+            $sortOrder = $request->input('sort_order', 'desc');
+            $filterDateFrom = $request->input('filter_date_from');
+            $filterDateTo = $request->input('filter_date_to');
+            $filterStatus = $request->input('filter_status');
 
-            // Get attendance records for the specified date and teacher's classes
-            $attendanceSessions = DB::table('attendance_sessions')
-                ->whereIn('class_id', $classIds)
-                ->whereDate('date', $date)
-                ->orderBy('class_id')
-                ->paginate($perPage)
-                ->withQueryString();
+            // Get all attendance sessions (no filters for teacher role)
+            $query = AttendanceSession::with(['semester'])
+                ->withCount(['attendances']);
+
+            // Apply search filters
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('pin', 'like', "%{$search}%")
+                        ->orWhere('title', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            // Apply additional filters
+            if ($filterDateFrom) {
+                $query->whereDate('date', '>=', $filterDateFrom);
+            }
+
+            if ($filterDateTo) {
+                $query->whereDate('date', '<=', $filterDateTo);
+            }
+
+            if ($filterStatus === 'active') {
+                $query->where('expires_at', '>', now());
+            } elseif ($filterStatus === 'expired') {
+                $query->where('expires_at', '<=', now());
+            }
+
+            // Apply sorting
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Execute paginated query
+            $sessions = $query->paginate($perPage)->withQueryString();
 
             // Format data for frontend
-            $formattedSessions = collect($attendanceSessions->items())->map(function ($session) {
-                $totalStudents = DB::table('semesters_students')
-                    ->where('class_id', $session->class_id)
-                    ->distinct('students_id')
-                    ->count('students_id');
-
-                $presentCount = DB::table('attendances')
-                    ->where('attendance_sessions_id', $session->id)
-                    ->where('status', 'hadir')
-                    ->count();
-
-                $absentCount = DB::table('attendances')
-                    ->where('attendance_sessions_id', $session->id)
-                    ->where('status', 'alpha')
-                    ->count();
-
-                $excusedCount = DB::table('attendances')
-                    ->where('attendance_sessions_id', $session->id)
-                    ->whereIn('status', ['izin', 'sakit'])
-                    ->count();
-
-                $className = DB::table('classes')
-                    ->where('id', $session->class_id)
-                    ->value('name');
-
-                $subjectName = DB::table('subjects')
-                    ->where('id', $session->subject_id)
-                    ->value('name');
+            $formattedSessions = $sessions->map(function ($session) {
+                $isActive = Carbon::parse($session->expires_at)->isFuture();
+                $presentCount = $session->attendances()->where('status', 'hadir')->count();
+                $absentCount = $session->attendances()->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
+                $totalStudents = $presentCount + $absentCount;
+                $attendanceRate = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100, 1) : 0;
 
                 return [
                     'id' => $session->id,
-                    'date' => date('d M Y', strtotime($session->date)),
                     'pin' => $session->pin,
-                    'class_id' => $session->class_id,
-                    'class_name' => $className,
-                    'subject_id' => $session->subject_id,
-                    'subject_name' => $subjectName,
-                    'is_expired' => $session->expires_at && now() > $session->expires_at,
-                    'expires_at' => $session->expires_at ? date('d M Y, H:i', strtotime($session->expires_at)) : null,
-                    'total_students' => $totalStudents,
+                    'title' => $session->title,
+                    'description' => $session->description,
+                    'date' => Carbon::parse($session->date)->format('d-m-Y'),
+                    'semester' => $session->semester ? $session->semester->name : '-',
+                    'expires_at' => Carbon::parse($session->expires_at)->format('d-m-Y H:i'),
+                    'is_active' => $isActive,
+                    'status' => $isActive ? 'Active' : 'Expired',
+                    'attendance_count' => $session->attendances_count,
                     'present_count' => $presentCount,
                     'absent_count' => $absentCount,
-                    'excused_count' => $excusedCount,
-                    'attendance_rate' => $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100) : 0,
+                    'attendance_rate' => $attendanceRate,
+                    'created_at' => Carbon::parse($session->created_at)->format('d-m-Y H:i'),
                 ];
             });
 
-            // Get daily summary
-            $dailySummary = [
-                'total_students' => 0,
-                'present_count' => 0,
-                'absent_count' => 0,
-                'excused_count' => 0,
-                'classes_with_sessions' => 0,
-            ];
-
-            foreach ($formattedSessions as $session) {
-                $dailySummary['total_students'] += $session['total_students'];
-                $dailySummary['present_count'] += $session['present_count'];
-                $dailySummary['absent_count'] += $session['absent_count'];
-                $dailySummary['excused_count'] += $session['excused_count'];
-                $dailySummary['classes_with_sessions']++;
-            }
-
-            $dailySummary['attendance_rate'] = $dailySummary['total_students'] > 0
-                ? round(($dailySummary['present_count'] / $dailySummary['total_students']) * 100)
-                : 0;
-
-            // Get active sessions for today
-            $activeSessions = DB::table('attendance_sessions')
-                ->join('classes', 'attendance_sessions.class_id', '=', 'classes.id')
-                ->join('subjects', 'attendance_sessions.subject_id', '=', 'subjects.id')
-                ->whereIn('attendance_sessions.class_id', $classIds)
-                ->whereDate('date', now()->toDateString())
-                ->where(function ($query) {
-                    $query->whereNull('expires_at')
-                        ->orWhere('expires_at', '>', now());
-                })
-                ->select(
-                    'attendance_sessions.id',
-                    'attendance_sessions.pin',
-                    'attendance_sessions.expires_at',
-                    'classes.name as class_name',
-                    'subjects.name as subject_name'
-                )
-                ->get();
-
+            // Return view with data
             return Inertia::render('Teacher/Attendance/Index', [
                 'sessions' => $formattedSessions,
-                'daily_summary' => $dailySummary,
-                'active_sessions' => $activeSessions,
-                'selected_date' => $date,
                 'pagination' => [
-                    'total' => $attendanceSessions->total(),
-                    'per_page' => $attendanceSessions->perPage(),
-                    'current_page' => $attendanceSessions->currentPage(),
-                    'last_page' => $attendanceSessions->lastPage(),
-                    'from' => $attendanceSessions->firstItem(),
-                    'to' => $attendanceSessions->lastItem(),
+                    'total' => $sessions->total(),
+                    'per_page' => $sessions->perPage(),
+                    'current_page' => $sessions->currentPage(),
+                    'last_page' => $sessions->lastPage(),
+                    'from' => $sessions->firstItem(),
+                    'to' => $sessions->lastItem(),
                 ],
+                'filters' => [
+                    'search' => $search,
+                    'sort_by' => $sortBy,
+                    'sort_order' => $sortOrder,
+                    'filter_date_from' => $filterDateFrom,
+                    'filter_date_to' => $filterDateTo,
+                    'filter_status' => $filterStatus,
+                ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Error in teacher attendance index: ' . $e->getMessage());
             return redirect()->back()->withErrors([
-                'error' => 'Failed to load attendance records: ' . $e->getMessage()
+                'error' => 'Failed to load attendance sessions: ' . $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Display the specified attendance session (daily view).
+     * Display daily view of attendances.
      */
     public function dailyView(Request $request)
     {
         try {
             // Validate request
             $validated = $request->validate([
-                'date' => 'required|date',
-                'class_id' => 'nullable|exists:classes,id',
+                'date' => 'nullable|date',
+                'session_id' => 'nullable|exists:attendance_sessions,id',
             ]);
 
-            // Get current teacher
-            $user = Auth::user();
-            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
+            // Get today's date if not provided
+            $date = $request->input('date', Carbon::today()->format('Y-m-d'));
 
-            // Get classes taught by this teacher
-            $classIds = Subject::where('teacher_id', $teacher->id)
-                ->distinct('class_id')
-                ->pluck('class_id');
+            // Get sessions for the date
+            $sessionsQuery = AttendanceSession::whereDate('date', $date)
+                ->with(['semester'])
+                ->withCount(['attendances']);
 
-            // Apply class filter if provided
-            if ($request->has('class_id')) {
-                // Verify the teacher teaches this class
-                if (!$classIds->contains($request->class_id)) {
-                    return redirect()->route('teacher.attendance.index')
-                        ->with('error', 'You do not have permission to view attendance for this class.');
-                }
-                $classIds = [$request->class_id];
+            // Get selected session or first session for the day
+            $selectedSessionId = $request->input('session_id');
+            $sessions = $sessionsQuery->get();
+
+            if ($selectedSessionId) {
+                $selectedSession = $sessions->firstWhere('id', $selectedSessionId);
+            } else {
+                $selectedSession = $sessions->first();
+                $selectedSessionId = $selectedSession?->id;
             }
 
-            // Get date
-            $date = $request->date;
+            // Get attendance data for the selected session
+            $attendanceData = null;
+            $students = collect([]);
+            $stats = [
+                'total' => 0,
+                'present' => 0,
+                'sick' => 0,
+                'excused' => 0,
+                'absent' => 0,
+                'not_submitted' => 0,
+            ];
 
-            // Get attendance sessions for the date
-            $attendanceSessions = DB::table('attendance_sessions')
-                ->whereIn('class_id', $classIds)
-                ->whereDate('date', $date)
-                ->get();
+            if ($selectedSession) {
+                // Get all students
+                $allStudents = Student::orderBy('name')->get();
 
-            $sessionIds = $attendanceSessions->pluck('id');
-
-            // Get class information
-            $classes = DB::table('classes')
-                ->whereIn('id', $classIds)
-                ->get(['id', 'name']);
-
-            // Prepare data structure
-            $attendanceData = [];
-            foreach ($classes as $class) {
-                $sessions = $attendanceSessions->where('class_id', $class->id);
-
-                if ($sessions->isEmpty()) {
-                    continue; // Skip classes with no sessions
-                }
-
-                $sessionIds = $sessions->pluck('id');
-
-                // Get students in the class
-                $students = DB::table('students')
-                    ->join('semesters_students', 'students.id', '=', 'semesters_students.students_id')
-                    ->where('semesters_students.class_id', $class->id)
-                    ->distinct('students.id')
-                    ->select('students.id', 'students.name', 'students.nisn', 'students.gender')
+                // Get attendances for this session
+                $attendances = Attendance::where('attendance_sessions_id', $selectedSession->id)
+                    ->with('student')
                     ->get();
 
-                // Get attendance records
-                $attendanceRecords = DB::table('attendances')
-                    ->whereIn('attendance_sessions_id', $sessionIds)
-                    ->get();
+                // Prepare student attendance data
+                $students = $allStudents->map(function ($student) use ($attendances) {
+                    $attendance = $attendances->where('student_id', $student->id)->first();
 
-                // Prepare student data with attendance status
-                $studentData = [];
-                foreach ($students as $student) {
-                    $record = $attendanceRecords->where('student_id', $student->id)->first();
-
-                    $studentData[] = [
+                    return [
                         'id' => $student->id,
                         'name' => $student->name,
                         'nisn' => $student->nisn,
-                        'gender' => $student->gender,
-                        'status' => $record ? $record->status : 'alpha',
-                        'submitted_at' => $record && $record->submitted_at ? date('d M Y, H:i', strtotime($record->submitted_at)) : null,
+                        'status' => $attendance ? $attendance->status : null,
+                        'submitted_at' => $attendance && $attendance->submitted_at ?
+                            Carbon::parse($attendance->submitted_at)->format('d-m-Y H:i:s') : null,
+                        'attendance_id' => $attendance ? $attendance->id : null,
                     ];
-                }
+                });
 
-                // Calculate statistics
-                $totalStudents = count($studentData);
-                $presentCount = collect($studentData)->where('status', 'hadir')->count();
-                $absentCount = collect($studentData)->where('status', 'alpha')->count();
-                $excusedCount = collect($studentData)->whereIn('status', ['izin', 'sakit'])->count();
+                // Count statistics
+                $stats = [
+                    'total' => $allStudents->count(),
+                    'present' => $attendances->where('status', 'hadir')->count(),
+                    'sick' => $attendances->where('status', 'sakit')->count(),
+                    'excused' => $attendances->where('status', 'izin')->count(),
+                    'absent' => $attendances->where('status', 'alpha')->count(),
+                    'not_submitted' => $allStudents->count() - $attendances->count(),
+                ];
 
-                $attendanceData[] = [
-                    'class_id' => $class->id,
-                    'class_name' => $class->name,
-                    'session_id' => $sessions->first()->id,
-                    'total_students' => $totalStudents,
-                    'present_count' => $presentCount,
-                    'absent_count' => $absentCount,
-                    'excused_count' => $excusedCount,
-                    'attendance_rate' => $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100) : 0,
-                    'students' => $studentData,
+                // Format session data
+                $attendanceData = [
+                    'id' => $selectedSession->id,
+                    'pin' => $selectedSession->pin,
+                    'title' => $selectedSession->title,
+                    'description' => $selectedSession->description,
+                    'date' => Carbon::parse($selectedSession->date)->format('d-m-Y'),
+                    'semester' => $selectedSession->semester ? $selectedSession->semester->name : '-',
+                    'expires_at' => Carbon::parse($selectedSession->expires_at)->format('d-m-Y H:i:s'),
+                    'is_active' => Carbon::parse($selectedSession->expires_at)->isFuture(),
                 ];
             }
 
-            // Get overall statistics
-            $overallStats = [
-                'total_students' => collect($attendanceData)->sum('total_students'),
-                'present_count' => collect($attendanceData)->sum('present_count'),
-                'absent_count' => collect($attendanceData)->sum('absent_count'),
-                'excused_count' => collect($attendanceData)->sum('excused_count'),
-                'classes_count' => count($attendanceData),
-            ];
+            // Format sessions for dropdown
+            $formattedSessions = $sessions->map(function ($session) {
+                return [
+                    'id' => $session->id,
+                    'title' => $session->title,
+                    'pin' => $session->pin,
+                ];
+            });
 
-            $overallStats['attendance_rate'] = $overallStats['total_students'] > 0
-                ? round(($overallStats['present_count'] / $overallStats['total_students']) * 100)
-                : 0;
-
-            return Inertia::render('Teacher/Attendance/DailyView', [
-                'attendance_data' => $attendanceData,
-                'overall_stats' => $overallStats,
-                'selected_date' => $date,
-                'formatted_date' => date('d M Y', strtotime($date)),
+            // Return view with data
+            return Inertia::render('Teacher/Attendance/Daily', [
+                'date' => $date,
+                'sessions' => $formattedSessions,
+                'selectedSessionId' => $selectedSessionId,
+                'attendanceData' => $attendanceData,
+                'students' => $students,
+                'stats' => $stats,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error in teacher attendance daily view: ' . $e->getMessage());
             return redirect()->back()->withErrors([
-                'error' => 'Failed to load daily attendance view: ' . $e->getMessage()
+                'error' => 'Failed to load daily attendance: ' . $e->getMessage()
             ]);
         }
     }
 
     /**
-     * Display active sessions with PIN codes.
+     * Display active attendance sessions.
      */
-    public function activeSessions()
+    public function activeSessions(Request $request)
     {
         try {
-            // Get current teacher
-            $user = Auth::user();
-            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
-
-            // Get classes taught by this teacher
-            $classIds = Subject::where('teacher_id', $teacher->id)
-                ->distinct('class_id')
-                ->pluck('class_id');
-
             // Get active sessions
-            $activeSessions = DB::table('attendance_sessions')
-                ->join('classes', 'attendance_sessions.class_id', '=', 'classes.id')
-                ->join('subjects', 'attendance_sessions.subject_id', '=', 'subjects.id')
-                ->whereIn('attendance_sessions.class_id', $classIds)
-                ->whereDate('date', now()->toDateString())
-                ->where(function ($query) {
-                    $query->whereNull('expires_at')
-                        ->orWhere('expires_at', '>', now());
-                })
-                ->select(
-                    'attendance_sessions.id',
-                    'attendance_sessions.pin',
-                    'attendance_sessions.expires_at',
-                    'attendance_sessions.date',
-                    'classes.id as class_id',
-                    'classes.name as class_name',
-                    'subjects.id as subject_id',
-                    'subjects.name as subject_name'
-                )
+            $activeSessions = AttendanceSession::where('expires_at', '>', now())
+                ->with(['semester'])
+                ->withCount(['attendances'])
+                ->orderBy('expires_at')
                 ->get();
 
-            // Format data
+            // Format data for frontend
             $formattedSessions = $activeSessions->map(function ($session) {
-                $totalStudents = DB::table('semesters_students')
-                    ->where('class_id', $session->class_id)
-                    ->distinct('students_id')
-                    ->count('students_id');
+                $presentCount = $session->attendances()->where('status', 'hadir')->count();
+                $absentCount = $session->attendances()->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
+                $totalStudents = $presentCount + $absentCount;
+                $attendanceRate = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100, 1) : 0;
 
-                $presentCount = DB::table('attendances')
-                    ->where('attendance_sessions_id', $session->id)
-                    ->where('status', 'hadir')
-                    ->count();
+                // Calculate remaining time
+                $expiresAt = Carbon::parse($session->expires_at);
+                $now = Carbon::now();
+                $diffInMinutes = $now->diffInMinutes($expiresAt, false);
+
+                $remainingTime = '';
+                if ($diffInMinutes > 60) {
+                    $hours = floor($diffInMinutes / 60);
+                    $minutes = $diffInMinutes % 60;
+                    $remainingTime = "{$hours}h {$minutes}m";
+                } else {
+                    $remainingTime = "{$diffInMinutes}m";
+                }
 
                 return [
                     'id' => $session->id,
                     'pin' => $session->pin,
-                    'date' => date('d M Y', strtotime($session->date)),
-                    'expires_at' => $session->expires_at ? date('d M Y, H:i', strtotime($session->expires_at)) : null,
-                    'time_remaining' => $session->expires_at ? now()->diffInMinutes($session->expires_at, false) : null,
-                    'class_id' => $session->class_id,
-                    'class_name' => $session->class_name,
-                    'subject_id' => $session->subject_id,
-                    'subject_name' => $session->subject_name,
-                    'total_students' => $totalStudents,
+                    'title' => $session->title,
+                    'description' => $session->description,
+                    'date' => Carbon::parse($session->date)->format('d-m-Y'),
+                    'semester' => $session->semester ? $session->semester->name : '-',
+                    'expires_at' => Carbon::parse($session->expires_at)->format('d-m-Y H:i'),
+                    'remaining_time' => $remainingTime,
+                    'attendance_count' => $session->attendances_count,
                     'present_count' => $presentCount,
-                    'present_rate' => $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100) : 0,
+                    'absent_count' => $absentCount,
+                    'attendance_rate' => $attendanceRate,
                 ];
             });
 
+            // Return view with data
             return Inertia::render('Teacher/Attendance/ActiveSessions', [
-                'active_sessions' => $formattedSessions,
-                'today_date' => now()->format('d M Y'),
+                'activeSessions' => $formattedSessions,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error in teacher active sessions: ' . $e->getMessage());
             return redirect()->back()->withErrors([
                 'error' => 'Failed to load active sessions: ' . $e->getMessage()
             ]);

@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\AttendanceSession;
+use App\Models\Attendance;
+use App\Models\Semester;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +22,7 @@ class AttendanceController extends Controller
             $user = Auth::user();
             $student = Student::where('user_id', $user->id)->firstOrFail();
 
-            // Get current semester and class
+            // Get current semester for the student
             $currentSemesterStudent = DB::table('semesters_students')
                 ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
                 ->where('semesters_students.students_id', $student->id)
@@ -34,33 +37,21 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            $currentClassId = $currentSemesterStudent->class_id;
             $currentSemesterId = $currentSemesterStudent->semesters_id;
 
-            // Get subjects for this student's class
-            $subjects = DB::table('subjects')
-                ->where('class_id', $currentClassId)
-                ->get();
-
-            $subjectIds = $subjects->pluck('id')->toArray();
-
-            // Get attendance sessions for this semester and class
-            $attendanceSessions = DB::table('attendance_sessions')
-                ->where('semester_id', $currentSemesterId)
-                ->where('class_id', $currentClassId)
+            // Get attendance sessions for this semester
+            $attendanceSessions = AttendanceSession::where('semester_id', $currentSemesterId)
                 ->count();
 
             // Get attendance records
             $attendanceRecords = DB::table('attendances')
                 ->join('attendance_sessions', 'attendances.attendance_sessions_id', '=', 'attendance_sessions.id')
-                ->join('subjects', 'attendance_sessions.subject_id', '=', 'subjects.id')
                 ->where('attendances.student_id', $student->id)
                 ->where('attendance_sessions.semester_id', $currentSemesterId)
                 ->select(
                     'attendances.*',
                     'attendance_sessions.date as session_date',
-                    'attendance_sessions.subject_id',
-                    'subjects.name as subject_name'
+                    'attendance_sessions.title as session_title'
                 )
                 ->orderBy('attendance_sessions.date', 'desc')
                 ->get();
@@ -82,29 +73,22 @@ class AttendanceController extends Controller
                     : 'N/A'
             ];
 
-            // Get attendance by subject
+            // Group sessions by title for attendance by subject/category analysis
+            $sessionsByTitle = $attendanceRecords->groupBy('session_title');
             $attendanceBySubject = [];
 
-            foreach ($subjects as $subject) {
-                $subjectSessions = DB::table('attendance_sessions')
-                    ->where('semester_id', $currentSemesterId)
-                    ->where('class_id', $currentClassId)
-                    ->where('subject_id', $subject->id)
-                    ->count();
-
-                $subjectPresent = $attendanceRecords
-                    ->where('subject_id', $subject->id)
-                    ->where('status', 'hadir')
-                    ->count();
+            foreach ($sessionsByTitle as $title => $records) {
+                $sessionCount = $records->count();
+                $presentCount = $records->where('status', 'hadir')->count();
 
                 $attendanceBySubject[] = [
-                    'subject_id' => $subject->id,
-                    'subject_name' => $subject->name,
-                    'total_sessions' => $subjectSessions,
-                    'present' => $subjectPresent,
-                    'absent' => $subjectSessions - $subjectPresent,
-                    'attendance_rate' => $subjectSessions > 0
-                        ? round(($subjectPresent / $subjectSessions) * 100) . '%'
+                    'subject_id' => null, // No subject_id in new schema
+                    'subject_name' => $title,
+                    'total_sessions' => $sessionCount,
+                    'present' => $presentCount,
+                    'absent' => $sessionCount - $presentCount,
+                    'attendance_rate' => $sessionCount > 0
+                        ? round(($presentCount / $sessionCount) * 100) . '%'
                         : 'N/A'
                 ];
             }
@@ -114,7 +98,8 @@ class AttendanceController extends Controller
                 return [
                     'id' => $record->id,
                     'date' => date('d M Y', strtotime($record->session_date)),
-                    'subject_name' => $record->subject_name,
+                    'subject_name' => $record->session_title, // Using session title instead of subject
+                    'session_title' => $record->session_title,
                     'status' => $record->status,
                     'submitted_at' => $record->submitted_at
                         ? date('d M Y H:i', strtotime($record->submitted_at))
@@ -145,7 +130,7 @@ class AttendanceController extends Controller
 
             // Validate input
             $validated = $request->validate([
-                'subject_id' => 'nullable|integer',
+                'title' => 'nullable|string',
                 'status' => 'nullable|string|in:all,hadir,sakit,izin,alpha',
                 'month' => 'nullable|date_format:Y-m',
                 'page' => 'nullable|integer|min:1',
@@ -153,13 +138,13 @@ class AttendanceController extends Controller
             ]);
 
             // Set default values
-            $subjectId = $request->input('subject_id');
+            $title = $request->input('title');
             $status = $request->input('status', 'all');
             $month = $request->input('month');
             $perPage = $request->input('per_page', 20);
             $page = $request->input('page', 1);
 
-            // Get current semester and class
+            // Get current semester
             $currentSemesterStudent = DB::table('semesters_students')
                 ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
                 ->where('semesters_students.students_id', $student->id)
@@ -176,42 +161,42 @@ class AttendanceController extends Controller
                         'last_page' => 1,
                     ],
                     'filters' => [
-                        'subject_id' => $subjectId,
+                        'title' => $title,
                         'status' => $status,
                         'month' => $month,
                     ],
                     'subjects' => [],
+                    'months' => [],
                 ]);
             }
 
-            $currentClassId = $currentSemesterStudent->class_id;
-
-            // Get subjects for this student's class
-            $subjects = DB::table('subjects')
-                ->where('class_id', $currentClassId)
+            // Get all unique session titles for this student
+            $sessionTitles = DB::table('attendances')
+                ->join('attendance_sessions', 'attendances.attendance_sessions_id', '=', 'attendance_sessions.id')
+                ->where('attendances.student_id', $student->id)
+                ->select('attendance_sessions.title')
+                ->distinct()
                 ->get()
-                ->map(function ($subject) {
+                ->map(function ($session) {
                     return [
-                        'id' => $subject->id,
-                        'name' => $subject->name,
+                        'id' => $session->title, // Using title as ID since we don't have subject_id
+                        'name' => $session->title,
                     ];
                 });
 
             // Base query for attendance records
             $query = DB::table('attendances')
                 ->join('attendance_sessions', 'attendances.attendance_sessions_id', '=', 'attendance_sessions.id')
-                ->join('subjects', 'attendance_sessions.subject_id', '=', 'subjects.id')
                 ->where('attendances.student_id', $student->id)
                 ->select(
                     'attendances.*',
                     'attendance_sessions.date as session_date',
-                    'attendance_sessions.subject_id',
-                    'subjects.name as subject_name'
+                    'attendance_sessions.title as session_title'
                 );
 
             // Apply filters
-            if ($subjectId) {
-                $query->where('attendance_sessions.subject_id', $subjectId);
+            if ($title) {
+                $query->where('attendance_sessions.title', $title);
             }
 
             if ($status !== 'all') {
@@ -233,8 +218,9 @@ class AttendanceController extends Controller
                 return [
                     'id' => $attendance->id,
                     'date' => date('d M Y', strtotime($attendance->session_date)),
-                    'subject_name' => $attendance->subject_name,
-                    'subject_id' => $attendance->subject_id,
+                    'subject_name' => $attendance->session_title, // Using session title instead of subject name
+                    'subject_id' => null, // No subject ID in new schema
+                    'session_title' => $attendance->session_title,
                     'status' => $attendance->status,
                     'submitted_at' => $attendance->submitted_at
                         ? date('d M Y H:i', strtotime($attendance->submitted_at))
@@ -269,11 +255,11 @@ class AttendanceController extends Controller
                     'to' => $attendances->lastItem(),
                 ],
                 'filters' => [
-                    'subject_id' => $subjectId,
+                    'title' => $title, // Changed from subject_id to title
                     'status' => $status,
                     'month' => $month,
                 ],
-                'subjects' => $subjects,
+                'subjects' => $sessionTitles, // Using session titles instead of subjects
                 'months' => $formattedMonths,
             ]);
         } catch (\Exception $e) {
@@ -282,6 +268,125 @@ class AttendanceController extends Controller
             return redirect()->back()->withErrors([
                 'error' => 'Failed to load attendance history: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    public function submitAttendance(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'session_id' => 'required|exists:attendance_sessions,id',
+                'pin' => 'required|string|size:6',
+            ]);
+
+            $user = Auth::user();
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+            $session = AttendanceSession::findOrFail($validated['session_id']);
+
+            // Check if session is active
+            if (!$session->isActive()) {
+                return redirect()->back()->withErrors([
+                    'error' => 'This attendance session has expired.'
+                ]);
+            }
+
+            // Verify PIN
+            if ($session->pin !== $validated['pin']) {
+                return redirect()->back()->withErrors([
+                    'error' => 'Invalid PIN code.'
+                ]);
+            }
+
+            // Check if student already submitted attendance
+            $existingAttendance = Attendance::where('attendance_sessions_id', $session->id)
+                ->where('student_id', $student->id)
+                ->first();
+
+            if ($existingAttendance) {
+                return redirect()->back()->withErrors([
+                    'error' => 'You have already submitted attendance for this session.'
+                ]);
+            }
+
+            // Create new attendance record
+            Attendance::create([
+                'attendance_sessions_id' => $session->id,
+                'student_id' => $student->id,
+                'status' => 'hadir',
+                'submitted_at' => now(),
+            ]);
+
+            // Log activity
+            if (class_exists('\App\Models\ActivityLog')) {
+                \App\Models\ActivityLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'submit_attendance',
+                    'description' => "Submitted attendance for session {$session->title}",
+                    'ip_address' => $request->ip(),
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Attendance submitted successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error in student attendance submission: ' . $e->getMessage());
+
+            return redirect()->back()->withErrors([
+                'error' => 'Failed to submit attendance: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function activeSession()
+    {
+        try {
+            $user = Auth::user();
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+
+            // Get current semester for the student
+            $currentSemesterStudent = DB::table('semesters_students')
+                ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
+                ->where('semesters_students.students_id', $student->id)
+                ->orderBy('semesters.end_date', 'desc')
+                ->first();
+
+            if (!$currentSemesterStudent) {
+                return response()->json([
+                    'active_sessions' => []
+                ]);
+            }
+
+            $currentSemesterId = $currentSemesterStudent->semesters_id;
+
+            // Get active sessions for current semester
+            $activeSessions = AttendanceSession::where('semester_id', $currentSemesterId)
+                ->where('expires_at', '>', now())
+                ->get()
+                ->map(function ($session) use ($student) {
+                    // Check if student already submitted attendance
+                    $hasSubmitted = Attendance::where('attendance_sessions_id', $session->id)
+                        ->where('student_id', $student->id)
+                        ->exists();
+
+                    return [
+                        'id' => $session->id,
+                        'title' => $session->title,
+                        'description' => $session->description,
+                        'date' => $session->date->format('d M Y'),
+                        'subject_name' => $session->title, // Using session title since we don't have subject
+                        'remaining_time' => $session->remaining_time,
+                        'has_submitted' => $hasSubmitted,
+                    ];
+                });
+
+            return response()->json([
+                'active_sessions' => $activeSessions
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in getting active attendance sessions: ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'Failed to get active sessions: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

@@ -21,9 +21,7 @@ const StudentAttendanceHistory = ({
     subjects,
     months,
 }) => {
-    const [subjectFilter, setSubjectFilter] = useState(
-        filters?.subject_id || ""
-    );
+    const [titleFilter, setTitleFilter] = useState(filters?.title || "");
     const [statusFilter, setStatusFilter] = useState(filters?.status || "all");
     const [monthFilter, setMonthFilter] = useState(filters?.month || "");
     const [showFilters, setShowFilters] = useState(false);
@@ -68,7 +66,7 @@ const StudentAttendanceHistory = ({
         router.get(
             route("student.attendance.history"),
             {
-                subject_id: subjectFilter || null,
+                title: titleFilter || null,
                 status: statusFilter,
                 month: monthFilter || null,
                 page: 1, // Reset to page 1 when filtering
@@ -87,7 +85,7 @@ const StudentAttendanceHistory = ({
             route("student.attendance.history"),
             {
                 page: page,
-                subject_id: subjectFilter || null,
+                title: titleFilter || null,
                 status: statusFilter,
                 month: monthFilter || null,
             },
@@ -128,6 +126,22 @@ const StudentAttendanceHistory = ({
         }
     }, [pagination]);
 
+    // Translate status to readable text
+    const getStatusText = (status) => {
+        switch (status) {
+            case "hadir":
+                return "Present";
+            case "sakit":
+                return "Sick";
+            case "izin":
+                return "Excused";
+            case "alpha":
+                return "Absent";
+            default:
+                return status;
+        }
+    };
+
     return (
         <StudentLayout title="Attendance History">
             <div className="py-6 w-full">
@@ -165,19 +179,19 @@ const StudentAttendanceHistory = ({
                             <div className="flex flex-wrap items-center gap-4">
                                 <div className="w-64">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Filter by Subject
+                                        Filter by Session Title
                                     </label>
                                     <select
-                                        value={subjectFilter}
+                                        value={titleFilter}
                                         onChange={(e) =>
-                                            setSubjectFilter(e.target.value)
+                                            setTitleFilter(e.target.value)
                                         }
                                         className="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <option value="">All Subjects</option>
-                                        {subjects.map((subject) => (
+                                        <option value="">All Sessions</option>
+                                        {subjects.map((subject, index) => (
                                             <option
-                                                key={subject.id}
+                                                key={index}
                                                 value={subject.id}
                                             >
                                                 {subject.name}
@@ -239,7 +253,7 @@ const StudentAttendanceHistory = ({
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            setSubjectFilter("");
+                                            setTitleFilter("");
                                             setStatusFilter("all");
                                             setMonthFilter("");
 
@@ -279,7 +293,7 @@ const StudentAttendanceHistory = ({
                                                 Date
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Subject
+                                                Session Title
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Status
@@ -320,16 +334,9 @@ const StudentAttendanceHistory = ({
                                                                 attendance.status
                                                             )}`}
                                                         >
-                                                            {attendance.status ===
-                                                            "hadir"
-                                                                ? "Present"
-                                                                : attendance.status ===
-                                                                  "sakit"
-                                                                ? "Sick"
-                                                                : attendance.status ===
-                                                                  "izin"
-                                                                ? "Excused"
-                                                                : "Absent"}
+                                                            {getStatusText(
+                                                                attendance.status
+                                                            )}
                                                         </span>
                                                     </div>
                                                 </td>
@@ -365,7 +372,7 @@ const StudentAttendanceHistory = ({
                                     No Attendance Records Found
                                 </h3>
                                 <p className="text-gray-500">
-                                    {subjectFilter ||
+                                    {titleFilter ||
                                     statusFilter !== "all" ||
                                     monthFilter
                                         ? "Try adjusting your filters to see more results"

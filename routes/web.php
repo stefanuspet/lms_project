@@ -110,7 +110,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
         Route::post('/{session}/update-attendance', [AttendanceController::class, 'updateAttendance'])->name('update-attendance');
         Route::post('/{session}/extend', [AttendanceController::class, 'extendSession'])->name('extend-session');
         Route::post('/{session}/close', [AttendanceController::class, 'closeSession'])->name('close-session');
-        Route::get('/class/{classId}/subjects', [AttendanceController::class, 'getSubjectsForClass'])->name('get-subjects-for-class');
+        // Hapus route get-subjects-for-class karena sudah tidak digunakan
     });
 
     // Attendance routes for students
