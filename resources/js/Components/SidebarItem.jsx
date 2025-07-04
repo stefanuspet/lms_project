@@ -1,16 +1,26 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 
-const SidebarItem = ({ icon: Icon, label, active = false, path }) => {
+const SidebarItem = ({ icon: Icon, label, active, path, onClick }) => {
     return (
         <Link
             href={path}
-            className={`w-full mt-2 ${
-                active ? "bg-[#C3EBFA]" : "hover:bg-[#C3EBFA]"
-            } cursor-pointer py-3 px-5 rounded-xl flex items-center gap-x-4`}
+            onClick={onClick}
+            className={`
+                flex items-center py-3 px-4 my-1 rounded-lg transition-colors
+                ${
+                    active
+                        ? "bg-sky-100 text-sky-700"
+                        : "text-gray-600 hover:bg-gray-100"
+                }
+            `}
         >
-            <Icon size="20" color="#242424" />
-            <span className="font-medium">{label}</span>
+            <Icon
+                variant={active ? "Bold" : "Linear"}
+                size="20"
+                className={active ? "text-sky-700" : ""}
+            />
+            <span className="ml-3 font-medium text-sm">{label}</span>
         </Link>
     );
 };

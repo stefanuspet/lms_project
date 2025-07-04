@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { ArrowLeft2, Calendar, Book1, ClockCircle } from "iconsax-reactjs";
+import { ArrowLeft2, Calendar, Book1, Clock } from "iconsax-reactjs";
 
 const EnrollmentHistory = ({ student, enrollments }) => {
     return (
@@ -133,7 +133,7 @@ const EnrollmentHistory = ({ student, enrollments }) => {
                                                     </div>
 
                                                     <div className="flex items-center bg-white px-3 py-2 rounded border border-gray-200">
-                                                        <ClockCircle
+                                                        <Clock
                                                             size="16"
                                                             className="text-gray-500 mr-2"
                                                         />

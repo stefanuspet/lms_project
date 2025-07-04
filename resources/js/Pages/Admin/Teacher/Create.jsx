@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
@@ -7,7 +7,7 @@ import TextInput from "@/Components/TextInput";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
 const TeacherCreate = () => {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         email: "",
         password: "",
@@ -17,15 +17,68 @@ const TeacherCreate = () => {
         address: "",
     });
 
+    const [clientErrors, setClientErrors] = useState({});
+    const [isFormValid, setIsFormValid] = useState(false);
+
+    // Validate form whenever data changes
+    useEffect(() => {
+        validateForm();
+    }, [data]);
+
+    // Form validation logic
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Required fields validation
+        if (!data.name) newErrors.name = "Name is required";
+        if (!data.email) newErrors.email = "Email is required";
+        if (!data.nip) newErrors.nip = "School ID / NIP is required";
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (data.email && !emailRegex.test(data.email)) {
+            newErrors.email = "Please enter a valid email address";
+        }
+
+        // Password validation
+        if (!data.password) {
+            newErrors.password = "Password is required";
+        } else if (data.password.length < 8) {
+            newErrors.password = "Password must be at least 8 characters";
+        }
+
+        // Password confirmation validation
+        if (data.password && !data.password_confirmation) {
+            newErrors.password_confirmation = "Please confirm your password";
+        } else if (data.password !== data.password_confirmation) {
+            newErrors.password_confirmation = "Passwords do not match";
+        }
+
+        setClientErrors(newErrors);
+
+        // Form is valid if there are no errors
+        setIsFormValid(Object.keys(newErrors).length === 0);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Gunakan format nama route yang benar, bukan path URL
-        post(route("admin.teachers.store"));
+
+        // Double-check validation before submitting
+        validateForm();
+
+        if (isFormValid) {
+            post(route("admin.teachers.store"));
+        }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setData(name, value);
+    };
+
+    // Get displayed error (priority to server-side errors)
+    const getErrorMessage = (field) => {
+        return errors[field] || clientErrors[field];
     };
 
     return (
@@ -77,7 +130,7 @@ const TeacherCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.name}
+                                        message={getErrorMessage("name")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -98,7 +151,7 @@ const TeacherCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.nip}
+                                        message={getErrorMessage("nip")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -118,7 +171,7 @@ const TeacherCreate = () => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.phone}
+                                        message={getErrorMessage("phone")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -138,7 +191,7 @@ const TeacherCreate = () => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.address}
+                                        message={getErrorMessage("address")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -166,7 +219,7 @@ const TeacherCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.email}
+                                        message={getErrorMessage("email")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -175,7 +228,7 @@ const TeacherCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password"
-                                        value="Password"
+                                        value="Password (minimum 8 characters)"
                                     />
                                     <TextInput
                                         id="password"
@@ -188,7 +241,7 @@ const TeacherCreate = () => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password}
+                                        message={getErrorMessage("password")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -210,10 +263,19 @@ const TeacherCreate = () => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password_confirmation}
+                                        message={getErrorMessage(
+                                            "password_confirmation"
+                                        )}
                                         className="mt-2"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Password Requirements Hint */}
+                            <div className="mt-4 text-sm text-gray-500">
+                                <p>
+                                    Password must be at least 8 characters long.
+                                </p>
                             </div>
 
                             {/* Form Actions */}
@@ -226,8 +288,8 @@ const TeacherCreate = () => {
                                 </Link>
                                 <button
                                     type="submit"
-                                    disabled={processing}
-                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
+                                    disabled={processing || !isFormValid}
+                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
                                 >
                                     Save Teacher
                                 </button>

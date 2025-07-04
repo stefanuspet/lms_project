@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
@@ -17,19 +17,74 @@ const TeacherEdit = ({ teacher }) => {
         address: teacher.address || "",
     });
 
+    const [clientErrors, setClientErrors] = useState({});
+    const [isFormValid, setIsFormValid] = useState(true); // Default to true for edit form since password is optional
+
+    // Validate form whenever data changes
+    useEffect(() => {
+        validateForm();
+    }, [data]);
+
+    // Form validation logic
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Required fields validation
+        if (!data.name) newErrors.name = "Name is required";
+        if (!data.email) newErrors.email = "Email is required";
+        if (!data.nip) newErrors.nip = "School ID / NIP is required";
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (data.email && !emailRegex.test(data.email)) {
+            newErrors.email = "Please enter a valid email address";
+        }
+
+        // Password validation - only if password field is not empty
+        if (data.password && data.password.length < 8) {
+            newErrors.password = "Password must be at least 8 characters";
+        }
+
+        // Password confirmation validation - only if password field is not empty
+        if (data.password && !data.password_confirmation) {
+            newErrors.password_confirmation = "Please confirm your password";
+        } else if (
+            data.password &&
+            data.password !== data.password_confirmation
+        ) {
+            newErrors.password_confirmation = "Passwords do not match";
+        }
+
+        setClientErrors(newErrors);
+
+        // Form is valid if there are no errors
+        setIsFormValid(Object.keys(newErrors).length === 0);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(route("admin.teachers.update", teacher.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                // Success handled by redirect with flash message
-            },
-        });
+
+        // Double-check validation before submitting
+        validateForm();
+
+        if (isFormValid) {
+            put(route("admin.teachers.update", teacher.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Success handled by redirect with flash message
+                },
+            });
+        }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setData(name, value);
+    };
+
+    // Get displayed error (priority to server-side errors)
+    const getErrorMessage = (field) => {
+        return errors[field] || clientErrors[field];
     };
 
     return (
@@ -81,7 +136,7 @@ const TeacherEdit = ({ teacher }) => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.name}
+                                        message={getErrorMessage("name")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -102,7 +157,7 @@ const TeacherEdit = ({ teacher }) => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.nip}
+                                        message={getErrorMessage("nip")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -122,7 +177,7 @@ const TeacherEdit = ({ teacher }) => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.phone}
+                                        message={getErrorMessage("phone")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -142,7 +197,7 @@ const TeacherEdit = ({ teacher }) => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.address}
+                                        message={getErrorMessage("address")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -170,7 +225,7 @@ const TeacherEdit = ({ teacher }) => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.email}
+                                        message={getErrorMessage("email")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -179,7 +234,7 @@ const TeacherEdit = ({ teacher }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password"
-                                        value="Password (leave blank to keep current)"
+                                        value="Password (leave blank to keep current, min 8 characters if changing)"
                                     />
                                     <TextInput
                                         id="password"
@@ -191,7 +246,7 @@ const TeacherEdit = ({ teacher }) => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password}
+                                        message={getErrorMessage("password")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -212,10 +267,20 @@ const TeacherEdit = ({ teacher }) => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password_confirmation}
+                                        message={getErrorMessage(
+                                            "password_confirmation"
+                                        )}
                                         className="mt-2"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Password Requirements Hint */}
+                            <div className="mt-4 text-sm text-gray-500">
+                                <p>
+                                    If updating password, it must be at least 8
+                                    characters long.
+                                </p>
                             </div>
 
                             {/* Form Actions */}
@@ -228,8 +293,8 @@ const TeacherEdit = ({ teacher }) => {
                                 </Link>
                                 <button
                                     type="submit"
-                                    disabled={processing}
-                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
+                                    disabled={processing || !isFormValid}
+                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
                                 >
                                     Update Teacher
                                 </button>

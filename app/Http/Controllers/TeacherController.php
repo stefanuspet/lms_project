@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Teacher;
 use App\Models\User;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class TeacherController extends Controller
@@ -92,8 +95,6 @@ class TeacherController extends Controller
         ]);
     }
 
-    // Metode lainnya tetap sama...
-
     public function create()
     {
         return Inertia::render('Admin/Teacher/Create');
@@ -101,33 +102,53 @@ class TeacherController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'nip' => 'required|string|max:20|unique:teachers',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-        ]);
+        try {
+            // Validasi input
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'nip' => 'required|string|max:20|unique:teachers',
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+            ]);
 
-        // Buat user baru
-        $user = User::create([
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role' => 'guru',
-        ]);
+            DB::beginTransaction();
 
-        // Buat teacher baru
-        $teacher = Teacher::create([
-            'user_id' => $user->id,
-            'name' => $request->name,
-            'nip' => $request->nip,
-            'phone' => $request->phone ?? null,
-            'address' => $request->address ?? null,
-        ]);
+            // Buat user baru
+            $user = User::create([
+                'email' => $request->email,
+                'password' => bcrypt($request->password),
+                'role' => 'guru',
+            ]);
 
-        return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully');
+            // Buat teacher baru
+            $teacher = Teacher::create([
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'nip' => $request->nip,
+                'phone' => $request->phone ?? null,
+                'address' => $request->address ?? null,
+            ]);
+
+            // Log aktivitas
+            $this->logActivity(
+                auth()->id(),
+                'create teacher',
+                'Created new teacher: ' . $teacher->name . ' (NIP: ' . $teacher->nip . ')'
+            );
+
+            DB::commit();
+
+            return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating teacher: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to create teacher: ' . $e->getMessage()])
+                ->withInput();
+        }
     }
 
     /**
@@ -135,31 +156,44 @@ class TeacherController extends Controller
      */
     public function show(Teacher $teacher)
     {
-        $teacher->load(['user', 'subjects.classroom']);
+        try {
+            $teacher->load(['user', 'subjects.classroom']);
 
-        return Inertia::render('Admin/Teacher/Show', [
-            'teacher' => [
-                'id' => $teacher->id,
-                'name' => $teacher->name,
-                'nip' => $teacher->nip,
-                'phone' => $teacher->phone,
-                'address' => $teacher->address,
-                'user' => [
-                    'id' => $teacher->user->id,
-                    'email' => $teacher->user->email,
-                ],
-                'subjects' => $teacher->subjects->map(function ($subject) {
-                    return [
-                        'id' => $subject->id,
-                        'name' => $subject->name,
-                        'classroom' => $subject->classroom ? [
-                            'id' => $subject->classroom->id,
-                            'name' => $subject->classroom->name,
-                        ] : null,
-                    ];
-                }),
-            ]
-        ]);
+            // Log aktivitas
+            $this->logActivity(
+                auth()->id(),
+                'view teacher',
+                'Viewed teacher details: ' . $teacher->name . ' (NIP: ' . $teacher->nip . ')'
+            );
+
+            return Inertia::render('Admin/Teacher/Show', [
+                'teacher' => [
+                    'id' => $teacher->id,
+                    'name' => $teacher->name,
+                    'nip' => $teacher->nip,
+                    'phone' => $teacher->phone,
+                    'address' => $teacher->address,
+                    'user' => [
+                        'id' => $teacher->user->id,
+                        'email' => $teacher->user->email,
+                    ],
+                    'subjects' => $teacher->subjects->map(function ($subject) {
+                        return [
+                            'id' => $subject->id,
+                            'name' => $subject->name,
+                            'classroom' => $subject->classroom ? [
+                                'id' => $subject->classroom->id,
+                                'name' => $subject->classroom->name,
+                            ] : null,
+                        ];
+                    }),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error showing teacher: ' . $e->getMessage());
+            return redirect()->route('admin.teachers.index')
+                ->with('error', 'Error displaying teacher details: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -167,21 +201,27 @@ class TeacherController extends Controller
      */
     public function edit(Teacher $teacher)
     {
-        $teacher->load('user');
+        try {
+            $teacher->load('user');
 
-        return Inertia::render('Admin/Teacher/Edit', [
-            'teacher' => [
-                'id' => $teacher->id,
-                'name' => $teacher->name,
-                'nip' => $teacher->nip,
-                'phone' => $teacher->phone,
-                'address' => $teacher->address,
-                'user' => [
-                    'id' => $teacher->user->id,
-                    'email' => $teacher->user->email,
+            return Inertia::render('Admin/Teacher/Edit', [
+                'teacher' => [
+                    'id' => $teacher->id,
+                    'name' => $teacher->name,
+                    'nip' => $teacher->nip,
+                    'phone' => $teacher->phone,
+                    'address' => $teacher->address,
+                    'user' => [
+                        'id' => $teacher->user->id,
+                        'email' => $teacher->user->email,
+                    ]
                 ]
-            ]
-        ]);
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error editing teacher: ' . $e->getMessage());
+            return redirect()->route('admin.teachers.index')
+                ->with('error', 'Error loading teacher for editing: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -189,37 +229,57 @@ class TeacherController extends Controller
      */
     public function update(Request $request, Teacher $teacher)
     {
-        // Validasi input
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->user_id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'nip' => 'required|string|max:20|unique:teachers,nip,' . $teacher->id,
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-        ]);
+        try {
+            // Validasi input
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->user_id,
+                'password' => 'nullable|string|min:8|confirmed',
+                'nip' => 'required|string|max:20|unique:teachers,nip,' . $teacher->id,
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+            ]);
 
-        // Update user data
-        $userData = [
-            'email' => $request->email,
-        ];
+            DB::beginTransaction();
 
-        // Update password if provided
-        if ($request->filled('password')) {
-            $userData['password'] = bcrypt($request->password);
+            // Update user data
+            $userData = [
+                'email' => $request->email,
+            ];
+
+            // Update password if provided
+            if ($request->filled('password')) {
+                $userData['password'] = bcrypt($request->password);
+            }
+
+            $teacher->user->update($userData);
+
+            // Update teacher data
+            $teacher->update([
+                'name' => $request->name,
+                'nip' => $request->nip,
+                'phone' => $request->phone,
+                'address' => $request->address,
+            ]);
+
+            // Log aktivitas
+            $this->logActivity(
+                auth()->id(),
+                'update teacher',
+                'Updated teacher: ' . $teacher->name . ' (NIP: ' . $teacher->nip . ')'
+            );
+
+            DB::commit();
+
+            return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating teacher: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to update teacher: ' . $e->getMessage()])
+                ->withInput();
         }
-
-        $teacher->user->update($userData);
-
-        // Update teacher data
-        $teacher->update([
-            'name' => $request->name,
-            'nip' => $request->nip,
-            'phone' => $request->phone,
-            'address' => $request->address,
-        ]);
-
-        return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully');
     }
 
     /**
@@ -227,17 +287,139 @@ class TeacherController extends Controller
      */
     public function destroy(Teacher $teacher)
     {
-        // Simpan user_id sebelum menghapus teacher
-        $userId = $teacher->user_id;
+        try {
+            DB::beginTransaction();
 
-        // Hapus teacher
-        $teacher->delete();
+            // Simpan informasi teacher sebelum dihapus untuk logging
+            $teacherName = $teacher->name;
+            $teacherNip = $teacher->nip;
 
-        // Hapus user terkait
-        if ($userId) {
-            User::where('id', $userId)->delete();
+            // Simpan user_id sebelum menghapus teacher
+            $userId = $teacher->user_id;
+
+            // Cek apakah guru memiliki mata pelajaran terkait
+            $subjectsCount = $teacher->subjects()->count();
+            if ($subjectsCount > 0) {
+                return redirect()->back()->withErrors([
+                    'error' => "Cannot delete teacher because they have {$subjectsCount} subjects assigned. Please reassign the subjects first."
+                ]);
+            }
+
+            // Hapus relasi teachers_subjects jika ada
+            DB::table('teachers_subjects')
+                ->where('teacher_id', $teacher->id)
+                ->delete();
+
+            // Hapus teacher
+            $teacher->delete();
+
+            // Hapus notifikasi terkait
+            DB::table('notifications')
+                ->where('user_id', $userId)
+                ->delete();
+
+            // Hapus user terkait
+            if ($userId) {
+                User::where('id', $userId)->delete();
+            }
+
+            // Log aktivitas
+            $this->logActivity(
+                auth()->id(),
+                'delete teacher',
+                'Deleted teacher: ' . $teacherName . ' (NIP: ' . $teacherNip . ')'
+            );
+
+            DB::commit();
+
+            return redirect()->route('admin.teachers.index')->with('success', 'Teacher deleted successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting teacher: ' . $e->getMessage());
+
+            return redirect()->back()->withErrors(['error' => 'Failed to delete teacher: ' . $e->getMessage()]);
         }
+    }
 
-        return redirect()->route('admin.teachers.index')->with('success', 'Teacher deleted successfully');
+    /**
+     * Bulk delete teachers.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'teacher_ids' => 'required|array',
+            'teacher_ids.*' => 'exists:teachers,id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $teacherIds = $request->teacher_ids;
+
+            // Check which teachers have subjects
+            $teachersWithSubjects = Teacher::whereIn('id', $teacherIds)
+                ->withCount('subjects')
+                ->having('subjects_count', '>', 0)
+                ->get();
+
+            if ($teachersWithSubjects->count() > 0) {
+                $teacherNames = $teachersWithSubjects->pluck('name')->implode(', ');
+                return redirect()->back()->withErrors([
+                    'error' => "Cannot delete teachers with assigned subjects: {$teacherNames}"
+                ]);
+            }
+
+            // Get user IDs for these teachers
+            $userIds = Teacher::whereIn('id', $teacherIds)->pluck('user_id')->toArray();
+
+            // Delete teachers_subjects records
+            DB::table('teachers_subjects')
+                ->whereIn('teacher_id', $teacherIds)
+                ->delete();
+
+            // Delete teachers
+            Teacher::whereIn('id', $teacherIds)->delete();
+
+            // Delete notifications
+            DB::table('notifications')
+                ->whereIn('user_id', $userIds)
+                ->delete();
+
+            // Delete users
+            User::whereIn('id', $userIds)->delete();
+
+            // Log aktivitas
+            $this->logActivity(
+                auth()->id(),
+                'bulk delete teachers',
+                'Bulk deleted ' . count($teacherIds) . ' teachers'
+            );
+
+            DB::commit();
+
+            return redirect()->route('admin.teachers.index')
+                ->with('success', count($teacherIds) . ' teachers deleted successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error bulk deleting teachers: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to delete teachers: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Function to log activity
+     */
+    private function logActivity($userId, $action, $description)
+    {
+        DB::table('activity_logs')->insert([
+            'user_id' => $userId,
+            'action' => $action,
+            'description' => $description,
+            'ip_address' => request()->ip(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

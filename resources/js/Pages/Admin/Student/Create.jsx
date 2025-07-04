@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
@@ -20,14 +20,68 @@ const StudentCreate = () => {
         religion: "",
     });
 
+    const [clientErrors, setClientErrors] = useState({});
+    const [isFormValid, setIsFormValid] = useState(false);
+
+    // Validate form whenever data changes
+    useEffect(() => {
+        validateForm();
+    }, [data]);
+
+    // Form validation logic
+    const validateForm = () => {
+        const newErrors = {};
+
+        // Required fields validation
+        if (!data.name) newErrors.name = "Name is required";
+        if (!data.email) newErrors.email = "Email is required";
+        if (!data.nisn) newErrors.nisn = "NISN is required";
+
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (data.email && !emailRegex.test(data.email)) {
+            newErrors.email = "Please enter a valid email address";
+        }
+
+        // Password validation
+        if (!data.password) {
+            newErrors.password = "Password is required";
+        } else if (data.password.length < 8) {
+            newErrors.password = "Password must be at least 8 characters";
+        }
+
+        // Password confirmation validation
+        if (data.password && !data.password_confirmation) {
+            newErrors.password_confirmation = "Please confirm your password";
+        } else if (data.password !== data.password_confirmation) {
+            newErrors.password_confirmation = "Passwords do not match";
+        }
+
+        setClientErrors(newErrors);
+
+        // Form is valid if there are no errors
+        setIsFormValid(Object.keys(newErrors).length === 0);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("admin.students.store"));
+
+        // Double-check validation before submitting
+        validateForm();
+
+        if (isFormValid) {
+            post(route("admin.students.store"));
+        }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setData(name, value);
+    };
+
+    // Get displayed error (priority to server-side errors)
+    const getErrorMessage = (field) => {
+        return errors[field] || clientErrors[field];
     };
 
     return (
@@ -79,7 +133,7 @@ const StudentCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.name}
+                                        message={getErrorMessage("name")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -97,7 +151,7 @@ const StudentCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.nisn}
+                                        message={getErrorMessage("nisn")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -120,7 +174,7 @@ const StudentCreate = () => {
                                         <option value="female">Female</option>
                                     </SelectInput>
                                     <InputError
-                                        message={errors.gender}
+                                        message={getErrorMessage("gender")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -151,7 +205,7 @@ const StudentCreate = () => {
                                         </option>
                                     </SelectInput>
                                     <InputError
-                                        message={errors.religion}
+                                        message={getErrorMessage("religion")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -171,7 +225,7 @@ const StudentCreate = () => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.birth_date}
+                                        message={getErrorMessage("birth_date")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -191,7 +245,7 @@ const StudentCreate = () => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.birth_place}
+                                        message={getErrorMessage("birth_place")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -219,7 +273,7 @@ const StudentCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.email}
+                                        message={getErrorMessage("email")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -228,7 +282,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password"
-                                        value="Password"
+                                        value="Password (minimum 8 characters)"
                                     />
                                     <TextInput
                                         id="password"
@@ -241,7 +295,7 @@ const StudentCreate = () => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password}
+                                        message={getErrorMessage("password")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -263,10 +317,19 @@ const StudentCreate = () => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password_confirmation}
+                                        message={getErrorMessage(
+                                            "password_confirmation"
+                                        )}
                                         className="mt-2"
                                     />
                                 </div>
+                            </div>
+
+                            {/* Password Requirements Hint */}
+                            <div className="mt-4 text-sm text-gray-500">
+                                <p>
+                                    Password must be at least 8 characters long.
+                                </p>
                             </div>
 
                             {/* Form Actions */}
@@ -279,8 +342,8 @@ const StudentCreate = () => {
                                 </Link>
                                 <button
                                     type="submit"
-                                    disabled={processing}
-                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
+                                    disabled={processing || !isFormValid}
+                                    className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
                                 >
                                     Save Student
                                 </button>

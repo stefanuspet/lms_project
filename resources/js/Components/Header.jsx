@@ -1,29 +1,83 @@
-import { Messages1, Notification } from "iconsax-reactjs";
 import React from "react";
+import { Link } from "@inertiajs/react";
+import {
+    NotificationBing,
+    MessageQuestion,
+    Setting,
+    User,
+} from "iconsax-reactjs";
 
-const Header = () => {
+const Header = ({ toggleSidebar }) => {
     return (
-        <div className="">
-            <div className="flex justify-end items-center h-12 pt-8 w-full gap-x-4 ">
-                <div className="bg-white px-1.5 py-1.5 rounded-full flex justify-center items-center">
-                    <Messages1 variant="Bold" color="#242424" size="20" />
+        <header className="bg-white border-b border-gray-200 py-2 px-4">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    {/* Mobile only menu toggle */}
+                    <button
+                        onClick={toggleSidebar}
+                        className="p-2 rounded-md hover:bg-gray-100 md:hidden"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="w-6 h-6"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                            />
+                        </svg>
+                    </button>
+
+                    {/* Page Title - show on larger screens */}
+                    <h1 className="text-xl font-semibold text-gray-800 hidden md:block">
+                        Dashboard
+                    </h1>
                 </div>
-                <div className="bg-white px-1.5 py-1.5 rounded-full flex justify-center items-center">
-                    <Notification size="20" color="#242424" variant="Bold" />
-                </div>
-                <div className="flex items-center gap-x-2">
-                    <div className="pl-4">
-                        <p className="text-sm font-semibold">Catherine lois</p>
-                        <p className="text-sm text-right">Admin</p>
+
+                {/* Right Actions */}
+                <div className="flex items-center gap-2 sm:gap-4">
+                    {/* Notification */}
+                    {/* <button className="p-2 rounded-full hover:bg-gray-100">
+                        <div className="relative">
+                            <NotificationBing
+                                size="22"
+                                className="text-gray-600"
+                            />
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
+                                3
+                            </span>
+                        </div>
+                    </button> */}
+
+                    {/* Help */}
+                    {/* <button className="p-2 rounded-full hover:bg-gray-100 hidden sm:block">
+                        <MessageQuestion size="22" className="text-sky-600" />
+                    </button> */}
+
+                    {/* Settings */}
+                    {/* <button className="p-2 rounded-full hover:bg-gray-100 hidden sm:block">
+                        <Setting size="22" className="text-sky-600" />
+                    </button> */}
+
+                    {/* User Profile */}
+                    <div className="flex items-center">
+                        <button className="flex items-center gap-2 hover:bg-gray-100 rounded-full p-1 pl-1 pr-2">
+                            <div className="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white">
+                                <User size="20" />
+                            </div>
+                            <span className="text-sm font-medium text-gray-700 hidden sm:block">
+                                Admin
+                            </span>
+                        </button>
                     </div>
-                    <img
-                        src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                        alt="Profile Picture"
-                        className="rounded-full w-10 h-10 object-cover"
-                    />
                 </div>
             </div>
-        </div>
+        </header>
     );
 };
 

@@ -1,105 +1,92 @@
 import React from "react";
-import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-ChartJS.register(ArcElement, Tooltip, Legend);
+import {
+    PieChart,
+    Pie,
+    Cell,
+    ResponsiveContainer,
+    Legend,
+    Tooltip,
+} from "recharts";
 
 const StudentsGenderChart = ({ boysCount, girlsCount }) => {
-    const total = boysCount + girlsCount;
-    console.log(boysCount);
+    const data = [
+        { name: "Laki-laki", value: boysCount, color: "#0EA5E9" },
+        { name: "Perempuan", value: girlsCount, color: "#38BDF8" },
+    ];
 
-    const boysPercentage = Math.round((boysCount / total) * 100);
-    const girlsPercentage = Math.round((girlsCount / total) * 100);
+    const COLORS = ["#0EA5E9", "#38BDF8"];
+    const RADIAN = Math.PI / 180;
 
-    // Chart data
-    const data = {
-        labels: ["Boys", "Girls"],
-        datasets: [
-            {
-                labels: "Boys",
-                data: [boysCount, girlsCount],
-                backgroundColor: ["#F7F8FA", "#C3EBFA"],
-                borderRadius: 100,
-                borderWidth: 0,
-                cutout: "55%",
-                radius: "100%",
-            },
-            {
-                labels: "Girls",
-                data: [boysCount, girlsCount],
-                backgroundColor: ["#FAE27C", "#F7F8FA"],
-                borderRadius: 100,
-                borderWidth: 0,
-                cutout: "55%",
-                radius: "90%",
-            },
-        ],
-    };
+    const renderCustomizedLabel = ({
+        cx,
+        cy,
+        midAngle,
+        innerRadius,
+        outerRadius,
+        percent,
+        index,
+    }) => {
+        // Hide labels on small screens or when segments are too small
+        if (window.innerWidth < 400 || percent < 0.1) return null;
 
-    // Chart options
-    const options = {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: false,
-            },
-            tooltip: {
-                enabled: false,
-            },
-        },
-        animation: {
-            animateRotate: true,
-            animateScale: true,
-        },
-        maintainAspectRatio: false,
-        cutout: "40%",
+        const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+        const x = cx + radius * Math.cos(-midAngle * RADIAN);
+        const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+        return (
+            <text
+                x={x}
+                y={y}
+                fill="white"
+                textAnchor={x > cx ? "start" : "end"}
+                dominantBaseline="central"
+                fontSize={window.innerWidth < 768 ? "10" : "14"}
+                fontWeight="bold"
+            >
+                {`${(percent * 100).toFixed(0)}%`}
+            </text>
+        );
     };
 
     return (
-        <div className="bg-white p-6 rounded-lg shadow-sm w-full">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Students</h2>
-                <div className="flex space-x-1">
-                    <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
-                    <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
-                </div>
-            </div>
-
-            <div className="relative h-44 w-full">
-                {/* Chart container */}
-                <Doughnut data={data} options={options} />
-
-                {/* Center content with icon */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="flex justify-center">
-                            <div className="text-[#A8E0F0]">
-                                <img src="/assets/icons/BoyGirl.svg" alt="" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Statistics at the bottom */}
-            <div className="flex justify-between mt-6">
-                <div className="text-center">
-                    <div className="w-4 h-4 bg-[#C3EBFA] rounded-full mx-auto"></div>
-                    <div className="text-lg font-bold mt-2">{boysCount}</div>
-                    <div className="text-gray-400 text-sm">
-                        Boys ({boysPercentage}%)
-                    </div>
-                </div>
-                <div className="text-center">
-                    <div className="w-4 h-4 bg-[#FAE27C] rounded-full mx-auto"></div>
-                    <div className="text-lg font-bold mt-2">
-                        {girlsCount.toLocaleString()}
-                    </div>
-                    <div className="text-gray-400 text-sm">
-                        Girls ({girlsPercentage}%)
-                    </div>
-                </div>
-            </div>
+        <div className="h-full w-full flex flex-col">
+            <ResponsiveContainer
+                width="100%"
+                height={window.innerWidth < 640 ? 150 : 200}
+            >
+                <PieChart>
+                    <Pie
+                        data={data}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={renderCustomizedLabel}
+                        outerRadius={window.innerWidth < 640 ? "70%" : "80%"}
+                        fill="#8884d8"
+                        dataKey="value"
+                    >
+                        {data.map((entry, index) => (
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={COLORS[index % COLORS.length]}
+                            />
+                        ))}
+                    </Pie>
+                    <Tooltip
+                        formatter={(value) => [`${value} siswa`, null]}
+                        contentStyle={{ fontSize: "12px" }}
+                    />
+                    <Legend
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                        wrapperStyle={{
+                            fontSize: window.innerWidth < 640 ? "10px" : "12px",
+                            paddingTop: "10px",
+                        }}
+                    />
+                </PieChart>
+            </ResponsiveContainer>
         </div>
     );
 };
