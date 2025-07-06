@@ -43,8 +43,8 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
             <div className="py-6 w-full">
                 {/* Header */}
                 <div className="w-full bg-white rounded-xl shadow-sm mb-6">
-                    <div className="flex justify-between items-center px-6 py-5 border-b">
-                        <div className="flex items-center gap-4">
+                    <div className="flex justify-between items-center px-6 py-5 border-b w-full">
+                        <div className="flex gap-4">
                             <Link
                                 href={route("teacher.attendance.index")}
                                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -62,32 +62,23 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                     Menampilkan semua sesi absensi yang sedang
                                     berjalan
                                 </p>
-                                <div>
-                                    <h1 className="font-bold text-xl text-gray-800">
-                                        Sesi Absensi Aktif
-                                    </h1>
-                                    <p className="text-sm text-gray-600">
-                                        Menampilkan semua sesi absensi yang
-                                        sedang berjalan
-                                    </p>
-                                </div>
                             </div>
-                            <div>
-                                <Link
-                                    href={route("teacher.attendance.daily")}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-                                >
-                                    <Calendar size="20" />
-                                    <span>Absensi Harian</span>
-                                </Link>
-                            </div>
+                        </div>
+                        <div>
+                            <Link
+                                href={route("teacher.attendance.daily")}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                            >
+                                <Calendar size="20" />
+                                <span>Absensi Harian</span>
+                            </Link>
                         </div>
                     </div>
 
                     {/* Active Sessions */}
                     <div className="w-full">
                         {activeSessions && activeSessions.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 gap-6">
                                 {activeSessions.map((session) => (
                                     <div
                                         key={session.id}

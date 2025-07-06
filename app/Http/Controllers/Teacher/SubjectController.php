@@ -47,41 +47,42 @@ class SubjectController extends Controller
             // Query subjects assigned to this teacher
             $query = Subject::query()
                 ->where('teacher_id', $teacher->id)
-                ->with(['classroom', 'teacher']);
+                ->leftJoin('classes', 'subjects.class_id', '=', 'classes.id')
+                ->select('subjects.*', 'classes.name as class_name');
 
             // Apply search filters
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                    $q->where('subjects.name', 'like', "%{$search}%")
+                        ->orWhere('subjects.description', 'like', "%{$search}%");
                 });
             }
 
             // Apply additional filters
             if ($filterClass) {
-                $query->where('class_id', $filterClass);
+                $query->where('subjects.class_id', $filterClass);
             }
 
             // Apply sorting
-            $query->orderBy($sortBy, $sortOrder);
+            $query->orderBy("subjects.{$sortBy}", $sortOrder);
 
             // Execute paginated query
             $subjects = $query->paginate($perPage)->withQueryString();
 
             // Format data for frontend
             $formattedSubjects = $subjects->map(function ($subject) {
-                // Get student count for this subject's class
+                // Get student count for this subject's class - FIX: Use correct column name
                 $studentCount = DB::table('semesters_students')
                     ->where('class_id', $subject->class_id)
-                    ->distinct('students_id')
+                    ->distinct('students_id') // Use whatever column name exists in your DB
                     ->count('students_id');
 
                 // Get material count
                 $materialCount = Material::where('subject_id', $subject->id)->count();
-                
+
                 // Get assignment count
                 $assignmentCount = Assignment::where('subject_id', $subject->id)->count();
-                
+
                 // Get pending submissions count
                 $pendingSubmissions = AssignmentSubmission::whereHas('assignment', function ($query) use ($subject) {
                     $query->where('subject_id', $subject->id);
@@ -91,8 +92,8 @@ class SubjectController extends Controller
                     'id' => $subject->id,
                     'name' => $subject->name,
                     'description' => $subject->description,
-                    'class_name' => $subject->classroom ? $subject->classroom->name : '-',
-                    'semester_name' => 'Current Semester', // You can enhance this with actual semester data
+                    'class_name' => $subject->class_name ?? '-',
+                    'semester_name' => 'Current Semester',
                     'student_count' => $studentCount,
                     'materials_count' => $materialCount,
                     'assignments_count' => $assignmentCount,
@@ -129,7 +130,7 @@ class SubjectController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Error in teacher subjects index: ' . $e->getMessage());
-            
+
             // Return error response
             return redirect()->back()->withErrors([
                 'error' => 'Failed to load subjects: ' . $e->getMessage()
@@ -150,20 +151,31 @@ class SubjectController extends Controller
                     ->with('error', 'You do not have permission to view this subject.');
             }
 
-            // Load relations
-            $subject->load(['classroom', 'teacher']);
+            // Get class information using raw query to avoid relationship issues
+            $classInfo = DB::table('classes')
+                ->where('id', $subject->class_id)
+                ->first();
 
-            // Get student count and list for this subject's class
-            $students = Student::whereHas('classes', function ($query) use ($subject) {
-                $query->where('class_id', $subject->class_id);
-            })->get();
+            // Get students for this subject's class - FIX: Use direct DB query instead of relationship
+            $students = DB::table('students')
+                ->join('semesters_students', 'students.id', '=', 'semesters_students.students_id')
+                ->where('semesters_students.class_id', $subject->class_id)
+                ->select('students.*')
+                ->get();
 
             // Get counts for materials, assignments, and attendance
             $materialsCount = Material::where('subject_id', $subject->id)->count();
             $assignmentsCount = Assignment::where('subject_id', $subject->id)->count();
-            $attendanceCount = DB::table('attendance_sessions')
-                ->where('subject_id', $subject->id)
-                ->count();
+
+            // Get attendance count with error handling
+            $attendanceCount = 0;
+            try {
+                $attendanceCount = DB::table('attendance_sessions')
+                    ->where('subject_id', $subject->id)
+                    ->count();
+            } catch (\Exception $e) {
+                Log::warning('Could not get attendance count: ' . $e->getMessage());
+            }
 
             // Get pending submissions count
             $pendingSubmissions = AssignmentSubmission::whereHas('assignment', function ($query) use ($subject) {
@@ -173,25 +185,35 @@ class SubjectController extends Controller
             // Format student data with completion statistics
             $formattedStudents = $students->map(function ($student) use ($subject, $assignmentsCount) {
                 // Calculate completed assignments
-                $completedAssignments = AssignmentSubmission::whereHas('assignment', function ($query) use ($subject) {
-                    $query->where('subject_id', $subject->id);
-                })->where('student_id', $student->id)->count();
+                $completedAssignments = 0;
+                try {
+                    $completedAssignments = AssignmentSubmission::whereHas('assignment', function ($query) use ($subject) {
+                        $query->where('subject_id', $subject->id);
+                    })->where('student_id', $student->id)->count();
+                } catch (\Exception $e) {
+                    Log::warning('Could not get completed assignments for student ' . $student->id);
+                }
 
-                // Calculate attendance rate
-                $attendanceSessions = DB::table('attendance_sessions')
-                    ->where('subject_id', $subject->id)
-                    ->count();
-                
-                $studentAttendances = DB::table('attendances')
-                    ->join('attendance_sessions', 'attendances.attendance_sessions_id', '=', 'attendance_sessions.id')
-                    ->where('attendance_sessions.subject_id', $subject->id)
-                    ->where('attendances.student_id', $student->id)
-                    ->where('attendances.status', 'hadir')
-                    ->count();
-                
-                $attendanceRate = $attendanceSessions > 0 
-                    ? round(($studentAttendances / $attendanceSessions) * 100) . '%' 
-                    : 'N/A';
+                // Calculate attendance rate with error handling
+                $attendanceRate = 'N/A';
+                try {
+                    $attendanceSessions = DB::table('attendance_sessions')
+                        ->where('subject_id', $subject->id)
+                        ->count();
+
+                    if ($attendanceSessions > 0) {
+                        $studentAttendances = DB::table('attendances')
+                            ->join('attendance_sessions', 'attendances.attendance_sessions_id', '=', 'attendance_sessions.id')
+                            ->where('attendance_sessions.subject_id', $subject->id)
+                            ->where('attendances.student_id', $student->id)
+                            ->where('attendances.status', 'hadir')
+                            ->count();
+
+                        $attendanceRate = round(($studentAttendances / $attendanceSessions) * 100) . '%';
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Could not calculate attendance rate for student ' . $student->id);
+                }
 
                 return [
                     'id' => $student->id,
@@ -208,8 +230,8 @@ class SubjectController extends Controller
                 'id' => $subject->id,
                 'name' => $subject->name,
                 'description' => $subject->description,
-                'class_name' => $subject->classroom->name,
-                'semester_name' => 'Current Semester', // You can enhance this with actual semester data
+                'class_name' => $classInfo ? $classInfo->name : 'Unknown Class',
+                'semester_name' => 'Current Semester',
                 'student_count' => $students->count(),
                 'materials_count' => $materialsCount,
                 'assignments_count' => $assignmentsCount,
@@ -219,26 +241,38 @@ class SubjectController extends Controller
                 'created_at' => $subject->created_at->format('d-m-Y'),
             ];
 
+            // Log successful access
+            $this->logActivity($user->id, 'view_subject', "Viewed subject: {$subject->name}");
+
             return Inertia::render('Teacher/Subject/Show', [
                 'subject' => $formattedSubject
             ]);
         } catch (\Exception $e) {
-            Log::error('Error in teacher subject show: ' . $e->getMessage());
+            Log::error('Error in teacher subject show: ' . $e->getMessage(), [
+                'subject_id' => $subject->id ?? 'unknown',
+                'user_id' => Auth::id(),
+                'stack_trace' => $e->getTraceAsString()
+            ]);
+
             return redirect()->route('teacher.subjects.index')
-                ->with('error', 'Error displaying subject details: ' . $e->getMessage());
+                ->with('error', 'Error displaying subject details. Please try again.');
         }
     }
 
     // Function to log activity
     private function logActivity($userId, $action, $description)
     {
-        DB::table('activity_logs')->insert([
-            'user_id' => $userId,
-            'action' => $action,
-            'description' => $description,
-            'ip_address' => request()->ip(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        try {
+            DB::table('activity_logs')->insert([
+                'user_id' => $userId,
+                'action' => $action,
+                'description' => $description,
+                'ip_address' => request()->ip(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Could not log activity: ' . $e->getMessage());
+        }
     }
 }

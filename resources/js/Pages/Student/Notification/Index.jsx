@@ -15,6 +15,7 @@ import {
     CloseCircle,
     ArrowDown2,
     ArrowUp2,
+    ArrowRight2,
 } from "iconsax-reactjs";
 
 const StudentNotificationIndex = ({

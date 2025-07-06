@@ -310,7 +310,7 @@ const TeacherProgressSubject = ({ subject, assignments, students }) => {
                                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                         >
-                            Needs Attention less than 60
+                            Needs Attention (&lt;60)
                         </button>
                     </div>
 

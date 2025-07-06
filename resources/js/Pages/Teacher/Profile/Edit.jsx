@@ -21,98 +21,74 @@ import {
 
 const TeacherProfileEdit = ({ teacher, stats, flash }) => {
     const [activeTab, setActiveTab] = useState("personal");
-    const [passwordForm, setPasswordForm] = useState({
-        current_password: "",
-        password: "",
-        password_confirmation: "",
-    });
-    const [processingPassword, setProcessingPassword] = useState(false);
-    const [passwordErrors, setPasswordErrors] = useState({});
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    // Profile form
+    const {
+        data: profileData,
+        setData: setProfileData,
+        post: postProfile,
+        processing: profileProcessing,
+        errors: profileErrors,
+        reset: resetProfile,
+    } = useForm({
         name: teacher.name || "",
         email: teacher.email || "",
         phone: teacher.phone || "",
         address: teacher.address || "",
     });
 
-    const handleChange = (e) => {
+    // Password form
+    const {
+        data: passwordData,
+        setData: setPasswordData,
+        post: postPassword,
+        processing: passwordProcessing,
+        errors: passwordErrors,
+        reset: resetPassword,
+    } = useForm({
+        current_password: "",
+        password: "",
+        password_confirmation: "",
+    });
+
+    const handleProfileChange = (e) => {
         const { id, value } = e.target;
-        setData(id, value);
+        setProfileData(id, value);
     };
 
     const handlePasswordChange = (e) => {
         const { id, value } = e.target;
-        setPasswordForm((prevState) => ({
-            ...prevState,
-            [id]: value,
-        }));
+        setPasswordData(id, value);
     };
 
-    const handleSubmit = (e) => {
+    const handleProfileSubmit = (e) => {
         e.preventDefault();
-        post(route("teacher.profile.update"), {
+        // Use PUT method as defined in routes
+        router.put(route("teacher.profile.update"), profileData, {
             preserveScroll: true,
+            onSuccess: () => {
+                // Profile updated successfully
+            },
+            onError: (errors) => {
+                // Handle profile update errors
+                console.log("Profile update errors:", errors);
+            },
         });
     };
 
     const handlePasswordSubmit = (e) => {
         e.preventDefault();
-        setProcessingPassword(true);
-        setPasswordErrors({});
-
-        // Validation
-        let hasErrors = false;
-        const errors = {};
-
-        if (!passwordForm.current_password) {
-            errors.current_password = "Current password is required";
-            hasErrors = true;
-        }
-
-        if (!passwordForm.password) {
-            errors.password = "New password is required";
-            hasErrors = true;
-        } else if (passwordForm.password.length < 8) {
-            errors.password = "Password must be at least 8 characters";
-            hasErrors = true;
-        }
-
-        if (passwordForm.password !== passwordForm.password_confirmation) {
-            errors.password_confirmation = "Passwords do not match";
-            hasErrors = true;
-        }
-
-        if (hasErrors) {
-            setPasswordErrors(errors);
-            setProcessingPassword(false);
-            return;
-        }
-
-        // Submit password change
-        router.post(
-            route("teacher.profile.update"),
-            {
-                current_password: passwordForm.current_password,
-                password: passwordForm.password,
-                password_confirmation: passwordForm.password_confirmation,
+        // Use PUT method as defined in routes
+        router.put(route("teacher.profile.update"), passwordData, {
+            preserveScroll: true,
+            onSuccess: () => {
+                resetPassword();
             },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setPasswordForm({
-                        current_password: "",
-                        password: "",
-                        password_confirmation: "",
-                    });
-                    setProcessingPassword(false);
-                },
-                onError: (errors) => {
-                    setPasswordErrors(errors);
-                    setProcessingPassword(false);
-                },
-            }
-        );
+            onError: (errors) => {
+                // Handle password update errors
+                console.log("Password update errors:", errors);
+            },
+        });
     };
 
     return (
@@ -179,7 +155,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                 </span>
                                             </div>
                                             <p className="text-2xl font-bold text-gray-800 mt-1">
-                                                {stats.subjects_count}
+                                                {stats.subjects_count || 0}
                                             </p>
                                         </div>
                                         <div className="bg-purple-50 p-3 rounded-lg">
@@ -193,7 +169,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                 </span>
                                             </div>
                                             <p className="text-2xl font-bold text-gray-800 mt-1">
-                                                {stats.classes_count}
+                                                {stats.classes_count || 0}
                                             </p>
                                         </div>
                                         <div className="bg-green-50 p-3 rounded-lg">
@@ -207,7 +183,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                 </span>
                                             </div>
                                             <p className="text-2xl font-bold text-gray-800 mt-1">
-                                                {stats.materials_count}
+                                                {stats.materials_count || 0}
                                             </p>
                                         </div>
                                         <div className="bg-amber-50 p-3 rounded-lg">
@@ -221,7 +197,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                 </span>
                                             </div>
                                             <p className="text-2xl font-bold text-gray-800 mt-1">
-                                                {stats.assignments_count}
+                                                {stats.assignments_count || 0}
                                             </p>
                                         </div>
                                     </div>
@@ -263,7 +239,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                             <div className="p-6">
                                 {/* Personal Information Tab */}
                                 {activeTab === "personal" && (
-                                    <form onSubmit={handleSubmit}>
+                                    <form onSubmit={handleProfileSubmit}>
                                         <div className="space-y-6">
                                             {/* Full Name */}
                                             <div>
@@ -283,19 +259,23 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                     <input
                                                         type="text"
                                                         id="name"
-                                                        value={data.name}
-                                                        onChange={handleChange}
+                                                        value={profileData.name}
+                                                        onChange={
+                                                            handleProfileChange
+                                                        }
                                                         className={`pl-10 block w-full rounded-md border ${
-                                                            errors.name
+                                                            profileErrors.name
                                                                 ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                                                                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                                         } py-2 text-gray-900 shadow-sm focus:outline-none focus:ring-1 sm:text-sm`}
-                                                        disabled={processing}
+                                                        disabled={
+                                                            profileProcessing
+                                                        }
                                                     />
                                                 </div>
-                                                {errors.name && (
+                                                {profileErrors.name && (
                                                     <p className="mt-1 text-sm text-red-600">
-                                                        {errors.name}
+                                                        {profileErrors.name}
                                                     </p>
                                                 )}
                                             </div>
@@ -318,19 +298,25 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                     <input
                                                         type="email"
                                                         id="email"
-                                                        value={data.email}
-                                                        onChange={handleChange}
+                                                        value={
+                                                            profileData.email
+                                                        }
+                                                        onChange={
+                                                            handleProfileChange
+                                                        }
                                                         className={`pl-10 block w-full rounded-md border ${
-                                                            errors.email
+                                                            profileErrors.email
                                                                 ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                                                                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                                         } py-2 text-gray-900 shadow-sm focus:outline-none focus:ring-1 sm:text-sm`}
-                                                        disabled={processing}
+                                                        disabled={
+                                                            profileProcessing
+                                                        }
                                                     />
                                                 </div>
-                                                {errors.email && (
+                                                {profileErrors.email && (
                                                     <p className="mt-1 text-sm text-red-600">
-                                                        {errors.email}
+                                                        {profileErrors.email}
                                                     </p>
                                                 )}
                                             </div>
@@ -353,19 +339,25 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                     <input
                                                         type="text"
                                                         id="phone"
-                                                        value={data.phone}
-                                                        onChange={handleChange}
+                                                        value={
+                                                            profileData.phone
+                                                        }
+                                                        onChange={
+                                                            handleProfileChange
+                                                        }
                                                         className={`pl-10 block w-full rounded-md border ${
-                                                            errors.phone
+                                                            profileErrors.phone
                                                                 ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                                                                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                                         } py-2 text-gray-900 shadow-sm focus:outline-none focus:ring-1 sm:text-sm`}
-                                                        disabled={processing}
+                                                        disabled={
+                                                            profileProcessing
+                                                        }
                                                     />
                                                 </div>
-                                                {errors.phone && (
+                                                {profileErrors.phone && (
                                                     <p className="mt-1 text-sm text-red-600">
-                                                        {errors.phone}
+                                                        {profileErrors.phone}
                                                     </p>
                                                 )}
                                             </div>
@@ -387,20 +379,26 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                     </div>
                                                     <textarea
                                                         id="address"
-                                                        value={data.address}
-                                                        onChange={handleChange}
+                                                        value={
+                                                            profileData.address
+                                                        }
+                                                        onChange={
+                                                            handleProfileChange
+                                                        }
                                                         rows="3"
                                                         className={`pl-10 block w-full rounded-md border ${
-                                                            errors.address
+                                                            profileErrors.address
                                                                 ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                                                                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                                         } py-2 text-gray-900 shadow-sm focus:outline-none focus:ring-1 sm:text-sm`}
-                                                        disabled={processing}
+                                                        disabled={
+                                                            profileProcessing
+                                                        }
                                                     ></textarea>
                                                 </div>
-                                                {errors.address && (
+                                                {profileErrors.address && (
                                                     <p className="mt-1 text-sm text-red-600">
-                                                        {errors.address}
+                                                        {profileErrors.address}
                                                     </p>
                                                 )}
                                             </div>
@@ -409,12 +407,12 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                             <div className="flex justify-end">
                                                 <button
                                                     type="submit"
-                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                                                    disabled={processing}
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                                    disabled={profileProcessing}
                                                 >
                                                     <Save2 size="20" />
                                                     <span>
-                                                        {processing
+                                                        {profileProcessing
                                                             ? "Saving..."
                                                             : "Save Changes"}
                                                     </span>
@@ -469,7 +467,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                         type="password"
                                                         id="current_password"
                                                         value={
-                                                            passwordForm.current_password
+                                                            passwordData.current_password
                                                         }
                                                         onChange={
                                                             handlePasswordChange
@@ -480,7 +478,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                                         } py-2 text-gray-900 shadow-sm focus:outline-none focus:ring-1 sm:text-sm`}
                                                         disabled={
-                                                            processingPassword
+                                                            passwordProcessing
                                                         }
                                                     />
                                                 </div>
@@ -512,7 +510,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                         type="password"
                                                         id="password"
                                                         value={
-                                                            passwordForm.password
+                                                            passwordData.password
                                                         }
                                                         onChange={
                                                             handlePasswordChange
@@ -523,7 +521,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                                         } py-2 text-gray-900 shadow-sm focus:outline-none focus:ring-1 sm:text-sm`}
                                                         disabled={
-                                                            processingPassword
+                                                            passwordProcessing
                                                         }
                                                     />
                                                 </div>
@@ -536,7 +534,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                 )}
                                                 <div className="grid grid-cols-2 gap-2 mt-2">
                                                     <div className="flex items-center">
-                                                        {passwordForm.password
+                                                        {passwordData.password
                                                             .length >= 8 ? (
                                                             <TickCircle
                                                                 size="16"
@@ -575,7 +573,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                         type="password"
                                                         id="password_confirmation"
                                                         value={
-                                                            passwordForm.password_confirmation
+                                                            passwordData.password_confirmation
                                                         }
                                                         onChange={
                                                             handlePasswordChange
@@ -586,7 +584,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                                         } py-2 text-gray-900 shadow-sm focus:outline-none focus:ring-1 sm:text-sm`}
                                                         disabled={
-                                                            processingPassword
+                                                            passwordProcessing
                                                         }
                                                     />
                                                 </div>
@@ -598,9 +596,9 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                     </p>
                                                 )}
                                                 <div className="mt-2 flex items-center">
-                                                    {passwordForm.password &&
-                                                    passwordForm.password ===
-                                                        passwordForm.password_confirmation ? (
+                                                    {passwordData.password &&
+                                                    passwordData.password ===
+                                                        passwordData.password_confirmation ? (
                                                         <TickCircle
                                                             size="16"
                                                             className="text-green-500 mr-1"
@@ -621,14 +619,14 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                             <div className="flex justify-end">
                                                 <button
                                                     type="submit"
-                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                                                     disabled={
-                                                        processingPassword
+                                                        passwordProcessing
                                                     }
                                                 >
                                                     <Security size="20" />
                                                     <span>
-                                                        {processingPassword
+                                                        {passwordProcessing
                                                             ? "Updating..."
                                                             : "Update Password"}
                                                     </span>

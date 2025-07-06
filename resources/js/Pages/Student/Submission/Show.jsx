@@ -7,7 +7,7 @@ import {
     Calendar,
     Clock,
     ClipboardTick,
-    Download,
+    DocumentDownload,
     DocumentText,
     Book1,
     Information,
@@ -16,6 +16,7 @@ import {
 } from "iconsax-reactjs";
 
 const StudentSubmissionShow = ({ submission, can_resubmit }) => {
+    console.log("Subject ID:", submission);
     return (
         <StudentLayout title="Submission Details">
             <div className="py-6 w-full">
@@ -48,7 +49,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                     download
                                     className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                                 >
-                                    <Download size="20" />
+                                    <DocumentDownload size="20" />
                                     <span>Download Submission</span>
                                 </a>
                             )}
@@ -218,7 +219,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                 download
                                                 className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-1 text-sm"
                                             >
-                                                <Download size="16" />
+                                                <DocumentDownload size="16" />
                                                 <span>Download</span>
                                             </a>
                                         </div>
@@ -393,7 +394,11 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                         <Link
                                             href={route(
                                                 "student.subjects.show",
-                                                submission.assignment.subject_id
+                                                {
+                                                    subject:
+                                                        submission.assignment
+                                                            .subject_id,
+                                                }
                                             )}
                                             className="block w-full px-4 py-2 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                         >

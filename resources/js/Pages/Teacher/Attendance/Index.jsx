@@ -379,9 +379,9 @@ const TeacherAttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Kehadiran
                                     </th>
-                                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {/* <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Aksi
-                                    </th>
+                                    </th> */}
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -474,7 +474,7 @@ const TeacherAttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <Link
                                                     href={route(
                                                         "teacher.attendance.daily",
@@ -488,7 +488,7 @@ const TeacherAttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                                 >
                                                     <Eye size="20" />
                                                 </Link>
-                                            </td>
+                                            </td> */}
                                         </tr>
                                     ))
                                 ) : (

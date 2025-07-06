@@ -440,38 +440,43 @@ class ProgressController extends Controller
 
             // Get attendance statistics
             $attendanceStats = [];
-            foreach ($relevantSubjects as $subject) {
-                // Get attendance sessions for this subject
+
+            // Mendapatkan semester saat ini
+            $currentSemesterId = DB::table('semesters_students')
+                ->where('students_id', $student->id)
+                ->orderBy('created_at', 'desc')
+                ->value('semesters_id');
+
+            if ($currentSemesterId) {
+                // Ambil semua sesi kehadiran di semester ini
                 $sessions = DB::table('attendance_sessions')
-                    ->where('subject_id', $subject->id)
+                    ->where('semester_id', $currentSemesterId)
                     ->get();
 
-                if ($sessions->isEmpty()) {
-                    continue;
+                if (!$sessions->isEmpty()) {
+                    // Get attendance records for this student
+                    $attendanceRecords = DB::table('attendances')
+                        ->whereIn('attendance_sessions_id', $sessions->pluck('id'))
+                        ->where('student_id', $student->id)
+                        ->get();
+
+                    // Statistik kehadiran secara keseluruhan (bukan per subjek)
+                    $totalSessions = $sessions->count();
+                    $presentCount = $attendanceRecords->where('status', 'hadir')->count();
+                    $absentCount = $attendanceRecords->where('status', 'alpha')->count();
+                    $excusedCount = $attendanceRecords->whereIn('status', ['izin', 'sakit'])->count();
+                    $attendanceRate = $totalSessions > 0 ? round(($presentCount / $totalSessions) * 100) : 0;
+
+                    // Simpan dalam format yang kompatibel dengan UI
+                    // Menggunakan 'overall' sebagai kunci, bukan subject_id
+                    $attendanceStats['overall'] = [
+                        'total_sessions' => $totalSessions,
+                        'present_count' => $presentCount,
+                        'absent_count' => $absentCount,
+                        'excused_count' => $excusedCount,
+                        'attendance_rate' => $attendanceRate,
+                    ];
                 }
-
-                // Get attendance records for this student
-                $attendanceRecords = DB::table('attendances')
-                    ->whereIn('attendance_sessions_id', $sessions->pluck('id'))
-                    ->where('student_id', $student->id)
-                    ->get();
-
-                // Calculate statistics
-                $totalSessions = $sessions->count();
-                $presentCount = $attendanceRecords->where('status', 'hadir')->count();
-                $absentCount = $attendanceRecords->where('status', 'alpha')->count();
-                $excusedCount = $attendanceRecords->whereIn('status', ['izin', 'sakit'])->count();
-
-                // Calculate attendance rate
-                $attendanceRate = $totalSessions > 0 ? round(($presentCount / $totalSessions) * 100) : 0;
-
-                $attendanceStats[$subject->id] = [
-                    'total_sessions' => $totalSessions,
-                    'present_count' => $presentCount,
-                    'absent_count' => $absentCount,
-                    'excused_count' => $excusedCount,
-                    'attendance_rate' => $attendanceRate,
-                ];
             }
 
             // Format student data

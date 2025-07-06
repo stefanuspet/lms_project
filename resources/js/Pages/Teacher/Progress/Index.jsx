@@ -175,16 +175,7 @@ const TeacherProgressIndex = ({
     const getSubjectLink = () => {
         if (!filters.filter_class) return null;
 
-        // Direct link using filter_class as a fallback
-        return (
-            <Link
-                href={`/teacher/progress/subject/${filters.filter_class}`}
-                className="text-purple-600 hover:text-purple-900 inline-block"
-                title="View Subject Progress"
-            >
-                <ClipboardTick size="20" />
-            </Link>
-        );
+        return null;
     };
 
     return (
