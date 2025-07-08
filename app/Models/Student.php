@@ -24,6 +24,10 @@ class Student extends Model
         'religion',
     ];
 
+    protected $casts = [
+        'birth_date' => 'date',
+    ];
+
     /**
      * Get the user that owns the student.
      */

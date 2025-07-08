@@ -96,6 +96,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
             setCurrentPage(pagination.current_page);
         }
     }, [pagination]);
+    console.log(subjects);
 
     return (
         <StudentLayout title="My Subjects">

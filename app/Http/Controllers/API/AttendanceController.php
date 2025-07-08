@@ -7,9 +7,9 @@ use App\Models\Attendance;
 use App\Models\AttendanceSession;
 use App\Models\Student;
 use App\Models\Semester;
-use App\Models\Subject;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AttendanceController extends Controller
@@ -34,6 +34,12 @@ class AttendanceController extends Controller
             ], 422);
         }
 
+        // Log request data for debugging
+        Log::debug('Attendance submission attempt', [
+            'pin' => $request->pin,
+            'user_id' => $request->user()->id ?? 'null'
+        ]);
+
         // Ambil user yang sedang login
         $user = $request->user();
         $student = Student::where('user_id', $user->id)->first();
@@ -44,6 +50,8 @@ class AttendanceController extends Controller
                 'message' => 'Data siswa tidak ditemukan'
             ], 404);
         }
+
+        Log::debug('Student found', ['student_id' => $student->id]);
 
         // Cari sesi absensi dengan PIN yang diberikan
         $session = AttendanceSession::where('pin', $request->pin)
@@ -56,6 +64,12 @@ class AttendanceController extends Controller
                 'message' => 'PIN tidak valid atau sesi absensi sudah berakhir'
             ], 404);
         }
+
+        Log::debug('Session found', [
+            'session_id' => $session->id,
+            'pin' => $session->pin,
+            'expires_at' => $session->expires_at
+        ]);
 
         // Cek apakah siswa sudah absen di sesi ini
         $existingAttendance = Attendance::where('attendance_sessions_id', $session->id)
@@ -80,13 +94,21 @@ class AttendanceController extends Controller
             ], 409);
         }
 
-        // Cek apakah siswa terdaftar dalam kelas untuk semester ini
-        $studentInClass = $student->isEnrolledIn($session->class_id, $session->semester_id);
+        // Karena tidak ada kolom class_id di attendance_sessions, kita akan memeriksa
+        // jika siswa terdaftar pada semester yang sama dengan sesi absensi
+        $studentInSemester = $student->semesters()
+            ->where('semesters.id', $session->semester_id)
+            ->exists();
 
-        if (!$studentInClass) {
+        Log::debug('Checking enrollment in semester', [
+            'semester_id' => $session->semester_id,
+            'is_enrolled' => $studentInSemester ? 'yes' : 'no'
+        ]);
+
+        if (!$studentInSemester) {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda tidak terdaftar dalam kelas ini untuk semester saat ini'
+                'message' => 'Anda tidak terdaftar pada semester saat ini'
             ], 403);
         }
 
@@ -100,24 +122,14 @@ class AttendanceController extends Controller
 
         $attendance->save();
 
+        Log::debug('Attendance saved', ['attendance_id' => $attendance->id]);
+
         // Data sesi
         $sessionData = [
             'id' => $session->id,
             'title' => $session->title ?? 'Sesi Absensi',
             'date' => $session->date->format('Y-m-d'),
-            'subject' => null
         ];
-
-        // Tambahkan info mata pelajaran jika ada
-        if ($session->subject_id) {
-            $subject = Subject::find($session->subject_id);
-            if ($subject) {
-                $sessionData['subject'] = [
-                    'id' => $subject->id,
-                    'name' => $subject->name
-                ];
-            }
-        }
 
         return response()->json([
             'success' => true,
@@ -157,7 +169,7 @@ class AttendanceController extends Controller
         $endDate = $request->input('end_date');
 
         $query = Attendance::with(['session' => function ($q) {
-            $q->with(['semester', 'subject']);
+            $q->with(['semester']);
         }])
             ->where('student_id', $student->id)
             ->orderBy('created_at', 'desc');
@@ -179,7 +191,6 @@ class AttendanceController extends Controller
         // Format data untuk response
         $formattedAttendances = $attendances->map(function ($attendance) {
             $sessionData = null;
-            $subjectData = null;
             $semesterData = null;
 
             if ($attendance->session) {
@@ -188,13 +199,6 @@ class AttendanceController extends Controller
                     'title' => $attendance->session->title ?? 'Sesi Absensi',
                     'date' => $attendance->session->date->format('Y-m-d'),
                 ];
-
-                if ($attendance->session->subject) {
-                    $subjectData = [
-                        'id' => $attendance->session->subject->id,
-                        'name' => $attendance->session->subject->name
-                    ];
-                }
 
                 if ($attendance->session->semester) {
                     $semesterData = [
@@ -209,7 +213,6 @@ class AttendanceController extends Controller
                 'status' => $attendance->status,
                 'submitted_at' => $attendance->submitted_at ? $attendance->submitted_at->format('Y-m-d H:i:s') : null,
                 'session' => $sessionData,
-                'subject' => $subjectData,
                 'semester' => $semesterData
             ];
         });
@@ -267,7 +270,7 @@ class AttendanceController extends Controller
         }
 
         // Ambil semua absensi untuk semester ini
-        $attendances = Attendance::with(['session.subject'])
+        $attendances = Attendance::with(['session'])
             ->whereHas('session', function ($q) use ($semesterId) {
                 $q->where('semester_id', $semesterId);
             })
@@ -308,7 +311,6 @@ class AttendanceController extends Controller
         // Format data untuk response
         $formattedAttendances = $attendances->map(function ($attendance) {
             $sessionData = null;
-            $subjectData = null;
 
             if ($attendance->session) {
                 $sessionData = [
@@ -316,21 +318,13 @@ class AttendanceController extends Controller
                     'title' => $attendance->session->title ?? 'Sesi Absensi',
                     'date' => $attendance->session->date->format('Y-m-d'),
                 ];
-
-                if ($attendance->session->subject) {
-                    $subjectData = [
-                        'id' => $attendance->session->subject->id,
-                        'name' => $attendance->session->subject->name
-                    ];
-                }
             }
 
             return [
                 'id' => $attendance->id,
                 'status' => $attendance->status,
                 'submitted_at' => $attendance->submitted_at ? $attendance->submitted_at->format('Y-m-d H:i:s') : null,
-                'session' => $sessionData,
-                'subject' => $subjectData
+                'session' => $sessionData
             ];
         });
 
