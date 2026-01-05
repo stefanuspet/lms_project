@@ -39,10 +39,6 @@ class AttendanceController extends Controller
 
             $currentSemesterId = $currentSemesterStudent->semesters_id;
 
-            // Get attendance sessions for this semester
-            $attendanceSessions = AttendanceSession::where('semester_id', $currentSemesterId)
-                ->count();
-
             // Get attendance records
             $attendanceRecords = DB::table('attendances')
                 ->join('attendance_sessions', 'attendances.attendance_sessions_id', '=', 'attendance_sessions.id')
@@ -56,21 +52,52 @@ class AttendanceController extends Controller
                 ->orderBy('attendance_sessions.date', 'desc')
                 ->get();
 
-            // Calculate attendance summary
-            $totalPresent = $attendanceRecords->where('status', 'hadir')->count();
-            $totalSick = $attendanceRecords->where('status', 'sakit')->count();
-            $totalPermit = $attendanceRecords->where('status', 'izin')->count();
-            $totalAbsent = $attendanceRecords->where('status', 'alpha')->count();
+            // Calculate daily final status (arrival + departure => 1 status per date)
+            // Get all session dates in this semester
+            $sessionDates = AttendanceSession::where('semester_id', $currentSemesterId)
+                ->pluck('date')
+                ->unique();
+
+            $dailyStatuses = [];
+
+            foreach ($sessionDates as $date) {
+                $recordsForDate = $attendanceRecords->where('session_date', $date);
+                $statuses = $recordsForDate->pluck('status')->all();
+
+                // Default: alpha (bolos/tidak hadir)
+                $finalStatus = 'alpha';
+
+                if (in_array('sakit', $statuses, true)) {
+                    $finalStatus = 'sakit';
+                } elseif (in_array('izin', $statuses, true)) {
+                    $finalStatus = 'izin';
+                } else {
+                    // Hadir hanya jika minimal dua sesi dan semuanya hadir
+                    $presentCount = collect($statuses)->filter(fn ($s) => $s === 'hadir')->count();
+                    if ($presentCount >= 2 && count($statuses) >= 2) {
+                        $finalStatus = 'hadir';
+                    }
+                }
+
+                $dailyStatuses[$date] = $finalStatus;
+            }
+
+            $totalDays = count($dailyStatuses);
+            $totalPresent = collect($dailyStatuses)->filter(fn ($s) => $s === 'hadir')->count();
+            $totalSick = collect($dailyStatuses)->filter(fn ($s) => $s === 'sakit')->count();
+            $totalPermit = collect($dailyStatuses)->filter(fn ($s) => $s === 'izin')->count();
+            $totalAbsent = collect($dailyStatuses)->filter(fn ($s) => $s === 'alpha')->count();
 
             $attendanceSummary = [
-                'total_sessions' => $attendanceSessions,
+                // Interpreted now as total days with sessions in current semester
+                'total_sessions' => $totalDays,
                 'present' => $totalPresent,
                 'sick' => $totalSick,
                 'permit' => $totalPermit,
                 'absent' => $totalAbsent,
-                'attendance_rate' => $attendanceSessions > 0
-                    ? round(($totalPresent / $attendanceSessions) * 100) . '%'
-                    : 'N/A'
+                'attendance_rate' => $totalDays > 0
+                    ? round(($totalPresent / $totalDays) * 100) . '%'
+                    : 'N/A',
             ];
 
             // Group sessions by title for attendance by subject/category analysis
@@ -276,7 +303,9 @@ class AttendanceController extends Controller
         try {
             $validated = $request->validate([
                 'session_id' => 'required|exists:attendance_sessions,id',
-                'pin' => 'required|string|size:6',
+                'qr_token' => 'required|string',
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
             ]);
 
             $user = Auth::user();
@@ -290,10 +319,17 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            // Verify PIN
-            if ($session->pin !== $validated['pin']) {
+            // Verify QR token
+            if ($session->qr_token !== $validated['qr_token']) {
                 return redirect()->back()->withErrors([
-                    'error' => 'Invalid PIN code.'
+                    'error' => 'QR code tidak valid.'
+                ]);
+            }
+
+            // Validate geolocation proximity (~150m)
+            if (!$this->isWithinRadius($validated['latitude'], $validated['longitude'])) {
+                return redirect()->back()->withErrors([
+                    'error' => 'Lokasi di luar area yang diizinkan untuk absensi.'
                 ]);
             }
 
@@ -359,7 +395,7 @@ class AttendanceController extends Controller
 
             // Get active sessions for current semester
             $activeSessions = AttendanceSession::where('semester_id', $currentSemesterId)
-                ->where('expires_at', '>', now())
+                ->active()
                 ->get()
                 ->map(function ($session) use ($student) {
                     // Check if student already submitted attendance
@@ -372,6 +408,8 @@ class AttendanceController extends Controller
                         'title' => $session->title,
                         'description' => $session->description,
                         'date' => $session->date->format('d M Y'),
+                        'session_type' => $session->session_type,
+                        'start_time' => $session->start_time?->format('H:i'),
                         'subject_name' => $session->title, // Using session title since we don't have subject
                         'remaining_time' => $session->remaining_time,
                         'has_submitted' => $hasSubmitted,
@@ -388,5 +426,29 @@ class AttendanceController extends Controller
                 'error' => 'Failed to get active sessions: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Validate that provided coordinates are within a given radius of the allowed point.
+     */
+    private function isWithinRadius(float $latitude, float $longitude, int $radiusMeters = 150): bool
+    {
+        $targetLat = -7.780518240646772;
+        $targetLng = 110.41577003973752;
+
+        $earthRadius = 6371000; // meters
+        $latFrom = deg2rad($latitude);
+        $lonFrom = deg2rad($longitude);
+        $latTo = deg2rad($targetLat);
+        $lonTo = deg2rad($targetLng);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+        $distance = $angle * $earthRadius;
+
+        return $distance <= $radiusMeters;
     }
 }

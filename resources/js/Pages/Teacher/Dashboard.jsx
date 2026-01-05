@@ -27,19 +27,20 @@ const TeacherDashboard = ({
     recent_submissions,
     notifications,
     current_classes,
+    extracurricular_summary = { total: 0, active_sessions_today: 0 },
 }) => {
     return (
-        <TeacherLayout title="Teacher Dashboard">
+        <TeacherLayout title="Dashboard Guru">
             <div className="py-6 w-full">
                 {/* Welcome Banner */}
                 <div className="bg-gradient-to-r from-amber-500 to-yellow-400 rounded-xl shadow-sm mb-6">
                     <div className="px-6 py-5 flex items-center justify-between">
                         <div>
                             <h1 className="text-white text-2xl font-bold">
-                                Welcome back, {teacher.name}!
+                                Selamat datang kembali, {teacher.name}!
                             </h1>
                             <p className="text-amber-100 mt-1">
-                                {new Date().toLocaleDateString("en-US", {
+                                {new Date().toLocaleDateString("id-ID", {
                                     weekday: "long",
                                     year: "numeric",
                                     month: "long",
@@ -61,7 +62,9 @@ const TeacherDashboard = ({
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-gray-500 text-sm">My Subjects</p>
+                            <p className="text-gray-500 text-sm">
+                                Mata Pelajaran Saya
+                            </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.total_subjects}
                             </p>
@@ -78,7 +81,7 @@ const TeacherDashboard = ({
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
                             <p className="text-gray-500 text-sm">
-                                Active Assignments
+                                Tugas Aktif
                             </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.active_assignments}
@@ -96,7 +99,7 @@ const TeacherDashboard = ({
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
                             <p className="text-gray-500 text-sm">
-                                Pending Submissions
+                                Pengumpulan Menunggu Dinilai
                             </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.pending_submissions}
@@ -114,7 +117,7 @@ const TeacherDashboard = ({
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
                             <p className="text-gray-500 text-sm">
-                                Total Students
+                                Total Siswa
                             </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.total_students}
@@ -125,6 +128,32 @@ const TeacherDashboard = ({
                                 variant="Bold"
                                 size="24"
                                 className="text-green-600"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Ekstrakurikuler */}
+                    <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-gray-500 text-sm">
+                                Ekstrakurikuler yang Dibina
+                            </p>
+                            <p className="text-2xl font-bold text-gray-800">
+                                {extracurricular_summary?.total || 0}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Sesi presensi ekskul aktif hari ini:{" "}
+                                <span className="font-semibold">
+                                    {extracurricular_summary?.active_sessions_today ||
+                                        0}
+                                </span>
+                            </p>
+                        </div>
+                        <div className="p-3 bg-purple-100 rounded-full">
+                            <Teacher
+                                variant="Bold"
+                                size="24"
+                                className="text-purple-600"
                             />
                         </div>
                     </div>
@@ -142,13 +171,13 @@ const TeacherDashboard = ({
                                         size="20"
                                         className="text-amber-600"
                                     />
-                                    <span>My Classes</span>
+                                    <span>Kelas Saya</span>
                                 </h2>
                                 <Link
                                     href={route("teacher.subjects.index")}
                                     className="text-sm text-blue-600 hover:text-blue-800"
                                 >
-                                    View All
+                                    Lihat Semua
                                 </Link>
                             </div>
                             <div className="px-6 py-4">
@@ -178,7 +207,7 @@ const TeacherDashboard = ({
                                                             {
                                                                 subject.student_count
                                                             }{" "}
-                                                            Students
+                                                            Siswa
                                                         </span>
                                                     </div>
                                                 </div>
@@ -192,7 +221,7 @@ const TeacherDashboard = ({
                                                             {
                                                                 subject.materials_count
                                                             }{" "}
-                                                            Materials
+                                                            Materi
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
@@ -204,7 +233,7 @@ const TeacherDashboard = ({
                                                             {
                                                                 subject.assignments_count
                                                             }{" "}
-                                                            Assignments
+                                                            Tugas
                                                         </span>
                                                     </div>
                                                 </div>
@@ -214,8 +243,8 @@ const TeacherDashboard = ({
                                 ) : (
                                     <div className="text-center py-4 text-gray-500">
                                         <p>
-                                            You don't have any classes assigned
-                                            yet.
+                                            Anda belum memiliki kelas yang
+                                            diampu.
                                         </p>
                                     </div>
                                 )}
@@ -230,7 +259,7 @@ const TeacherDashboard = ({
                                         size="20"
                                         className="text-red-600"
                                     />
-                                    <span>Upcoming Assignment Deadlines</span>
+                                    <span>Batas Waktu Tugas Mendatang</span>
                                 </h2>
                             </div>
                             <div className="px-6 py-4">
@@ -271,10 +300,10 @@ const TeacherDashboard = ({
                                                                 {
                                                                     assignment.days_remaining
                                                                 }{" "}
-                                                                days left
+                                                                hari lagi
                                                             </span>
                                                             <span className="text-xs text-gray-500 mt-1">
-                                                                Due:{" "}
+                                                                Tenggat:{" "}
                                                                 {
                                                                     assignment.deadline
                                                                 }
@@ -295,7 +324,7 @@ const TeacherDashboard = ({
                                                                 {
                                                                     assignment.student_count
                                                                 }{" "}
-                                                                submitted
+                                                                sudah mengumpulkan
                                                             </span>
                                                         </div>
                                                         <Link
@@ -305,7 +334,7 @@ const TeacherDashboard = ({
                                                             )}
                                                             className="text-sm text-blue-600 hover:text-blue-800"
                                                         >
-                                                            View Submissions
+                                                            Lihat Pengumpulan
                                                         </Link>
                                                     </div>
                                                 </div>
@@ -314,7 +343,10 @@ const TeacherDashboard = ({
                                     </div>
                                 ) : (
                                     <div className="text-center py-4 text-gray-500">
-                                        <p>No upcoming assignment deadlines.</p>
+                                        <p>
+                                            Belum ada batas waktu tugas
+                                            mendatang.
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -328,7 +360,7 @@ const TeacherDashboard = ({
                                         size="20"
                                         className="text-green-600"
                                     />
-                                    <span>Recent Submissions</span>
+                                    <span>Pengumpulan Terbaru</span>
                                 </h2>
                             </div>
                             <div className="px-6 py-4">
@@ -363,8 +395,8 @@ const TeacherDashboard = ({
                                                                 }`}
                                                             >
                                                                 {submission.is_graded
-                                                                    ? "Graded"
-                                                                    : "Needs Grading"}
+                                                                    ? "Sudah Dinilai"
+                                                                    : "Perlu Dinilai"}
                                                             </span>
                                                             <span className="text-xs text-gray-500 mt-1">
                                                                 {
@@ -382,8 +414,8 @@ const TeacherDashboard = ({
                                                             className="text-sm text-blue-600 hover:text-blue-800"
                                                         >
                                                             {submission.is_graded
-                                                                ? "View"
-                                                                : "Grade"}
+                                                                ? "Lihat"
+                                                                : "Nilai"}
                                                         </Link>
                                                     </div>
                                                 </div>
@@ -392,7 +424,7 @@ const TeacherDashboard = ({
                                     </div>
                                 ) : (
                                     <div className="text-center py-4 text-gray-500">
-                                        <p>No recent submissions.</p>
+                                        <p>Tidak ada pengumpulan terbaru.</p>
                                     </div>
                                 )}
                             </div>
@@ -437,7 +469,7 @@ const TeacherDashboard = ({
                                         </div>
                                         <div className="flex flex-col items-center">
                                             <span className="text-gray-500 text-xs">
-                                                Classes
+                                                Kelas
                                             </span>
                                             <span className="text-gray-900 font-bold">
                                                 {stats.total_classes}
@@ -464,7 +496,7 @@ const TeacherDashboard = ({
                                         size="20"
                                         className="text-purple-600"
                                     />
-                                    <span>Calendar</span>
+                                    <span>Kalender</span>
                                 </h2>
                             </div>
                             <div className="px-6 py-4">
@@ -474,9 +506,9 @@ const TeacherDashboard = ({
                                         size="40"
                                         className="text-purple-200 mx-auto mb-2"
                                     />
-                                    <p>Calendar view coming soon!</p>
+                                    <p>Tampilan kalender akan segera hadir.</p>
                                     <p className="text-sm mt-1">
-                                        Schedule and deadlines will appear here.
+                                        Jadwal dan batas waktu akan muncul di sini.
                                     </p>
                                 </div>
                             </div>
@@ -490,13 +522,13 @@ const TeacherDashboard = ({
                                         size="20"
                                         className="text-amber-600"
                                     />
-                                    <span>Recent Notifications</span>
+                                    <span>Notifikasi Terbaru</span>
                                 </h2>
                                 <Link
                                     href={route("teacher.notifications.index")}
                                     className="text-sm text-blue-600 hover:text-blue-800"
                                 >
-                                    View All
+                                    Lihat Semua
                                 </Link>
                             </div>
                             <div className="px-6 py-4">
@@ -554,7 +586,7 @@ const TeacherDashboard = ({
                                     </div>
                                 ) : (
                                     <div className="text-center py-4 text-gray-500">
-                                        <p>No recent notifications.</p>
+                                        <p>Tidak ada notifikasi terbaru.</p>
                                     </div>
                                 )}
                             </div>
@@ -564,7 +596,7 @@ const TeacherDashboard = ({
                         <div className="bg-white rounded-xl shadow-sm">
                             <div className="px-6 py-4 border-b">
                                 <h2 className="font-bold text-lg text-gray-800">
-                                    Quick Actions
+                                    Aksi Cepat
                                 </h2>
                             </div>
                             <div className="px-6 py-4 space-y-2">
@@ -576,7 +608,7 @@ const TeacherDashboard = ({
                                         size="20"
                                         className="text-amber-600"
                                     />
-                                    <span>View All Subjects</span>
+                                    <span>Lihat Semua Mata Pelajaran</span>
                                 </Link>
                                 {/* <Link
                                     href="#"

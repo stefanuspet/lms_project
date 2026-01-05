@@ -28,7 +28,7 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Semester Details
+                                Detail Semester
                             </h1>
                         </div>
                         <Link
@@ -57,8 +57,8 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                         }`}
                                     >
                                         {semester.is_active
-                                            ? "Active"
-                                            : "Inactive"}
+                                            ? "Aktif"
+                                            : "Tidak Aktif"}
                                     </span>
                                 </div>
                                 <div className="flex items-center mt-2 text-gray-600 space-x-6">
@@ -72,14 +72,14 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                     <div className="flex items-center">
                                         <People size="18" className="mr-2" />
                                         <span>
-                                            {semester.student_count} Students
+                                            {semester.student_count} Siswa
                                         </span>
                                     </div>
                                     <div className="flex items-center">
                                         <Book size="18" className="mr-2" />
                                         <span>
                                             {semester.teacher_subject_count}{" "}
-                                            Subjects
+                                            Mata Pelajaran
                                         </span>
                                     </div>
                                 </div>
@@ -88,7 +88,7 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                             {/* Students by Class */}
                             <div className="md:col-span-2">
                                 <h3 className="text-md font-semibold text-gray-700 mb-4 pb-2 border-b">
-                                    Students by Class
+                                    Siswa per Kelas
                                 </h3>
                                 {students_by_class &&
                                 students_by_class.length > 0 ? (
@@ -98,13 +98,13 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                                 <thead className="bg-gray-100">
                                                     <tr>
                                                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Class Name
+                                                            Nama Kelas
                                                         </th>
                                                         <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Students
+                                                            Jumlah Siswa
                                                         </th>
                                                         <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Action
+                                                            Aksi
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -141,8 +141,8 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                                                         )}
                                                                         className="text-blue-500 hover:text-blue-700"
                                                                     >
-                                                                        View
-                                                                        Class
+                                                                        Lihat
+                                                                        Kelas
                                                                     </Link>
                                                                 </td>
                                                             </tr>
@@ -155,8 +155,8 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                 ) : (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <p className="text-gray-500 italic">
-                                            No students enrolled in this
-                                            semester
+                                            Belum ada siswa yang terdaftar pada
+                                            semester ini
                                         </p>
                                     </div>
                                 )}
@@ -165,12 +165,12 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                             {/* Semester Stats */}
                             <div>
                                 <h3 className="text-md font-semibold text-gray-700 mb-4 pb-2 border-b">
-                                    Semester Overview
+                                    Ringkasan Semester
                                 </h3>
                                 <div className="space-y-4">
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h4 className="text-sm font-medium text-gray-500 mb-2">
-                                            Total Students
+                                            Total Siswa
                                         </h4>
                                         <p className="text-2xl font-bold text-amber-600">
                                             {semester.student_count}
@@ -178,7 +178,7 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                     </div>
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h4 className="text-sm font-medium text-gray-500 mb-2">
-                                            Total Subjects
+                                            Total Mata Pelajaran
                                         </h4>
                                         <p className="text-2xl font-bold text-amber-600">
                                             {semester.teacher_subject_count}
@@ -186,7 +186,7 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                     </div>
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h4 className="text-sm font-medium text-gray-500 mb-2">
-                                            Duration
+                                            Durasi
                                         </h4>
                                         <p className="text-xl font-medium text-gray-900">
                                             {calculateDuration(
@@ -286,8 +286,8 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                                                         )}
                                                                         className="text-blue-500 hover:text-blue-700"
                                                                     >
-                                                                        View
-                                                                        Teacher
+                                                                        Lihat
+                                                                        Guru
                                                                     </Link>
                                                                 </td>
                                                             </tr>
@@ -300,8 +300,8 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                 ) : (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <p className="text-gray-500 italic">
-                                            No subjects assigned in this
-                                            semester
+                                            Belum ada mata pelajaran yang
+                                            diampu pada semester ini
                                         </p>
                                     </div>
                                 )}
@@ -313,7 +313,7 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                     href={route("admin.semesters.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Back to List
+                                    Kembali ke Daftar
                                 </Link>
                                 <Link
                                     href={route(
@@ -348,11 +348,11 @@ const calculateDuration = (startDate, endDate) => {
     const diffMonths = Math.round(diffDays / 30);
 
     if (diffMonths < 1) {
-        return `${diffDays} days`;
+        return `${diffDays} hari`;
     } else if (diffMonths === 1) {
-        return `1 month (${diffDays} days)`;
+        return `1 bulan (${diffDays} hari)`;
     } else {
-        return `${diffMonths} months (${diffDays} days)`;
+        return `${diffMonths} bulan (${diffDays} hari)`;
     }
 };
 

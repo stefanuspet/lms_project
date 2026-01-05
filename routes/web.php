@@ -8,10 +8,20 @@ use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SemesterController;
+use App\Http\Controllers\AcademicYearController;
+use App\Http\Controllers\Student\ExtracurricularController as StudentExtracurricularController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\ExtracurricularController;
 use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceController;
+use App\Http\Controllers\Teacher\ExtracurricularController as TeacherExtracurricularController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\StaffController;
+use App\Http\Controllers\Teacher\ScheduleController as TeacherScheduleController;
+use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
+use App\Http\Controllers\Teacher\QuizController as TeacherQuizController;
+use App\Http\Controllers\Student\QuizController as StudentQuizController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -32,25 +42,38 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
     Route::get('teachers', [TeacherController::class, 'index'])->name('teachers.index');
     Route::get('teachers/create', [TeacherController::class, 'create'])->name('teachers.create');
     Route::post('teachers/store', [TeacherController::class, 'store'])->name('teachers.store');
+    Route::get('teachers/export', [TeacherController::class, 'export'])->name('teachers.export');
 
     // Route tambahan untuk operasi CRUD lengkap
     Route::get('teachers/{teacher}', [TeacherController::class, 'show'])->name('teachers.show');        // Untuk melihat detail guru
     Route::get('teachers/{teacher}/edit', [TeacherController::class, 'edit'])->name('teachers.edit');   // Untuk menampilkan form edit
-    Route::put('teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');    // Untuk menyimpan perubahan
+    // Gunakan POST (dan juga PUT) untuk update agar mudah meng-handle upload foto (FormData)
+    Route::match(['post', 'put'], 'teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');    // Untuk menyimpan perubahan
     Route::delete('teachers/{teacher}', [TeacherController::class, 'destroy'])->name('teachers.destroy'); // Untuk menghapus guru
+
+    // Staff routes - CRUD lengkap
+    Route::get('staff', [StaffController::class, 'index'])->name('staff.index');
+    Route::get('staff/create', [StaffController::class, 'create'])->name('staff.create');
+    Route::post('staff', [StaffController::class, 'store'])->name('staff.store');
+    Route::get('staff/export', [StaffController::class, 'export'])->name('staff.export');
+    Route::get('staff/{staff}', [StaffController::class, 'show'])->name('staff.show');
+    Route::get('staff/{staff}/edit', [StaffController::class, 'edit'])->name('staff.edit');
+    Route::post('staff/{staff}', [StaffController::class, 'update'])->name('staff.update');
+    Route::delete('staff/{staff}', [StaffController::class, 'destroy'])->name('staff.destroy');
 
     Route::get('/students', [StudentController::class, 'index'])->name('students.index');
     Route::get('/students/create', [StudentController::class, 'create'])->name('students.create');
     Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+    // Fitur tambahan yang menggunakan prefix /students harus didefinisikan SEBELUM route {student}
+    Route::get('/students/export', [StudentController::class, 'export'])->name('students.export');
+    Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('students.bulk-delete');
+    Route::get('/students/search/autocomplete', [StudentController::class, 'searchAutocomplete'])->name('students.search.autocomplete');
+
     Route::get('/students/{student}', [StudentController::class, 'show'])->name('students.show');
     Route::get('/students/{student}/edit', [StudentController::class, 'edit'])->name('students.edit');
-    Route::put('/students/{student}', [StudentController::class, 'update'])->name('students.update');
+    // Izinkan POST (dan PUT) untuk update agar mudah meng-handle upload foto (FormData)
+    Route::match(['post', 'put'], '/students/{student}', [StudentController::class, 'update'])->name('students.update');
     Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
-
-    // Fitur tambahan
-    Route::post('/students/bulk-delete', [StudentController::class, 'bulkDelete'])->name('students.bulk-delete');
-    Route::post('/students/export', [StudentController::class, 'export'])->name('students.export');
-    Route::get('/students/search/autocomplete', [StudentController::class, 'searchAutocomplete'])->name('students.search.autocomplete');
 
     // CRUD Dasar
     Route::get('/semesters', [SemesterController::class, 'index'])->name('semesters.index');
@@ -64,6 +87,14 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
     // Fitur tambahan
     Route::post('/semesters/{semester}/set-active', [SemesterController::class, 'setActive'])->name('semesters.set-active');
 
+    // Academic Year routes - CRUD
+    Route::get('/academic-years', [AcademicYearController::class, 'index'])->name('academic-years.index');
+    Route::get('/academic-years/create', [AcademicYearController::class, 'create'])->name('academic-years.create');
+    Route::post('/academic-years', [AcademicYearController::class, 'store'])->name('academic-years.store');
+    Route::get('/academic-years/{academicYear}/edit', [AcademicYearController::class, 'edit'])->name('academic-years.edit');
+    Route::put('/academic-years/{academicYear}', [AcademicYearController::class, 'update'])->name('academic-years.update');
+    Route::delete('/academic-years/{academicYear}', [AcademicYearController::class, 'destroy'])->name('academic-years.destroy');
+
     Route::get('/enrollments', [EnrollmentController::class, 'index'])->name('enrollments.index');
     Route::post('/enrollments/enroll', [EnrollmentController::class, 'enroll'])->name('enrollments.enroll');
     Route::post('/enrollments/unenroll', [EnrollmentController::class, 'unenroll'])->name('enrollments.unenroll');
@@ -75,17 +106,26 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
     Route::get('/subject', [SubjectController::class, 'index'])->name('subjects.index');
     Route::get('/subject/create', [SubjectController::class, 'create'])->name('subjects.create');
     Route::post('/subject', [SubjectController::class, 'store'])->name('subjects.store');
+    Route::get('/subject/export', [SubjectController::class, 'export'])->name('subjects.export');
+    Route::get('/subject/{subject}/export-grades', [SubjectController::class, 'exportGrades'])->name('subjects.export-grades');
     Route::get('/subject/{subject}', [SubjectController::class, 'show'])->name('subjects.show');
     Route::get('/subject/{subject}/edit', [SubjectController::class, 'edit'])->name('subjects.edit');
     Route::put('/subject/{subject}', [SubjectController::class, 'update'])->name('subjects.update');
     Route::delete('/subject/{subject}', [SubjectController::class, 'destroy'])->name('subjects.destroy');
 
-    // Additional subject features
-    // Route::post('/subjects/bulk-delete', [SubjectController::class, 'bulkDelete'])->name('subjects.bulk-delete');
+    // Extracurricular routes - CRUD
+    Route::get('/extracurriculars', [ExtracurricularController::class, 'index'])->name('extracurriculars.index');
+    Route::get('/extracurriculars/create', [ExtracurricularController::class, 'create'])->name('extracurriculars.create');
+    Route::post('/extracurriculars', [ExtracurricularController::class, 'store'])->name('extracurriculars.store');
+    Route::get('/extracurriculars/export', [ExtracurricularController::class, 'export'])->name('extracurriculars.export');
+    Route::get('/extracurriculars/{extracurricular}/edit', [ExtracurricularController::class, 'edit'])->name('extracurriculars.edit');
+    Route::put('/extracurriculars/{extracurricular}', [ExtracurricularController::class, 'update'])->name('extracurriculars.update');
+    Route::delete('/extracurriculars/{extracurricular}', [ExtracurricularController::class, 'destroy'])->name('extracurriculars.destroy');
 
     Route::get('/classrooms', [ClassroomController::class, 'index'])->name('classrooms.index');
     Route::get('/classrooms/create', [ClassroomController::class, 'create'])->name('classrooms.create');
     Route::post('/classrooms', [ClassroomController::class, 'store'])->name('classrooms.store');
+    Route::get('/classrooms/export', [ClassroomController::class, 'export'])->name('classrooms.export');
     Route::get('/classrooms/{classroom}', [ClassroomController::class, 'show'])->name('classrooms.show');
     Route::get('/classrooms/{classroom}/edit', [ClassroomController::class, 'edit'])->name('classrooms.edit');
     Route::put('/classrooms/{classroom}', [ClassroomController::class, 'update'])->name('classrooms.update');
@@ -97,6 +137,14 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
     Route::post('/classrooms/{classroom}/remove-students', [ClassroomController::class, 'removeStudents'])->name('classrooms.remove-students');
     Route::get('/classrooms/search/students', [ClassroomController::class, 'searchStudents'])->name('classrooms.search-students');
 
+    // Schedules routes
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('/schedules/create', [ScheduleController::class, 'create'])->name('schedules.create');
+    Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+    Route::get('/schedules/{schedule}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
+    Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
+    Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+
 
 
     // Attendance routes for admin
@@ -105,7 +153,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
         Route::get('/create', [AttendanceController::class, 'create'])->name('create');
         Route::post('/', [AttendanceController::class, 'store'])->name('store');
         Route::get('/reports', [AttendanceController::class, 'reports'])->name('reports');
-        Route::post('/export-report', [AttendanceController::class, 'exportReport'])->name('export-report');
+        // gunakan GET untuk export agar browser langsung mengunduh file
+        Route::get('/export-report', [AttendanceController::class, 'exportReport'])->name('export-report');
         Route::get('/{session}', [AttendanceController::class, 'show'])->name('show');
         Route::post('/{session}/update-attendance', [AttendanceController::class, 'updateAttendance'])->name('update-attendance');
         Route::post('/{session}/extend', [AttendanceController::class, 'extendSession'])->name('extend-session');
@@ -134,6 +183,13 @@ Route::prefix('teacher')->middleware(['auth', 'role:guru'])->name("teacher.")->g
     // Subject routes
     Route::get('subjects', [App\Http\Controllers\Teacher\SubjectController::class, 'index'])->name('subjects.index');
     Route::get('subjects/{subject}', [App\Http\Controllers\Teacher\SubjectController::class, 'show'])->name('subjects.show');
+    Route::get('subjects/{subject}/export-grades', [App\Http\Controllers\Teacher\SubjectController::class, 'exportGrades'])->name('subjects.export-grades');
+
+    // Subject discussions (forum)
+    Route::get('subjects/{subject}/discussions', [App\Http\Controllers\Teacher\DiscussionController::class, 'index'])->name('discussions.index');
+    Route::post('subjects/{subject}/discussions', [App\Http\Controllers\Teacher\DiscussionController::class, 'store'])->name('discussions.store');
+    Route::get('subjects/{subject}/discussions/{thread}', [App\Http\Controllers\Teacher\DiscussionController::class, 'show'])->name('discussions.show');
+    Route::post('subjects/{subject}/discussions/{thread}/reply', [App\Http\Controllers\Teacher\DiscussionController::class, 'reply'])->name('discussions.reply');
 
     // Subject-specific materials & assignments
     Route::get('subjects/{subject}/materials', [App\Http\Controllers\Teacher\MaterialController::class, 'subjectMaterials'])->name('subjects.materials');
@@ -163,10 +219,24 @@ Route::prefix('teacher')->middleware(['auth', 'role:guru'])->name("teacher.")->g
     Route::post('submissions/{submission}/grade', [App\Http\Controllers\Teacher\SubmissionController::class, 'grade'])->name('submissions.grade');
     Route::get('submissions/export/{assignment}', [App\Http\Controllers\Teacher\SubmissionController::class, 'export'])->name('submissions.export');
 
+    // Schedule
+    Route::get('schedule', [TeacherScheduleController::class, 'index'])->name('schedule.index');
+
     // Attendance routes
     Route::get('attendance', [TeacherAttendanceController::class, 'index'])->name('attendance.index');
     Route::get('attendance/daily', [TeacherAttendanceController::class, 'dailyView'])->name('attendance.daily');
     Route::get('attendance/active-sessions', [TeacherAttendanceController::class, 'activeSessions'])->name('attendance.active_sessions');
+    Route::post('attendance/extracurriculars/{extracurricular}', [TeacherAttendanceController::class, 'createExtracurricularSession'])->name('attendance.extracurriculars.create');
+
+    // Quizzes
+    Route::get('quizzes', [TeacherQuizController::class, 'index'])->name('quizzes.index');
+    Route::get('quizzes/create', [TeacherQuizController::class, 'create'])->name('quizzes.create');
+    Route::post('quizzes', [TeacherQuizController::class, 'store'])->name('quizzes.store');
+
+    // Extracurriculars (guru sebagai pembina)
+    Route::get('extracurriculars', [TeacherExtracurricularController::class, 'index'])->name('extracurriculars.index');
+    Route::get('extracurriculars/{extracurricular}', [TeacherExtracurricularController::class, 'show'])->name('extracurriculars.show');
+    Route::get('extracurriculars/{extracurricular}/export-attendance', [TeacherExtracurricularController::class, 'exportAttendance'])->name('extracurriculars.export-attendance');
 
     // Student Progress routes
     Route::get('progress', [App\Http\Controllers\Teacher\ProgressController::class, 'index'])->name('progress.index');
@@ -219,6 +289,24 @@ Route::prefix('student')->middleware(['auth', 'role:siswa'])->name("student.")->
     // Laporan Nilai
     Route::get('grades', [App\Http\Controllers\Student\GradeController::class, 'index'])->name('grades.index');
     Route::get('grades/subjects/{subject}', [App\Http\Controllers\Student\GradeController::class, 'subjectGrades'])->name('grades.subject');
+
+    // Jadwal pelajaran
+    Route::get('schedule', [StudentScheduleController::class, 'index'])->name('schedule.index');
+
+    // Quizzes
+    Route::get('quizzes', [StudentQuizController::class, 'index'])->name('quizzes.index');
+    Route::get('quizzes/{quiz}', [StudentQuizController::class, 'show'])->name('quizzes.show');
+    Route::post('quizzes/{quiz}/submit', [StudentQuizController::class, 'submit'])->name('quizzes.submit');
+
+    // Ekstrakurikuler (siswa)
+    Route::get('extracurriculars', [StudentExtracurricularController::class, 'index'])->name('extracurriculars.index');
+    Route::get('extracurriculars/{extracurricular}', [StudentExtracurricularController::class, 'show'])->name('extracurriculars.show');
+
+    // Diskusi (forum) per mata pelajaran
+    Route::get('subjects/{subject}/discussions', [App\Http\Controllers\Student\DiscussionController::class, 'index'])->name('discussions.index');
+    Route::post('subjects/{subject}/discussions', [App\Http\Controllers\Student\DiscussionController::class, 'store'])->name('discussions.store');
+    Route::get('subjects/{subject}/discussions/{thread}', [App\Http\Controllers\Student\DiscussionController::class, 'show'])->name('discussions.show');
+    Route::post('subjects/{subject}/discussions/{thread}/reply', [App\Http\Controllers\Student\DiscussionController::class, 'reply'])->name('discussions.reply');
 });
 
 Route::middleware('auth')->group(function () {

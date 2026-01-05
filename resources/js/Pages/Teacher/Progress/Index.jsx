@@ -204,10 +204,10 @@ const TeacherProgressIndex = ({
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
                         <h1 className="font-bold text-xl text-gray-800">
-                            Student Progress Tracker
+                            Pemantauan Progres Siswa
                         </h1>
                         <div className="flex items-center space-x-2">
-                            {/* Search box */}
+                            {/* Kotak Pencarian */}
                             <form onSubmit={handleSearch} className="relative">
                                 <SearchNormal1
                                     size="20"
@@ -215,7 +215,7 @@ const TeacherProgressIndex = ({
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search students"
+                                    placeholder="Cari siswa"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -223,7 +223,7 @@ const TeacherProgressIndex = ({
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
 
@@ -238,9 +238,9 @@ const TeacherProgressIndex = ({
                         </div>
                     </div>
 
-                    {/* Class filter */}
+                    {/* Filter Kelas */}
                     <div className="px-6 py-3 bg-gray-50 border-b flex items-center space-x-2 overflow-x-auto">
-                        <span className="text-sm text-gray-600">Class:</span>
+                        <span className="text-sm text-gray-600">Kelas:</span>
                         <button
                             onClick={() => handleClassFilter(null)}
                             className={`px-3 py-1 rounded-full text-sm ${
@@ -249,7 +249,7 @@ const TeacherProgressIndex = ({
                                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                             }`}
                         >
-                            All Classes
+                            Semua Kelas
                         </button>
                         {classes &&
                             classes.length > 0 &&
@@ -281,7 +281,7 @@ const TeacherProgressIndex = ({
                                         onClick={() => handleSort("name")}
                                     >
                                         <div className="flex items-center">
-                                            <span>Student Name</span>
+                                            <span>Nama Siswa</span>
                                             {sortBy === "name" &&
                                                 (sortOrder === "asc" ? (
                                                     <ArrowUp
@@ -304,7 +304,7 @@ const TeacherProgressIndex = ({
                                         onClick={() => handleSort("class_name")}
                                     >
                                         <div className="flex items-center">
-                                            <span>Class</span>
+                                            <span>Kelas</span>
                                             {sortBy === "class_name" &&
                                                 (sortOrder === "asc" ? (
                                                     <ArrowUp
@@ -326,7 +326,7 @@ const TeacherProgressIndex = ({
                                         }
                                     >
                                         <div className="flex items-center">
-                                            <span>Assignment Completion</span>
+                                            <span>Penyelesaian Tugas</span>
                                             {sortBy ===
                                                 "assignment_completion" &&
                                                 (sortOrder === "asc" ? (
@@ -349,7 +349,7 @@ const TeacherProgressIndex = ({
                                         }
                                     >
                                         <div className="flex items-center">
-                                            <span>Average Grade</span>
+                                            <span>Nilai Rata-rata</span>
                                             {sortBy === "average_grade" &&
                                                 (sortOrder === "asc" ? (
                                                     <ArrowUp
@@ -365,7 +365,7 @@ const TeacherProgressIndex = ({
                                         </div>
                                     </th>
                                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
+                                        Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -400,7 +400,7 @@ const TeacherProgressIndex = ({
                                                             {
                                                                 student.total_assignments
                                                             }{" "}
-                                                            tasks
+                                                            tugas
                                                         </span>
                                                         <span className="text-sm font-medium text-gray-700">
                                                             {
@@ -442,7 +442,7 @@ const TeacherProgressIndex = ({
                                                     </div>
                                                 ) : (
                                                     <span className="text-sm text-gray-500">
-                                                        No grades yet
+                                                        Belum ada nilai
                                                     </span>
                                                 )}
                                             </td>
@@ -453,7 +453,7 @@ const TeacherProgressIndex = ({
                                                         student.id
                                                     )}
                                                     className="text-blue-600 hover:text-blue-900 inline-block"
-                                                    title="View Student Progress"
+                                                    title="Lihat Progres Siswa"
                                                 >
                                                     <Eye size="20" />
                                                 </Link>
@@ -469,7 +469,7 @@ const TeacherProgressIndex = ({
                                             colSpan="6"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No students found
+                                            Tidak ada siswa
                                         </td>
                                     </tr>
                                 )}
@@ -485,7 +485,7 @@ const TeacherProgressIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -517,7 +517,7 @@ const TeacherProgressIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Selanjutnya
                             </button>
                         </div>
                     )}

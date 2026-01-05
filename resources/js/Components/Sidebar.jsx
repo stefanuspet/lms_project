@@ -11,6 +11,7 @@ import {
     CalendarCircle,
     Personalcard,
     CloseCircle,
+    Calendar,
 } from "iconsax-reactjs";
 import SidebarItem from "./SidebarItem";
 import { usePage } from "@inertiajs/react";
@@ -18,68 +19,113 @@ import { usePage } from "@inertiajs/react";
 const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
     const { url } = usePage();
 
-    const menuItems = [
+    const sections = [
         {
-            label: "Dashboard",
-            icon: Home2,
-            active: url === "/admin/dashboard",
-            path: "/admin/dashboard",
+            title: "Utama",
+            items: [
+                {
+                    label: "Dashboard",
+                    icon: Home2,
+                    active: url === "/admin/dashboard",
+                    path: "/admin/dashboard",
+                },
+            ],
         },
         {
-            label: "Teachers",
-            icon: Teacher,
-            active: url === "/admin/teachers",
-            path: "/admin/teachers",
+            title: "Data",
+            items: [
+                {
+                    label: "Guru",
+                    icon: Teacher,
+                    active: url === "/admin/teachers",
+                    path: "/admin/teachers",
+                },
+                {
+                    label: "Staf & Security",
+                    icon: Personalcard,
+                    active: url.startsWith("/admin/staff"),
+                    path: "/admin/staff",
+                },
+                {
+                    label: "Siswa",
+                    icon: Profile2User,
+                    active: url === "/admin/students",
+                    path: "/admin/students",
+                },
+                {
+                    label: "Kelas",
+                    icon: Briefcase,
+                    active: url === "/admin/classrooms",
+                    path: "/admin/classrooms",
+                },
+                {
+                    label: "Mata Pelajaran",
+                    icon: Book1,
+                    active: url === "/admin/subject",
+                    path: "/admin/subject",
+                },
+                {
+                    label: "Ekstrakurikuler",
+                    icon: Calendar,
+                    active: url === "/admin/extracurriculars",
+                    path: "/admin/extracurriculars",
+                },
+            ],
         },
         {
-            label: "Students",
-            icon: Profile2User,
-            active: url === "/admin/students",
-            path: "/admin/students",
+            title: "Akademik",
+            items: [
+                {
+                    label: "Presensi",
+                    icon: People,
+                    active: url === "/admin/attendance",
+                    path: "/admin/attendance",
+                },
+                {
+                    label: "Jadwal",
+                    icon: CalendarCircle,
+                    active: url === "/admin/schedules",
+                    path: "/admin/schedules",
+                },
+                {
+                    label: "Semester",
+                    icon: CalendarCircle,
+                    active: url === "/admin/semesters",
+                    path: "/admin/semesters",
+                },
+                {
+                    label: "Tahun Ajar",
+                    icon: Calendar,
+                    active: url === "/admin/academic-years",
+                    path: "/admin/academic-years",
+                },
+            ],
         },
         {
-            label: "Attendances",
-            icon: People,
-            active: url === "/admin/attendance",
-            path: "/admin/attendance",
-        },
-        {
-            label: "Class",
-            icon: Briefcase,
-            active: url === "/admin/classrooms",
-            path: "/admin/classrooms",
-        },
-        {
-            label: "Subject",
-            icon: Book1,
-            active: url === "/admin/subject",
-            path: "/admin/subject",
-        },
-        {
-            label: "Semester",
-            icon: CalendarCircle,
-            active: url === "/admin/semesters",
-            path: "/admin/semesters",
-        },
-        {
-            label: "Students Enrollment",
-            icon: Personalcard,
-            active: url === "/admin/enrollments",
-            path: "/admin/enrollments",
-        },
-        {
-            label: "Activity Logs",
-            icon: Activity,
-            active: url === "/admin/activity-logs",
-            path: "/admin/activity-logs",
-        },
-        {
-            label: "Log out",
-            icon: Logout,
-            active: url === "/logout",
-            path: "/logout",
+            title: "Administrasi",
+            items: [
+                {
+                    label: "Pendaftaran",
+                    icon: Personalcard,
+                    active: url === "/admin/enrollments",
+                    path: "/admin/enrollments",
+                },
+                {
+                    label: "Log Aktivitas",
+                    icon: Activity,
+                    active: url === "/admin/activity-logs",
+                    path: "/admin/activity-logs",
+                },
+            ],
         },
     ];
+
+    const logoutItem = {
+        label: "Keluar",
+        icon: Logout,
+        active: url === "/logout",
+        path: "/logout",
+    };
 
     const closeSidebar = () => {
         if (isMobile) {
@@ -99,15 +145,15 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                 `}
             >
                 {/* Sidebar Header with Logo */}
-                <div className="py-6 px-4 flex items-center justify-between">
-                    <div className="flex items-center">
+                <div className="py-5 px-4 flex items-center justify-between border-b">
+                    <div className="flex items-center mx-auto justify-between w-full">
                         <img
                             src="/assets/images/Logo.png"
                             alt="logo"
-                            className="w-6"
+                            className="w-8 mx-auto"
                         />
-                        <h1 className="font-extrabold text-xl text-center pl-3">
-                            SchoolHub
+                        <h1 className="font-extrabold text-md pt-1">
+                            SMK Amaliyah Jakarta
                         </h1>
                     </div>
 
@@ -122,23 +168,40 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     )}
                 </div>
 
-                {/* Menu Label */}
-                <div className="mt-6 px-6">
-                    <p className="text-[#A7A9AA] text-sm font-medium">MENU</p>
-                </div>
+                {/* Menu Sections */}
+                <div className="mt-4 px-3 pb-6 overflow-y-auto max-h-[calc(100vh-120px)] flex flex-col justify-between">
+                    <div>
+                        {sections.map((section, idx) => (
+                            <div key={idx} className="mb-4">
+                                <div className="px-3 mb-1">
+                                    <p className="text-[#A7A9AA] text-xs font-semibold uppercase tracking-wide">
+                                        {section.title}
+                                    </p>
+                                </div>
+                                {section.items.map((item, index) => (
+                                    <SidebarItem
+                                        key={`${section.title}-${index}`}
+                                        icon={item.icon}
+                                        label={item.label}
+                                        active={item.active}
+                                        path={item.path}
+                                        onClick={isMobile ? closeSidebar : undefined}
+                                    />
+                                ))}
+                            </div>
+                        ))}
+                    </div>
 
-                {/* Menu Items */}
-                <div className="mt-4 px-3 pb-6 overflow-y-auto max-h-[calc(100vh-120px)]">
-                    {menuItems.map((item, index) => (
+                    {/* Logout at bottom */}
+                    <div className="mt-2 pt-3 border-t border-gray-200">
                         <SidebarItem
-                            key={index}
-                            icon={item.icon}
-                            label={item.label}
-                            active={item.active}
-                            path={item.path}
+                            icon={logoutItem.icon}
+                            label={logoutItem.label}
+                            active={logoutItem.active}
+                            path={logoutItem.path}
                             onClick={isMobile ? closeSidebar : undefined}
                         />
-                    ))}
+                    </div>
                 </div>
             </div>
 

@@ -5,7 +5,7 @@ import { ArrowLeft2, Edit2 } from "iconsax-reactjs";
 
 const StudentShow = ({ student }) => {
     return (
-        <AuthenticatedLayout title={`Student: ${student.name}`}>
+        <AuthenticatedLayout title={`Siswa: ${student.name}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -21,7 +21,7 @@ const StudentShow = ({ student }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Student Details
+                                Detail Data Siswa
                             </h1>
                         </div>
                         <Link
@@ -29,7 +29,7 @@ const StudentShow = ({ student }) => {
                             className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                         >
                             <Edit2 size="20" />
-                            <span>Edit Student</span>
+                            <span>Edit Data Siswa</span>
                         </Link>
                     </div>
 
@@ -39,14 +39,14 @@ const StudentShow = ({ student }) => {
                             {/* Student Profile Section */}
                             <div className="md:col-span-2">
                                 <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b">
-                                    Student Profile
+                                    Profil Siswa
                                 </h2>
                             </div>
 
                             {/* Info boxes */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Full Name
+                                    Nama Lengkap
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {student.name}
@@ -64,7 +64,7 @@ const StudentShow = ({ student }) => {
 
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Gender
+                                    Jenis Kelamin
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {student.gender ? student.gender : "-"}
@@ -73,16 +73,7 @@ const StudentShow = ({ student }) => {
 
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Religion
-                                </h3>
-                                <p className="text-lg font-medium text-gray-900">
-                                    {student.religion ? student.religion : "-"}
-                                </p>
-                            </div>
-
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Birth Date
+                                    Tanggal Lahir
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {student.birth_date
@@ -95,7 +86,7 @@ const StudentShow = ({ student }) => {
 
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Birth Place
+                                    Tempat Lahir
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {student.birth_place
@@ -178,7 +169,7 @@ const StudentShow = ({ student }) => {
                                 ) : (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <p className="text-gray-500 italic">
-                                            Not enrolled in any classes
+                                            Belum terdaftar di kelas mana pun
                                         </p>
                                     </div>
                                 )}
@@ -190,7 +181,7 @@ const StudentShow = ({ student }) => {
                                     href={route("admin.students.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Back to List
+                                    Kembali ke Daftar
                                 </Link>
                                 <Link
                                     href={route(
@@ -199,7 +190,7 @@ const StudentShow = ({ student }) => {
                                     )}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                                 >
-                                    Edit Student
+                                    Edit Data Siswa
                                 </Link>
                             </div>
                         </div>

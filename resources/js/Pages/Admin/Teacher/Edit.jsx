@@ -7,7 +7,7 @@ import TextInput from "@/Components/TextInput";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
 const TeacherEdit = ({ teacher }) => {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         name: teacher.name || "",
         email: teacher.user?.email || "",
         password: "",
@@ -15,7 +15,12 @@ const TeacherEdit = ({ teacher }) => {
         nip: teacher.nip || "",
         phone: teacher.phone || "",
         address: teacher.address || "",
+        profile_picture: null,
     });
+
+    const [previewProfilePicture, setPreviewProfilePicture] = useState(
+        teacher.profile_picture || "/assets/images/default-avatar.png",
+    );
 
     const [clientErrors, setClientErrors] = useState({});
     const [isFormValid, setIsFormValid] = useState(true); // Default to true for edit form since password is optional
@@ -30,29 +35,29 @@ const TeacherEdit = ({ teacher }) => {
         const newErrors = {};
 
         // Required fields validation
-        if (!data.name) newErrors.name = "Name is required";
-        if (!data.email) newErrors.email = "Email is required";
-        if (!data.nip) newErrors.nip = "School ID / NIP is required";
+        if (!data.name) newErrors.name = "Nama wajib diisi";
+        if (!data.email) newErrors.email = "Email wajib diisi";
+        if (!data.nip) newErrors.nip = "NIP wajib diisi";
 
         // Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (data.email && !emailRegex.test(data.email)) {
-            newErrors.email = "Please enter a valid email address";
+            newErrors.email = "Masukkan alamat email yang valid";
         }
 
         // Password validation - only if password field is not empty
         if (data.password && data.password.length < 8) {
-            newErrors.password = "Password must be at least 8 characters";
+            newErrors.password = "Password minimal 8 karakter";
         }
 
         // Password confirmation validation - only if password field is not empty
         if (data.password && !data.password_confirmation) {
-            newErrors.password_confirmation = "Please confirm your password";
+            newErrors.password_confirmation = "Konfirmasi password wajib diisi";
         } else if (
             data.password &&
             data.password !== data.password_confirmation
         ) {
-            newErrors.password_confirmation = "Passwords do not match";
+            newErrors.password_confirmation = "Konfirmasi password tidak sama";
         }
 
         setClientErrors(newErrors);
@@ -68,8 +73,9 @@ const TeacherEdit = ({ teacher }) => {
         validateForm();
 
         if (isFormValid) {
-            put(route("admin.teachers.update", teacher.id), {
+            post(route("admin.teachers.update", teacher.id), {
                 preserveScroll: true,
+                forceFormData: true,
                 onSuccess: () => {
                     // Success handled by redirect with flash message
                 },
@@ -82,14 +88,23 @@ const TeacherEdit = ({ teacher }) => {
         setData(name, value);
     };
 
+    const handleProfilePictureChange = (e) => {
+        const file = e.target.files[0];
+        setData("profile_picture", file || null);
+
+        if (file) {
+            setPreviewProfilePicture(URL.createObjectURL(file));
+        }
+    };
+
     // Get displayed error (priority to server-side errors)
     const getErrorMessage = (field) => {
         return errors[field] || clientErrors[field];
     };
 
     return (
-        <AuthenticatedLayout title="Edit Teacher">
-            <div className="py-6 w-full">
+        <AuthenticatedLayout title="Kelola Data Guru">
+            <div className="w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
@@ -104,7 +119,7 @@ const TeacherEdit = ({ teacher }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Edit Teacher
+                                Edit Data Guru
                             </h1>
                         </div>
                     </div>
@@ -116,15 +131,51 @@ const TeacherEdit = ({ teacher }) => {
                                 {/* Teacher Profile Section */}
                                 <div className="md:col-span-2">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Teacher Profile
+                                        Profil Guru
                                     </h2>
+                                </div>
+
+                                {/* Foto Profil */}
+                                <div className="md:col-span-2 flex items-center gap-6 mb-2">
+                                    <div>
+                                        <img
+                                            src={previewProfilePicture}
+                                            alt={data.name || "Foto profil"}
+                                            className="h-24 w-24 rounded-full object-cover border"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <InputLabel
+                                            htmlFor="profile_picture"
+                                            value="Foto Profil"
+                                        />
+                                        <input
+                                            id="profile_picture"
+                                            type="file"
+                                            accept="image/*"
+                                            className="mt-1 block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+                                            onChange={
+                                                handleProfilePictureChange
+                                            }
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Kosongkan jika tidak ingin mengubah
+                                            foto profil.
+                                        </p>
+                                        <InputError
+                                            message={getErrorMessage(
+                                                "profile_picture",
+                                            )}
+                                            className="mt-2"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Teacher Name */}
                                 <div>
                                     <InputLabel
                                         htmlFor="name"
-                                        value="Teacher Name"
+                                        value="Nama Guru"
                                     />
                                     <TextInput
                                         id="name"
@@ -143,10 +194,7 @@ const TeacherEdit = ({ teacher }) => {
 
                                 {/* School ID / NIP */}
                                 <div>
-                                    <InputLabel
-                                        htmlFor="nip"
-                                        value="School ID / NIP"
-                                    />
+                                    <InputLabel htmlFor="nip" value="NIP" />
                                     <TextInput
                                         id="nip"
                                         type="text"
@@ -166,7 +214,7 @@ const TeacherEdit = ({ teacher }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="phone"
-                                        value="Phone Number"
+                                        value="Nomor Telepon"
                                     />
                                     <TextInput
                                         id="phone"
@@ -186,7 +234,7 @@ const TeacherEdit = ({ teacher }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="address"
-                                        value="Address"
+                                        value="Alamat"
                                     />
                                     <TextInput
                                         id="address"
@@ -205,7 +253,7 @@ const TeacherEdit = ({ teacher }) => {
                                 {/* Account Information Section */}
                                 <div className="md:col-span-2 mt-4">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Login Information
+                                        Informasi Login
                                     </h2>
                                 </div>
 
@@ -213,7 +261,7 @@ const TeacherEdit = ({ teacher }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="email"
-                                        value="Email Address"
+                                        value="Alamat Email"
                                     />
                                     <TextInput
                                         id="email"
@@ -234,7 +282,7 @@ const TeacherEdit = ({ teacher }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password"
-                                        value="Password (leave blank to keep current, min 8 characters if changing)"
+                                        value="Password (kosongkan jika tidak diubah, minimal 8 karakter jika diubah)"
                                     />
                                     <TextInput
                                         id="password"
@@ -255,7 +303,7 @@ const TeacherEdit = ({ teacher }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password_confirmation"
-                                        value="Confirm Password"
+                                        value="Konfirmasi Password"
                                     />
                                     <TextInput
                                         id="password_confirmation"
@@ -268,7 +316,7 @@ const TeacherEdit = ({ teacher }) => {
                                     />
                                     <InputError
                                         message={getErrorMessage(
-                                            "password_confirmation"
+                                            "password_confirmation",
                                         )}
                                         className="mt-2"
                                     />
@@ -278,8 +326,8 @@ const TeacherEdit = ({ teacher }) => {
                             {/* Password Requirements Hint */}
                             <div className="mt-4 text-sm text-gray-500">
                                 <p>
-                                    If updating password, it must be at least 8
-                                    characters long.
+                                    Jika mengubah password, panjang minimal 8
+                                    karakter.
                                 </p>
                             </div>
 
@@ -289,14 +337,14 @@ const TeacherEdit = ({ teacher }) => {
                                     href={route("admin.teachers.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing || !isFormValid}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
                                 >
-                                    Update Teacher
+                                    Update Data
                                 </button>
                             </div>
                         </form>

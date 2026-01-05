@@ -39,6 +39,7 @@ const Dashboard = () => {
         notifications,
         recentActivities,
         registrationChart,
+        activePeriod,
     } = usePage().props;
     console.log(recentActivities);
 
@@ -59,13 +60,13 @@ const Dashboard = () => {
         {
             label: "Kelola Kelas",
             icon: Book1,
-            href: "#",
+            href: "/admin/classes",
             color: "blue",
         },
         {
             label: "Kelola Mata Pelajaran",
             icon: DocumentText,
-            href: "#",
+            href: "/admin/subjects",
             color: "green",
         },
     ];
@@ -81,7 +82,7 @@ const Dashboard = () => {
                                 Dashboard Administrator
                             </h1>
                             <p className="text-purple-100 text-sm sm:text-base mt-1">
-                                {new Date().toLocaleDateString("en-US", {
+                                {new Date().toLocaleDateString("id-ID", {
                                     weekday: "long",
                                     year: "numeric",
                                     month: "long",
@@ -95,6 +96,78 @@ const Dashboard = () => {
                                 size="80"
                                 className="text-white opacity-70"
                             />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Periode aktif & ringkasan hari ini */}
+                <div className="mb-4 sm:mb-6">
+                    <div className="bg-white rounded-xl shadow-sm px-4 sm:px-5 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-gray-100">
+                        <div className="flex items-start gap-3">
+                            <Calendar
+                                size="28"
+                                className="text-amber-500 mt-1 flex-shrink-0"
+                            />
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                    Periode Akademik Aktif
+                                </p>
+                                <div className="mt-1 text-sm sm:text-base text-gray-800">
+                                    <div>
+                                        Tahun Ajar:{" "}
+                                        <span className="font-semibold">
+                                            {activePeriod?.academic_year
+                                                ? activePeriod.academic_year
+                                                      .name
+                                                : "Belum diatur"}
+                                        </span>
+                                    </div>
+                                    {activePeriod?.academic_year
+                                        ?.formatted_period && (
+                                        <div className="text-xs text-gray-500">
+                                            Periode:{" "}
+                                            {
+                                                activePeriod.academic_year
+                                                    .formatted_period
+                                            }
+                                        </div>
+                                    )}
+                                    <div className="mt-1">
+                                        Semester:{" "}
+                                        <span className="font-semibold">
+                                            {activePeriod?.semester
+                                                ? activePeriod.semester.name
+                                                : "Belum diatur"}
+                                        </span>
+                                        {activePeriod?.semester
+                                            ?.formatted_period && (
+                                            <span className="ml-1 text-xs text-gray-500">
+                                                (
+                                                {
+                                                    activePeriod.semester
+                                                        .formatted_period
+                                                }
+                                                )
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 text-xs sm:text-sm text-amber-900">
+                            <p className="font-semibold mb-1">
+                                Ringkasan jadwal hari ini
+                            </p>
+                            <p>
+                                Pelajaran:{" "}
+                                <span className="font-semibold">
+                                    {activePeriod?.today?.schedules ?? 0}
+                                </span>{" "}
+                                | Ekstrakurikuler:{" "}
+                                <span className="font-semibold">
+                                    {activePeriod?.today?.extracurriculars ?? 0}
+                                </span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -130,7 +203,7 @@ const Dashboard = () => {
                 {/* Main Content */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     {/* First Row - Charts */}
-                    <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mb-4 sm:mb-6">
+                    <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mb-4 sm:mb-2">
                         <div className="h-60 sm:h-72 bg-white rounded-xl shadow-sm">
                             <div className="px-3 sm:px-4 py-2 sm:py-3 border-b flex items-center gap-2">
                                 <Profile2User

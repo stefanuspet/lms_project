@@ -15,7 +15,7 @@ import {
 
 const TeacherShow = ({ teacher, flash }) => {
     const handleDelete = () => {
-        if (confirm("Are you sure you want to delete this teacher?")) {
+        if (confirm("Apakah Anda yakin ingin menghapus data guru ini?")) {
             router.delete(route("admin.teachers.destroy", teacher.id), {
                 preserveScroll: true,
             });
@@ -25,7 +25,7 @@ const TeacherShow = ({ teacher, flash }) => {
     console.log(teacher);
 
     return (
-        <AuthenticatedLayout title="Teacher Details">
+        <AuthenticatedLayout title="Kelola Data Guru">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -36,7 +36,7 @@ const TeacherShow = ({ teacher, flash }) => {
                 </div>
             )}
 
-            <div className="py-6 w-full">
+            <div className="w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
@@ -51,7 +51,7 @@ const TeacherShow = ({ teacher, flash }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Teacher Details
+                                Detail Data Guru
                             </h1>
                         </div>
                         <div className="flex items-center space-x-3">
@@ -67,7 +67,7 @@ const TeacherShow = ({ teacher, flash }) => {
                                 className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
                             >
                                 <Trash size="20" />
-                                <span>Delete</span>
+                                <span>Hapus</span>
                             </button>
                         </div>
                     </div>
@@ -169,7 +169,7 @@ const TeacherShow = ({ teacher, flash }) => {
                                             size="24"
                                             className="text-gray-500 mr-2"
                                         />
-                                        Teaching Information
+                                        Informasi Kelas
                                     </h3>
 
                                     {teacher.subjects &&
@@ -179,10 +179,10 @@ const TeacherShow = ({ teacher, flash }) => {
                                                 <thead className="bg-gray-50">
                                                     <tr>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Subject
+                                                            Mata Pelajaran
                                                         </th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Class
+                                                            Kelas
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -213,8 +213,8 @@ const TeacherShow = ({ teacher, flash }) => {
                                         </div>
                                     ) : (
                                         <div className="bg-gray-50 text-gray-500 p-4 rounded-lg text-center">
-                                            No subjects assigned to this teacher
-                                            yet.
+                                            Belum ada mata pelajaran yang
+                                            diampu guru ini.
                                         </div>
                                     )}
                                 </div>
@@ -226,7 +226,7 @@ const TeacherShow = ({ teacher, flash }) => {
                                             size="24"
                                             className="text-gray-500 mr-2"
                                         />
-                                        Classes
+                                        Kelas
                                     </h3>
 
                                     {teacher.subjects &&
@@ -250,8 +250,8 @@ const TeacherShow = ({ teacher, flash }) => {
                                         </div>
                                     ) : (
                                         <div className="bg-gray-50 text-gray-500 p-4 rounded-lg text-center">
-                                            No classes assigned to this teacher
-                                            yet.
+                                            Belum ada kelas yang diampu guru
+                                            ini.
                                         </div>
                                     )}
                                 </div>

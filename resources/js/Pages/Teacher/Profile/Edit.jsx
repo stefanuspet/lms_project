@@ -92,7 +92,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
     };
 
     return (
-        <TeacherLayout title="Edit Profile">
+        <TeacherLayout title="Edit Profil">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -120,11 +120,14 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                             <div className="h-24 bg-gradient-to-r from-blue-500 to-blue-600"></div>
                             <div className="-mt-12 px-6 pb-6">
                                 <div className="flex justify-center">
-                                    <div className="h-24 w-24 rounded-full border-4 border-white bg-white flex items-center justify-center">
-                                        <Teacher
-                                            variant="Bold"
-                                            size="60"
-                                            className="text-blue-600"
+                                    <div className="h-24 w-24 rounded-full border-4 border-white bg-white flex items-center justify-center overflow-hidden">
+                                        <img
+                                            src={
+                                                teacher.profile_picture ||
+                                                "/assets/images/default-avatar.png"
+                                            }
+                                            alt={teacher.name}
+                                            className="h-full w-full object-cover"
                                         />
                                     </div>
                                 </div>
@@ -448,13 +451,13 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                 </div>
                                             </div>
 
-                                            {/* Current Password */}
+                                            {/* Password Saat Ini */}
                                             <div>
                                                 <label
                                                     htmlFor="current_password"
                                                     className="block text-sm font-medium text-gray-700 mb-1"
                                                 >
-                                                    Current Password
+                                                    Password Saat Ini
                                                 </label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -491,13 +494,13 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                 )}
                                             </div>
 
-                                            {/* New Password */}
+                                            {/* Password Baru */}
                                             <div>
                                                 <label
                                                     htmlFor="password"
                                                     className="block text-sm font-medium text-gray-700 mb-1"
                                                 >
-                                                    New Password
+                                                    Password Baru
                                                 </label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -547,20 +550,19 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                             />
                                                         )}
                                                         <span className="text-xs text-gray-600">
-                                                            At least 8
-                                                            characters
+                                                            Minimal 8 karakter
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Confirm Password */}
+                                            {/* Konfirmasi Password */}
                                             <div>
                                                 <label
                                                     htmlFor="password_confirmation"
                                                     className="block text-sm font-medium text-gray-700 mb-1"
                                                 >
-                                                    Confirm New Password
+                                                    Konfirmasi Password Baru
                                                 </label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -610,7 +612,7 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                         />
                                                     )}
                                                     <span className="text-xs text-gray-600">
-                                                        Passwords match
+                                                        Password cocok
                                                     </span>
                                                 </div>
                                             </div>
@@ -627,8 +629,8 @@ const TeacherProfileEdit = ({ teacher, stats, flash }) => {
                                                     <Security size="20" />
                                                     <span>
                                                         {passwordProcessing
-                                                            ? "Updating..."
-                                                            : "Update Password"}
+                                                            ? "Memperbarui..."
+                                                            : "Perbarui Password"}
                                                     </span>
                                                 </button>
                                             </div>

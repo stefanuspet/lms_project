@@ -12,6 +12,7 @@ import {
     CalendarCircle,
     Graph,
     Teacher,
+    CloseCircle,
 } from "iconsax-reactjs";
 import SidebarItem from "./SidebarItem";
 import { usePage } from "@inertiajs/react";
@@ -19,74 +20,89 @@ import { usePage } from "@inertiajs/react";
 const TeacherSidebar = ({ isOpen, setIsOpen, isMobile }) => {
     const { url } = usePage();
 
-    const menuItems = [
+    // Kelompokkan menu agar lebih mudah dibaca guru
+    const sections = [
         {
-            label: "Dashboard",
-            icon: Home2,
-            active: url === "/teacher/dashboard",
-            path: "/teacher/dashboard",
+            title: "Utama",
+            items: [
+                {
+                    label: "Dashboard",
+                    icon: Home2,
+                    active: url === "/teacher/dashboard",
+                    path: "/teacher/dashboard",
+                },
+            ],
         },
         {
-            label: "My Subjects",
-            icon: Book1,
-            active: url.startsWith("/teacher/subjects"),
-            path: "/teacher/subjects",
-        },
-        // {
-        //     label: "Teaching Materials",
-        //     icon: DocumentText,
-        //     active: url.startsWith("/teacher/materials"),
-        //     path: "/teacher/materials",
-        // },
-        // {
-        //     label: "Assignments",
-        //     icon: ClipboardTick,
-        //     active: url.startsWith("/teacher/assignments"),
-        //     path: "/teacher/assignments",
-        // },
-        // {
-        //     label: "Student Submissions",
-        //     icon: MessageEdit,
-        //     active: url.startsWith("/teacher/submissions"),
-        //     path: "/teacher/submissions",
-        // },
-        {
-            label: "Attendance",
-            icon: People,
-            active: url.startsWith("/teacher/attendance"),
-            path: "/teacher/attendance",
-        },
-        // {
-        //     label: "Schedule",
-        //     icon: CalendarCircle,
-        //     active: url.startsWith("/teacher/schedule"),
-        //     path: "/teacher/schedule",
-        // },
-        {
-            label: "Student Progress",
-            icon: Graph,
-            active: url.startsWith("/teacher/progress"),
-            path: "/teacher/progress",
+            title: "Mengajar",
+            items: [
+                {
+                    label: "Mata Pelajaran Saya",
+                    icon: Book1,
+                    active: url.startsWith("/teacher/subjects"),
+                    path: "/teacher/subjects",
+                },
+                {
+                    label: "Jadwal Mengajar",
+                    icon: CalendarCircle,
+                    active: url.startsWith("/teacher/schedule"),
+                    path: "/teacher/schedule",
+                },
+                {
+                    label: "Presensi Siswa",
+                    icon: People,
+                    active: url.startsWith("/teacher/attendance"),
+                    path: "/teacher/attendance",
+                },
+                {
+                    label: "Ekstrakurikuler",
+                    icon: Teacher,
+                    active: url.startsWith("/teacher/extracurriculars"),
+                    path: "/teacher/extracurriculars",
+                },
+            ],
         },
         {
-            label: "Notifications",
-            icon: NotificationBing,
-            active: url.startsWith("/teacher/notifications"),
-            path: "/teacher/notifications",
+            title: "Siswa",
+            items: [
+                {
+                    label: "Progres Siswa",
+                    icon: Graph,
+                    active: url.startsWith("/teacher/progress"),
+                    path: "/teacher/progress",
+                },
+            ],
         },
         {
-            label: "My Profile",
-            icon: UserEdit,
-            active: url.startsWith("/teacher/profile"),
-            path: "/teacher/profile",
+            title: "Informasi",
+            items: [
+                {
+                    label: "Notifikasi",
+                    icon: NotificationBing,
+                    active: url.startsWith("/teacher/notifications"),
+                    path: "/teacher/notifications",
+                },
+            ],
         },
         {
-            label: "Log out",
-            icon: Logout,
-            active: url === "/logout",
-            path: "/logout",
+            title: "Akun",
+            items: [
+                {
+                    label: "Profil Saya",
+                    icon: UserEdit,
+                    active: url.startsWith("/teacher/profile"),
+                    path: "/teacher/profile",
+                },
+            ],
         },
     ];
+
+    const logoutItem = {
+        label: "Keluar",
+        icon: Logout,
+        active: url === "/logout",
+        path: "/logout",
+    };
 
     const closeSidebar = () => {
         if (isMobile) {
@@ -105,15 +121,15 @@ const TeacherSidebar = ({ isOpen, setIsOpen, isMobile }) => {
                 `}
             >
                 {/* Sidebar Header with Logo */}
-                <div className="py-6 px-4 flex items-center justify-between">
-                    <div className="flex items-center">
+                <div className="py-5 px-4 flex items-center justify-between border-b">
+                    <div className="flex items-center mx-auto justify-between w-full">
                         <img
                             src="/assets/images/Logo.png"
                             alt="logo"
-                            className="w-6"
+                            className="w-8 mx-auto"
                         />
-                        <h1 className="font-extrabold text-xl text-center pl-3">
-                            SchoolHub
+                        <h1 className="font-extrabold text-md pt-1">
+                            SMK Amaliyah Jakarta
                         </h1>
                     </div>
 
@@ -128,23 +144,40 @@ const TeacherSidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     )}
                 </div>
 
-                {/* Menu Label */}
-                <div className="mt-6 px-6">
-                    <p className="text-[#A7A9AA] text-sm font-medium">MENU</p>
-                </div>
+                {/* Menu Sections */}
+                <div className="mt-4 px-3 pb-6 overflow-y-auto max-h-[calc(100vh-120px)] flex flex-col justify-between">
+                    <div>
+                        {sections.map((section, idx) => (
+                            <div key={idx} className="mb-4">
+                                <div className="px-3 mb-1">
+                                    <p className="text-[#A7A9AA] text-xs font-semibold uppercase tracking-wide">
+                                        {section.title}
+                                    </p>
+                                </div>
+                                {section.items.map((item, index) => (
+                                    <SidebarItem
+                                        key={`${section.title}-${index}`}
+                                        icon={item.icon}
+                                        label={item.label}
+                                        active={item.active}
+                                        path={item.path}
+                                        onClick={isMobile ? closeSidebar : undefined}
+                                    />
+                                ))}
+                            </div>
+                        ))}
+                    </div>
 
-                {/* Menu Items */}
-                <div className="mt-4 px-3 pb-6 overflow-y-auto max-h-[calc(100vh-120px)]">
-                    {menuItems.map((item, index) => (
+                    {/* Logout at bottom */}
+                    <div className="mt-2 pt-3 border-t border-gray-200">
                         <SidebarItem
-                            key={index}
-                            icon={item.icon}
-                            label={item.label}
-                            active={item.active}
-                            path={item.path}
+                            icon={logoutItem.icon}
+                            label={logoutItem.label}
+                            active={logoutItem.active}
+                            path={logoutItem.path}
                             onClick={isMobile ? closeSidebar : undefined}
                         />
-                    ))}
+                    </div>
                 </div>
             </div>
 

@@ -170,11 +170,11 @@ const TeacherAttendanceShow = ({ session, students }) => {
 
                             <div className="col-span-1 bg-purple-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-purple-500 mb-1">
-                                    PIN Code
+                                    QR Token
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                    <p className="text-2xl font-bold text-purple-700">
-                                        {session.pin}
+                                    <p className="text-2xl font-bold text-purple-700 break-all">
+                                        {session.qr_token}
                                     </p>
                                 </div>
                                 <p className="text-xs text-purple-600 mt-1">

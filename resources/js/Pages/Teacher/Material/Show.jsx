@@ -17,7 +17,7 @@ import TeacherLayout from "@/Layouts/TeacherLayout";
 
 const TeacherMaterialShow = ({ material, subject }) => {
     const handleDelete = () => {
-        if (confirm("Are you sure you want to delete this material?")) {
+        if (confirm("Apakah Anda yakin ingin menghapus materi ini?")) {
             router.delete(route("teacher.materials.destroy", material.id), {
                 onSuccess: () => {
                     router.visit(
@@ -59,7 +59,7 @@ const TeacherMaterialShow = ({ material, subject }) => {
     };
 
     return (
-        <TeacherLayout title={`Material: ${material.title}`}>
+        <TeacherLayout title={`Materi: ${material.title}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -78,7 +78,7 @@ const TeacherMaterialShow = ({ material, subject }) => {
                             </Link>
                             <div>
                                 <h1 className="font-bold text-xl text-gray-800">
-                                    Material Details
+                                    Detail Materi
                                 </h1>
                                 <p className="text-sm text-gray-600">
                                     {subject.name} - {subject.class_name}
@@ -187,7 +187,7 @@ const TeacherMaterialShow = ({ material, subject }) => {
                                     </div>
                                 ) : (
                                     <p className="text-gray-500 italic">
-                                        No content provided.
+                                        Belum ada konten.
                                     </p>
                                 )}
                             </div>
@@ -234,9 +234,9 @@ const TeacherMaterialShow = ({ material, subject }) => {
                                             "video"
                                         ) && (
                                             <p className="text-gray-500 italic">
-                                                Preview not available for this
-                                                file type. Please download the
-                                                file to view it.
+                                                Pratinjau tidak tersedia untuk
+                                                tipe file ini. Silakan unduh
+                                                file untuk melihatnya.
                                             </p>
                                         )}
                                 </div>
@@ -250,7 +250,7 @@ const TeacherMaterialShow = ({ material, subject }) => {
                                     })}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Back to Materials
+                                    Kembali ke Daftar Materi
                                 </Link>
                                 <Link
                                     href={route(
@@ -259,7 +259,7 @@ const TeacherMaterialShow = ({ material, subject }) => {
                                     )}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                                 >
-                                    Edit Material
+                                    Edit Materi
                                 </Link>
                             </div>
                         </div>

@@ -30,28 +30,28 @@ const TeacherCreate = () => {
         const newErrors = {};
 
         // Required fields validation
-        if (!data.name) newErrors.name = "Name is required";
-        if (!data.email) newErrors.email = "Email is required";
-        if (!data.nip) newErrors.nip = "School ID / NIP is required";
+        if (!data.name) newErrors.name = "Nama wajib diisi";
+        if (!data.email) newErrors.email = "Email wajib diisi";
+        if (!data.nip) newErrors.nip = "NIP wajib diisi";
 
         // Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (data.email && !emailRegex.test(data.email)) {
-            newErrors.email = "Please enter a valid email address";
+            newErrors.email = "Masukkan alamat email yang valid";
         }
 
         // Password validation
         if (!data.password) {
-            newErrors.password = "Password is required";
+            newErrors.password = "Password wajib diisi";
         } else if (data.password.length < 8) {
-            newErrors.password = "Password must be at least 8 characters";
+            newErrors.password = "Password minimal 8 karakter";
         }
 
         // Password confirmation validation
         if (data.password && !data.password_confirmation) {
-            newErrors.password_confirmation = "Please confirm your password";
+            newErrors.password_confirmation = "Konfirmasi password wajib diisi";
         } else if (data.password !== data.password_confirmation) {
-            newErrors.password_confirmation = "Passwords do not match";
+            newErrors.password_confirmation = "Konfirmasi password tidak sama";
         }
 
         setClientErrors(newErrors);
@@ -82,8 +82,8 @@ const TeacherCreate = () => {
     };
 
     return (
-        <AuthenticatedLayout title="Add New Teacher">
-            <div className="py-6 w-full">
+        <AuthenticatedLayout title="Kelola Data Guru">
+            <div className="w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
@@ -98,7 +98,7 @@ const TeacherCreate = () => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Add New Teacher
+                                Tambah Guru Baru
                             </h1>
                         </div>
                     </div>
@@ -110,7 +110,7 @@ const TeacherCreate = () => {
                                 {/* Teacher Profile Section */}
                                 <div className="md:col-span-2">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Teacher Profile
+                                        Profil Guru
                                     </h2>
                                 </div>
 
@@ -118,7 +118,7 @@ const TeacherCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="name"
-                                        value="Teacher Name"
+                                        value="Nama Guru"
                                     />
                                     <TextInput
                                         id="name"
@@ -137,10 +137,7 @@ const TeacherCreate = () => {
 
                                 {/* School ID / NIP */}
                                 <div>
-                                    <InputLabel
-                                        htmlFor="nip"
-                                        value="School ID / NIP"
-                                    />
+                                    <InputLabel htmlFor="nip" value="NIP" />
                                     <TextInput
                                         id="nip"
                                         type="text"
@@ -160,7 +157,7 @@ const TeacherCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="phone"
-                                        value="Phone Number"
+                                        value="Nomor Telepon"
                                     />
                                     <TextInput
                                         id="phone"
@@ -180,7 +177,7 @@ const TeacherCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="address"
-                                        value="Address"
+                                        value="Alamat"
                                     />
                                     <TextInput
                                         id="address"
@@ -199,7 +196,7 @@ const TeacherCreate = () => {
                                 {/* Account Information Section */}
                                 <div className="md:col-span-2 mt-4">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Login Information
+                                        Informasi Akun
                                     </h2>
                                 </div>
 
@@ -207,7 +204,7 @@ const TeacherCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="email"
-                                        value="Email Address"
+                                        value="Alamat Email"
                                     />
                                     <TextInput
                                         id="email"
@@ -228,7 +225,7 @@ const TeacherCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password"
-                                        value="Password (minimum 8 characters)"
+                                        value="Password (minimal 8 karakter)"
                                     />
                                     <TextInput
                                         id="password"
@@ -250,7 +247,7 @@ const TeacherCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password_confirmation"
-                                        value="Confirm Password"
+                                        value="Konfirmasi Password"
                                     />
                                     <TextInput
                                         id="password_confirmation"
@@ -274,7 +271,8 @@ const TeacherCreate = () => {
                             {/* Password Requirements Hint */}
                             <div className="mt-4 text-sm text-gray-500">
                                 <p>
-                                    Password must be at least 8 characters long.
+                                    Password harus terdiri dari minimal 8
+                                    karakter.
                                 </p>
                             </div>
 
@@ -284,14 +282,14 @@ const TeacherCreate = () => {
                                     href={route("admin.teachers.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing || !isFormValid}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
                                 >
-                                    Save Teacher
+                                    Simpan
                                 </button>
                             </div>
                         </form>

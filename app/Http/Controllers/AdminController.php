@@ -11,6 +11,10 @@ use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Models\AcademicYear;
+use App\Models\Semester;
+use App\Models\Schedule;
+use App\Models\Extracurricular;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +84,25 @@ class AdminController extends Controller
         $attendanceChange = $lastMonthRate > 0
             ? round(($attendanceRate - $lastMonthRate), 1)
             : 0;
+
+        // Informasi periode aktif (Tahun Ajar & Semester) dan ringkasan jadwal hari ini
+        $activeYear = AcademicYear::active()
+            ->orderByDesc('start_date')
+            ->first();
+
+        $today = Carbon::today();
+
+        $activeSemester = Semester::whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->orderByDesc('start_date')
+            ->first();
+
+        $todayDayKey = strtolower(Carbon::now()->englishDayOfWeek);
+
+        $todaySchedulesCount = Schedule::where('day_of_week', $todayDayKey)->count();
+        $todayExtracurricularCount = Extracurricular::where('day_of_week', $todayDayKey)
+            ->where('is_active', true)
+            ->count();
 
         // Data untuk chart pendaftaran bulanan
         $monthlyStudentRegistrations = Student::select(
@@ -276,7 +299,27 @@ class AdminController extends Controller
                 'systemStats' => $systemStats,
                 'notifications' => $notifications,
                 'recentActivities' => $recentActivities,
-                'registrationChart' => $chartData
+                'registrationChart' => $chartData,
+                'activePeriod' => [
+                    'academic_year' => $activeYear ? [
+                        'id' => $activeYear->id,
+                        'name' => $activeYear->name,
+                        'formatted_period' => $activeYear->start_date && $activeYear->end_date
+                            ? $activeYear->start_date->format('d M Y') . ' - ' . $activeYear->end_date->format('d M Y')
+                            : null,
+                    ] : null,
+                    'semester' => $activeSemester ? [
+                        'id' => $activeSemester->id,
+                        'name' => $activeSemester->name,
+                        'formatted_period' => $activeSemester->start_date && $activeSemester->end_date
+                            ? $activeSemester->start_date->format('d M Y') . ' - ' . $activeSemester->end_date->format('d M Y')
+                            : null,
+                    ] : null,
+                    'today' => [
+                        'schedules' => $todaySchedulesCount,
+                        'extracurriculars' => $todayExtracurricularCount,
+                    ],
+                ],
             ]
         );
     }

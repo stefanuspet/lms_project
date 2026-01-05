@@ -27,18 +27,16 @@ class EnrollmentController extends Controller
         ]);
 
         // Get active semester if not specified
-        $activeSemester = null;
-        if ($request->filled('semester_id')) {
-            $activeSemester = Semester::find($request->semester_id);
-        } else {
-            $activeSemester = Semester::where('start_date', '<=', now())
+        $activeSemester = $request->filled('semester_id')
+            ? Semester::find($request->semester_id)
+            : Semester::where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
+                ->orderByDesc('start_date')
                 ->first();
 
-            // If no active semester, get the latest one
-            if (!$activeSemester) {
-                $activeSemester = Semester::orderBy('start_date', 'desc')->first();
-            }
+        // If no active semester, get the latest one
+        if (!$activeSemester) {
+            $activeSemester = Semester::orderBy('start_date', 'desc')->first();
         }
 
         // Get all semesters for dropdown

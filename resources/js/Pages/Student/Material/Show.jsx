@@ -82,7 +82,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
                         >
                             <DocumentDownload size="18" />
-                            <span>Download</span>
+                            <span>Unduh</span>
                         </a>
                     </div>
                 </div>
@@ -112,7 +112,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
                         >
                             <DocumentDownload size="18" />
-                            <span>Download Image</span>
+                            <span>Unduh Gambar</span>
                         </a>
                     </div>
                 </div>
@@ -147,7 +147,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
                         >
                             <DocumentDownload size="18" />
-                            <span>Download Video</span>
+                            <span>Unduh Video</span>
                         </a>
                     </div>
                 </div>
@@ -171,7 +171,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                     >
                         <DocumentDownload size="18" />
-                        <span>Download File</span>
+                        <span>Unduh Berkas</span>
                     </a>
                 </div>
             );
@@ -234,7 +234,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                                     className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                                 >
                                     <DocumentDownload size="20" />
-                                    <span>Download</span>
+                                    <span>Unduh</span>
                                 </a>
                             )}
                         </div>
@@ -315,7 +315,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                                         </div>
                                     ) : (
                                         <p className="text-gray-500 italic">
-                                            No additional content provided.
+                                            Tidak ada konten tambahan.
                                         </p>
                                     )}
                                 </div>
@@ -373,7 +373,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                                         </div>
                                     ) : (
                                         <p className="text-gray-500 text-sm italic">
-                                            No related materials found.
+                                            Tidak ada materi terkait.
                                         </p>
                                     )}
 
@@ -389,8 +389,8 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                                             className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
                                         >
                                             <span>
-                                                View all materials for this
-                                                subject
+                                                Lihat semua materi untuk mata
+                                                pelajaran ini
                                             </span>
                                         </Link>
                                     </div>
@@ -403,13 +403,13 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                                             size="20"
                                             className="text-blue-600"
                                         />
-                                        <span>Subject Information</span>
+                                        <span>Informasi Mata Pelajaran</span>
                                     </h3>
 
                                     <div className="space-y-3">
                                         <div>
                                             <p className="text-sm text-blue-800 font-medium">
-                                                Subject
+                                                Mata Pelajaran
                                             </p>
                                             <p className="text-blue-700">
                                                 {material.subject_name}
@@ -418,7 +418,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
 
                                         <div>
                                             <p className="text-sm text-blue-800 font-medium">
-                                                Teacher
+                                                Guru
                                             </p>
                                             <p className="text-blue-700">
                                                 {material.teacher_name}
@@ -434,7 +434,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                                             )}
                                             className="block w-full px-4 py-2 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mt-2"
                                         >
-                                            Go to Subject Page
+                                            Buka Halaman Mata Pelajaran
                                         </Link>
                                     </div>
                                 </div>
@@ -461,7 +461,7 @@ const StudentMaterialShow = ({ material, related_materials }) => {
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
                             >
                                 <DocumentDownload size="18" />
-                                <span>Download Material</span>
+                                <span>Unduh Materi</span>
                             </a>
                         )}
                     </div>

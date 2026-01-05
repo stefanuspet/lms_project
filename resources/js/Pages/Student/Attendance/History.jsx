@@ -126,24 +126,24 @@ const StudentAttendanceHistory = ({
         }
     }, [pagination]);
 
-    // Translate status to readable text
+    // Translate status to readable text (Indonesian)
     const getStatusText = (status) => {
         switch (status) {
             case "hadir":
-                return "Present";
+                return "Hadir";
             case "sakit":
-                return "Sick";
+                return "Sakit";
             case "izin":
-                return "Excused";
+                return "Izin";
             case "alpha":
-                return "Absent";
+                return "Alpha";
             default:
                 return status;
         }
     };
 
     return (
-        <StudentLayout title="Attendance History">
+        <StudentLayout title="Riwayat Presensi">
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -158,9 +158,14 @@ const StudentAttendanceHistory = ({
                                     className="text-gray-600"
                                 />
                             </Link>
-                            <h1 className="font-bold text-xl text-gray-800">
-                                Attendance History
-                            </h1>
+                            <div>
+                                <h1 className="font-bold text-xl text-gray-800">
+                                    Riwayat Presensi
+                                </h1>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Lihat kembali kehadiranmu berdasarkan tanggal, status, dan bulan.
+                                </p>
+                            </div>
                         </div>
                         <div className="flex items-center space-x-2">
                             {/* Filter button */}
@@ -179,7 +184,7 @@ const StudentAttendanceHistory = ({
                             <div className="flex flex-wrap items-center gap-4">
                                 <div className="w-64">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Filter by Session Title
+                                        Filter berdasarkan Mata Pelajaran
                                     </label>
                                     <select
                                         value={titleFilter}
@@ -188,7 +193,7 @@ const StudentAttendanceHistory = ({
                                         }
                                         className="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <option value="">All Sessions</option>
+                                        <option value="">Semua Mata Pelajaran</option>
                                         {subjects.map((subject, index) => (
                                             <option
                                                 key={index}
@@ -202,7 +207,7 @@ const StudentAttendanceHistory = ({
 
                                 <div className="w-64">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Filter by Status
+                                        Filter berdasarkan Status
                                     </label>
                                     <select
                                         value={statusFilter}
@@ -211,17 +216,17 @@ const StudentAttendanceHistory = ({
                                         }
                                         className="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <option value="all">All Status</option>
-                                        <option value="hadir">Present</option>
-                                        <option value="sakit">Sick</option>
-                                        <option value="izin">Excused</option>
-                                        <option value="alpha">Absent</option>
+                                        <option value="all">Semua Status</option>
+                                        <option value="hadir">Hadir</option>
+                                        <option value="sakit">Sakit</option>
+                                        <option value="izin">Izin</option>
+                                        <option value="alpha">Alpha</option>
                                     </select>
                                 </div>
 
                                 <div className="w-64">
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Filter by Month
+                                        Filter berdasarkan Bulan
                                     </label>
                                     <select
                                         value={monthFilter}
@@ -230,7 +235,7 @@ const StudentAttendanceHistory = ({
                                         }
                                         className="w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                                     >
-                                        <option value="">All Months</option>
+                                        <option value="">Semua Bulan</option>
                                         {months.map((month, index) => (
                                             <option
                                                 key={index}
@@ -248,7 +253,7 @@ const StudentAttendanceHistory = ({
                                         onClick={applyFilters}
                                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                                     >
-                                        Apply Filters
+                                        Terapkan Filter
                                     </button>
                                     <button
                                         type="button"
@@ -290,16 +295,16 @@ const StudentAttendanceHistory = ({
                                     <thead className="bg-gray-50">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Date
+                                                Tanggal
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Session Title
+                                                Mata Pelajaran / Sesi
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Status
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Recorded Time
+                                                Waktu Tercatat
                                             </th>
                                         </tr>
                                     </thead>
@@ -353,7 +358,7 @@ const StudentAttendanceHistory = ({
                                                         </div>
                                                     ) : (
                                                         <span className="text-gray-400 italic">
-                                                            Not recorded
+                                                            Belum tercatat
                                                         </span>
                                                     )}
                                                 </td>
@@ -369,14 +374,14 @@ const StudentAttendanceHistory = ({
                                     className="mx-auto text-gray-300 mb-3"
                                 />
                                 <h3 className="text-lg font-medium text-gray-800 mb-2">
-                                    No Attendance Records Found
+                                    Tidak ada riwayat presensi
                                 </h3>
                                 <p className="text-gray-500">
                                     {titleFilter ||
                                     statusFilter !== "all" ||
                                     monthFilter
-                                        ? "Try adjusting your filters to see more results"
-                                        : "There are no attendance records in the system yet"}
+                                        ? "Coba ubah filter di atas untuk melihat riwayat lainnya."
+                                        : "Belum ada catatan presensi yang tersimpan."}
                                 </p>
                             </div>
                         )}
@@ -390,7 +395,7 @@ const StudentAttendanceHistory = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -426,7 +431,7 @@ const StudentAttendanceHistory = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Selanjutnya
                             </button>
                         </div>
                     )}

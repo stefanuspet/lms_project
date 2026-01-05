@@ -53,7 +53,7 @@ const StudentAttendanceIndex = ({
     };
 
     return (
-        <StudentLayout title="Attendance Overview">
+        <StudentLayout title="Ringkasan Presensi">
             <div className="py-6 w-full">
                 {/* Overview Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
@@ -144,7 +144,7 @@ const StudentAttendanceIndex = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Left Column */}
                     <div className="md:col-span-2 space-y-6">
-                        {/* Attendance Rate Card */}
+                        {/* Kartu Persentase Presensi */}
                         <div className="bg-white rounded-xl shadow-sm">
                             <div className="px-6 py-4 border-b flex items-center justify-between">
                                 <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -152,13 +152,13 @@ const StudentAttendanceIndex = ({
                                         size="20"
                                         className="text-blue-600"
                                     />
-                                    <span>Attendance Overview</span>
+                                    <span>Ringkasan Presensi</span>
                                 </h2>
                                 <Link
                                     href={route("student.attendance.history")}
                                     className="text-sm text-blue-600 hover:text-blue-800"
                                 >
-                                    View Full History
+                                    Lihat Riwayat Lengkap
                                 </Link>
                             </div>
                             <div className="p-6">
@@ -199,7 +199,7 @@ const StudentAttendanceIndex = ({
                                         </div>
                                     </div>
                                     <p className="text-lg font-medium text-gray-700 mt-3">
-                                        Attendance Rate
+                                        Persentase Kehadiran
                                     </p>
                                 </div>
 
@@ -294,7 +294,7 @@ const StudentAttendanceIndex = ({
                             </div>
                         </div>
 
-                        {/* Attendance by Session Title */}
+                        {/* Presensi per Sesi */}
                         <div className="bg-white rounded-xl shadow-sm">
                             <div className="px-6 py-4 border-b">
                                 <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -302,7 +302,7 @@ const StudentAttendanceIndex = ({
                                         size="20"
                                         className="text-blue-600"
                                     />
-                                    <span>Attendance by Session</span>
+                                    <span>Presensi per Sesi</span>
                                 </h2>
                             </div>
                             <div className="px-6 py-4">
@@ -394,7 +394,7 @@ const StudentAttendanceIndex = ({
                                 ) : (
                                     <div className="text-center py-4 text-gray-500">
                                         <p>
-                                            No attendance data available for
+                                            Tidak ada data presensi untuk
                                             sessions.
                                         </p>
                                     </div>
@@ -405,7 +405,7 @@ const StudentAttendanceIndex = ({
 
                     {/* Right Column */}
                     <div className="space-y-6">
-                        {/* Recent Attendances */}
+                        {/* Presensi Terbaru */}
                         <div className="bg-white rounded-xl shadow-sm">
                             <div className="px-6 py-4 border-b flex items-center justify-between">
                                 <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -413,13 +413,13 @@ const StudentAttendanceIndex = ({
                                         size="20"
                                         className="text-blue-600"
                                     />
-                                    <span>Recent Attendance</span>
+                                    <span>Presensi Terbaru</span>
                                 </h2>
                                 <Link
                                     href={route("student.attendance.history")}
                                     className="text-sm text-blue-600 hover:text-blue-800"
                                 >
-                                    View All
+                                    Lihat Semua
                                 </Link>
                             </div>
                             <div className="px-6 py-4">
@@ -505,7 +505,7 @@ const StudentAttendanceIndex = ({
                                     </div>
                                 ) : (
                                     <div className="text-center py-4 text-gray-500">
-                                        <p>No recent attendance records.</p>
+                                        <p>Tidak ada riwayat presensi terbaru.</p>
                                     </div>
                                 )}
                             </div>
@@ -518,7 +518,7 @@ const StudentAttendanceIndex = ({
                                     size="20"
                                     className="text-blue-600"
                                 />
-                                <span>Attendance Information</span>
+                                <span>Informasi Presensi</span>
                             </h3>
 
                             <div className="space-y-3 text-blue-700 text-sm">

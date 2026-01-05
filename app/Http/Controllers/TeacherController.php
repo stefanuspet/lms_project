@@ -55,7 +55,7 @@ class TeacherController extends Controller
         $teachers = $query->paginate($perPage)->withQueryString();
 
         // Format data untuk frontend
-        $formattedTeachers = $teachers->map(function ($teacher) {
+            $formattedTeachers = $teachers->map(function ($teacher) {
             // Ambil daftar kelas yang diajar
             $classes = $teacher->subjects->flatMap(function ($subject) {
                 return $subject->classroom ? [$subject->classroom->name] : [];
@@ -65,15 +65,16 @@ class TeacherController extends Controller
             $subjects = $teacher->subjects->pluck('name')->unique()->implode(', ');
 
             // Format data guru untuk tampilan
-            return [
-                'id' => $teacher->id,
-                'name' => $teacher->name,
-                'nip' => $teacher->nip,
-                'email' => $teacher->user->email,
-                'school_id' => $teacher->nip,
-                'subject' => $subjects,
-                'classes' => $classes,
-            ];
+                return [
+                    'id' => $teacher->id,
+                    'name' => $teacher->name,
+                    'nip' => $teacher->nip,
+                    'email' => $teacher->user->email,
+                    'school_id' => $teacher->nip,
+                    'subject' => $subjects,
+                    'classes' => $classes,
+                    'profile_picture' => $teacher->profile_picture ?? '/assets/images/default-avatar.png',
+                ];
         });
 
         // Return data ke view
@@ -95,6 +96,54 @@ class TeacherController extends Controller
         ]);
     }
 
+    /**
+     * Export teacher data as CSV (bisa dibuka di Excel tanpa warning).
+     */
+    public function export(Request $request)
+    {
+        $teachers = Teacher::with(['user', 'subjects.classroom'])->get();
+
+        $filename = 'data_guru_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($teachers) {
+            $output = fopen('php://output', 'w');
+
+            // Tambah BOM supaya Excel membaca UTF-8 dengan benar
+            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            // Gunakan ; sebagai delimiter (umum di regional Indonesia)
+            $delimiter = ';';
+
+            // Header kolom
+            fputcsv($output, ['Nama', 'NIP', 'Email', 'Mata Pelajaran', 'Kelas'], $delimiter);
+
+            foreach ($teachers as $teacher) {
+                $classes = $teacher->subjects->flatMap(function ($subject) {
+                    return $subject->classroom ? [$subject->classroom->name] : [];
+                })->unique()->implode(', ');
+
+                $subjects = $teacher->subjects->pluck('name')->unique()->implode(', ');
+
+                fputcsv($output, [
+                    $teacher->name,
+                    $teacher->nip,
+                    optional($teacher->user)->email,
+                    $subjects,
+                    $classes,
+                ], $delimiter);
+            }
+
+            fclose($output);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
+    }
+
     public function create()
     {
         return Inertia::render('Admin/Teacher/Create');
@@ -111,6 +160,7 @@ class TeacherController extends Controller
                 'nip' => 'required|string|max:20|unique:teachers',
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
+                'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             ]);
 
             DB::beginTransaction();
@@ -122,6 +172,15 @@ class TeacherController extends Controller
                 'role' => 'guru',
             ]);
 
+            // Tentukan path foto profil (default atau upload)
+            $profilePicturePath = '/assets/images/default-avatar.png';
+            if ($request->hasFile('profile_picture')) {
+                $path = $request
+                    ->file('profile_picture')
+                    ->store('avatars/teachers', 'public');
+                $profilePicturePath = '/storage/' . $path;
+            }
+
             // Buat teacher baru
             $teacher = Teacher::create([
                 'user_id' => $user->id,
@@ -129,6 +188,7 @@ class TeacherController extends Controller
                 'nip' => $request->nip,
                 'phone' => $request->phone ?? null,
                 'address' => $request->address ?? null,
+                'profile_picture' => $profilePicturePath,
             ]);
 
             // Log aktivitas
@@ -171,6 +231,7 @@ class TeacherController extends Controller
                     'id' => $teacher->id,
                     'name' => $teacher->name,
                     'nip' => $teacher->nip,
+                    'profile_picture' => $teacher->profile_picture,
                     'phone' => $teacher->phone,
                     'address' => $teacher->address,
                     'user' => [
@@ -238,6 +299,7 @@ class TeacherController extends Controller
                 'nip' => 'required|string|max:20|unique:teachers,nip,' . $teacher->id,
                 'phone' => 'nullable|string|max:20',
                 'address' => 'nullable|string|max:255',
+                'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             ]);
 
             DB::beginTransaction();
@@ -255,11 +317,22 @@ class TeacherController extends Controller
             $teacher->user->update($userData);
 
             // Update teacher data
+            // Tentukan path foto profil (tetap, atau upload baru jika ada)
+            $profilePicturePath =
+                $teacher->profile_picture ?? '/assets/images/default-avatar.png';
+            if ($request->hasFile('profile_picture')) {
+                $path = $request
+                    ->file('profile_picture')
+                    ->store('avatars/teachers', 'public');
+                $profilePicturePath = '/storage/' . $path;
+            }
+
             $teacher->update([
                 'name' => $request->name,
                 'nip' => $request->nip,
                 'phone' => $request->phone,
                 'address' => $request->address,
+                'profile_picture' => $profilePicturePath,
             ]);
 
             // Log aktivitas

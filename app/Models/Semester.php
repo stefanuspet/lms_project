@@ -15,6 +15,7 @@ class Semester extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'academic_year_id',
         'name',
         'start_date',
         'end_date',
@@ -73,5 +74,21 @@ class Semester extends Model
     {
         $now = now();
         return $now->between($this->start_date, $this->end_date);
+    }
+
+    /**
+     * Get schedules within this semester.
+     */
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    /**
+     * Academic year relationship.
+     */
+    public function academicYear()
+    {
+        return $this->belongsTo(AcademicYear::class);
     }
 }

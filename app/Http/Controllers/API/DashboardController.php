@@ -69,16 +69,10 @@ class DashboardController extends Controller
             'success' => true,
             'data' => [
                 'student' => [
-                    'id' => $student->id,
                     'name' => $student->name,
-                    'nisn' => $student->nisn,
-                    'email' => $user->email,
-                    'class_name' => $currentClass->name,
                 ],
                 'stats' => $stats,
-                'subjects' => $formattedSubjects,
                 'upcoming_assignments' => $upcomingAssignments,
-                'recent_materials' => $recentMaterials,
                 'unread_notifications' => $unreadNotificationsCount,
             ]
         ]);

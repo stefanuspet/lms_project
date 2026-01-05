@@ -55,4 +55,12 @@ class Classroom extends Model
             ->withPivot(['students_id'])
             ->orderBy('start_date', 'desc');
     }
+
+    /**
+     * Get all scheduled lessons for this class.
+     */
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class, 'class_id');
+    }
 }

@@ -8,6 +8,8 @@ use App\Models\AssignmentSubmission;
 use App\Models\Subject;
 use App\Models\Teacher;
 use App\Models\Material;
+use App\Models\Extracurricular;
+use App\Models\AttendanceSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -145,6 +147,20 @@ class DashboardController extends Controller
                 ];
             })->take(6);
 
+            // Ringkasan ekstrakurikuler yang dibina guru
+            $extracurriculars = Extracurricular::where('teacher_id', $teacher->id)
+                ->where('is_active', true)
+                ->get();
+
+            $totalExtracurriculars = $extracurriculars->count();
+
+            // Sesi presensi ekskul aktif hari ini
+            $today = now()->toDateString();
+            $activeExtraSessions = AttendanceSession::active()
+                ->whereNotNull('extracurricular_id')
+                ->whereDate('date', $today)
+                ->count();
+
             // Format teacher data
             $teacherData = [
                 'id' => $teacher->id,
@@ -158,6 +174,10 @@ class DashboardController extends Controller
             return Inertia::render('Teacher/Dashboard', [
                 'teacher' => $teacherData,
                 'stats' => $stats,
+                'extracurricular_summary' => [
+                    'total' => $totalExtracurriculars,
+                    'active_sessions_today' => $activeExtraSessions,
+                ],
                 'upcoming_assignments' => $upcomingAssignments,
                 'recent_submissions' => $recentSubmissions,
                 'notifications' => $notifications,

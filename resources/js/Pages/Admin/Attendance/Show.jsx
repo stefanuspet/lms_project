@@ -49,7 +49,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
     const handleCloseSession = () => {
         if (
             confirm(
-                "Apakah Anda yakin ingin menutup sesi absensi ini? Ini akan membuat PIN tidak berlaku lagi."
+                "Apakah Anda yakin ingin menutup sesi absensi ini? QR tidak dapat dipindai setelah ditutup."
             )
         ) {
             post(route("admin.attendance.close-session", session.id), {
@@ -115,7 +115,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
     };
 
     return (
-        <AuthenticatedLayout title={`Sesi Absensi: ${session.pin}`}>
+        <AuthenticatedLayout title={`Sesi Absensi: ${session.title}`}>
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -179,88 +179,75 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                     </div>
 
                     <div className="p-6">
-                        {/* PIN and Date Info */}
-                        <div className="flex flex-col md:flex-row md:space-x-6 mb-6">
-                            <div className="flex-1 bg-amber-50 p-6 rounded-lg mb-4 md:mb-0">
-                                <h2 className="text-amber-800 text-xl font-bold mb-4">
-                                    Kode PIN
-                                </h2>
-                                <div className="bg-white p-4 rounded-lg text-center">
-                                    <p className="font-mono text-4xl tracking-wider text-gray-900">
-                                        {session.pin}
-                                    </p>
-                                    <p className="text-sm text-gray-500 mt-2">
-                                        {session.is_active ? (
-                                            <span className="flex items-center justify-center">
-                                                <Timer1
-                                                    size="16"
-                                                    className="mr-1 text-green-500"
-                                                />
-                                                Aktif hingga{" "}
-                                                {session.expires_at}
-                                            </span>
-                                        ) : (
-                                            <span className="text-red-500">
-                                                Berakhir
-                                            </span>
-                                        )}
-                                    </p>
-                                </div>
-                            </div>
+                        {/* QR and Date Info */}
+        <div className="flex flex-col md:flex-row md:space-x-6 mb-6">
+            <div className="flex-1 bg-amber-50 p-6 rounded-lg mb-4 md:mb-0">
+                <h2 className="text-amber-800 text-xl font-bold mb-4">
+                    QR Absensi
+                </h2>
+                <div className="bg-white p-4 rounded-lg text-center">
+                    <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(
+                            session.qr_token
+                        )}`}
+                        alt="QR Absensi"
+                        className="mx-auto"
+                    />
+                    <p className="font-mono text-sm mt-3 break-all text-gray-800">
+                        {session.qr_token}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                        {session.is_active ? (
+                            <span className="flex items-center justify-center">
+                                <Timer1 size="16" className="mr-1 text-green-500" />
+                                Aktif hingga {session.expires_at}
+                            </span>
+                        ) : (
+                            <span className="text-red-500">Berakhir</span>
+                        )}
+                    </p>
+                </div>
+            </div>
 
-                            {/* Session Details */}
-                            <div className="flex-1 bg-gray-50 p-6 rounded-lg">
-                                <h2 className="text-gray-800 text-xl font-bold mb-4">
-                                    Detail Sesi
-                                </h2>
-                                <div className="space-y-3">
-                                    <div className="flex items-center">
-                                        <Calendar
-                                            size="20"
-                                            className="text-blue-500 mr-3"
-                                        />
-                                        <div>
-                                            <p className="text-sm text-gray-500">
-                                                Tanggal
-                                            </p>
-                                            <p className="text-gray-900">
-                                                {session.date}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <DocumentText
-                                            size="20"
-                                            className="text-amber-500 mr-3"
-                                        />
-                                        <div>
-                                            <p className="text-sm text-gray-500">
-                                                Deskripsi
-                                            </p>
-                                            <p className="text-gray-900">
-                                                {session.description || "-"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Timer1
-                                            size="20"
-                                            className="text-green-500 mr-3"
-                                        />
-                                        <div>
-                                            <p className="text-sm text-gray-500">
-                                                Semester
-                                            </p>
-                                            <p className="text-gray-900">
-                                                {session.semester
-                                                    ? session.semester.name
-                                                    : "-"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            {/* Session Details */}
+            <div className="flex-1 bg-gray-50 p-6 rounded-lg">
+                <h2 className="text-gray-800 text-xl font-bold mb-4">
+                    Detail Sesi
+                </h2>
+                <div className="space-y-3">
+                    <div className="flex items-center">
+                        <Calendar size="20" className="text-blue-500 mr-3" />
+                        <div>
+                            <p className="text-sm text-gray-500">Tanggal</p>
+                            <p className="text-gray-900">{session.date}</p>
                         </div>
+                    </div>
+                    <div className="flex items-center">
+                        <DocumentText size="20" className="text-amber-500 mr-3" />
+                        <div>
+                            <p className="text-sm text-gray-500">Deskripsi</p>
+                            <p className="text-gray-900">{session.description || "-"}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center">
+                        <Timer1 size="20" className="text-green-500 mr-3" />
+                        <div>
+                            <p className="text-sm text-gray-500">Semester & Jenis</p>
+                            <p className="text-gray-900">
+                                {session.semester ? session.semester.name : "-"} ·{" "}
+                                {session.session_type === "arrival" ? "Berangkat" : "Pulang"}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                                Waktu:{" "}
+                                {session.start_time
+                                    ? `${session.start_time} - ${session.expires_at}`
+                                    : session.expires_at}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
                         {/* Attendance Statistics */}
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
@@ -334,17 +321,15 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                             </div>
                         </div>
 
-                        {/* Note about PIN usage */}
-                        <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                            <p className="text-sm text-blue-700">
-                                <strong>Catatan:</strong> PIN ini dapat
-                                digunakan oleh semua siswa untuk mengisi
-                                absensi. PIN akan kedaluwarsa pada{" "}
-                                {session.expires_at}. Bagikan PIN ini kepada
-                                siswa melalui WhatsApp, pengumuman, atau media
-                                lainnya.
-                            </p>
-                        </div>
+                        {/* Note about QR usage */}
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+            <p className="text-sm text-blue-700">
+                <strong>Catatan:</strong> QR ini akan dipindai melalui aplikasi mobile
+                siswa. Pastikan mereka berada di lokasi kampus (sekitar koordinat
+                -7.780518, 110.415770) saat memindai. QR akan kedaluwarsa pada{" "}
+                {session.expires_at}.
+            </p>
+        </div>
                     </div>
                 </div>
 
@@ -645,8 +630,7 @@ const AttendanceShow = ({ session, students, stats, flash }) => {
                             Perpanjang Sesi Absensi
                         </h3>
                         <p className="text-sm text-gray-500 mb-4">
-                            PIN saat ini ({session.pin}) akan tetap aktif untuk
-                            waktu tambahan.
+                            QR absensi akan tetap aktif untuk waktu tambahan.
                         </p>
 
                         <div className="mb-4">

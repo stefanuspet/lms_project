@@ -13,7 +13,13 @@ import {
     TickCircle,
 } from "iconsax-reactjs";
 
-const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
+const SemesterIndex = ({
+    semesters,
+    pagination,
+    filters,
+    flash,
+    academic_years,
+}) => {
     const [searchTerm, setSearchTerm] = useState(filters?.search || "");
     const [processing, setProcessing] = useState(false);
     const [currentPage, setCurrentPage] = useState(
@@ -23,6 +29,9 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
         field: filters?.sort_by || "start_date",
         order: filters?.sort_order || "desc",
     });
+    const [selectedYear, setSelectedYear] = useState(
+        filters?.academic_year_id || "",
+    );
 
     // Fungsi untuk menghapus semester
     const handleDelete = (semesterId) => {
@@ -89,6 +98,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                 per_page: pagination.per_page,
                 sort_by: sortConfig.field,
                 sort_order: sortConfig.order,
+                academic_year_id: selectedYear || undefined,
             },
             {
                 preserveState: true,
@@ -110,6 +120,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                 per_page: pagination.per_page,
                 sort_by: sortConfig.field,
                 sort_order: sortConfig.order,
+                academic_year_id: selectedYear || undefined,
             },
             {
                 preserveState: true,
@@ -139,6 +150,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                 per_page: pagination.per_page,
                 sort_by: field,
                 sort_order: newOrder,
+                academic_year_id: selectedYear || undefined,
             },
             {
                 preserveState: true,
@@ -179,7 +191,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
     }, [pagination]);
 
     return (
-        <AuthenticatedLayout title="Semester Management">
+        <AuthenticatedLayout title="Manajemen Semester">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -203,9 +215,14 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
-                        <h1 className="font-bold text-xl text-gray-800">
-                            All Semesters
-                        </h1>
+                        <div>
+                            <h1 className="font-bold text-xl text-gray-800">
+                                Daftar Semester
+                            </h1>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Pilih Tahun Ajar di kanan untuk menyaring daftar semester.
+                            </p>
+                        </div>
                         <div className="flex items-center space-x-2">
                             {/* Search box */}
                             <form onSubmit={handleSearch} className="relative">
@@ -215,7 +232,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search by Name"
+                                    placeholder="Cari berdasarkan Nama"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -223,9 +240,46 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
+
+                            {/* Filter Tahun Ajar */}
+                            <select
+                                value={selectedYear || ""}
+                                onChange={(e) => {
+                                    setSelectedYear(e.target.value);
+                                    router.get(
+                                        route("admin.semesters.index"),
+                                        {
+                                            search: searchTerm,
+                                            page: 1,
+                                            per_page: pagination.per_page,
+                                            sort_by: sortConfig.field,
+                                            sort_order: sortConfig.order,
+                                            academic_year_id:
+                                                e.target.value || undefined,
+                                        },
+                                        {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                            only: [
+                                                "semesters",
+                                                "pagination",
+                                                "filters",
+                                            ],
+                                        },
+                                    );
+                                }}
+                                className="px-3 py-2 rounded-full border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            >
+                                <option value="">Semua Tahun Ajar</option>
+                                {academic_years?.map((year) => (
+                                    <option key={year.id} value={year.id}>
+                                        {year.name}
+                                    </option>
+                                ))}
+                            </select>
 
                             {/* Add button */}
                             <Link
@@ -247,7 +301,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                         onClick={() => handleSort("name")}
                                     >
                                         <div className="flex items-center space-x-1">
-                                            <span>Semester Name</span>
+                                            <span>Nama Semester</span>
                                             {sortConfig.field === "name" &&
                                                 (sortConfig.order === "asc" ? (
                                                     <ArrowUp
@@ -267,7 +321,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                         onClick={() => handleSort("start_date")}
                                     >
                                         <div className="flex items-center space-x-1">
-                                            <span>Start Date</span>
+                                            <span>Tanggal Mulai</span>
                                             {sortConfig.field ===
                                                 "start_date" &&
                                                 (sortConfig.order === "asc" ? (
@@ -288,7 +342,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                         onClick={() => handleSort("end_date")}
                                     >
                                         <div className="flex items-center space-x-1">
-                                            <span>End Date</span>
+                                            <span>Tanggal Selesai</span>
                                             {sortConfig.field === "end_date" &&
                                                 (sortConfig.order === "asc" ? (
                                                     <ArrowUp
@@ -307,10 +361,10 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                         Status
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Students
+                                        Jumlah Siswa
                                     </th>
                                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Action
+                                        Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -321,14 +375,21 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                             key={semester.id}
                                             className={
                                                 semester.is_active
-                                                    ? "bg-amber-50"
+                                                    ? "bg-green-50 hover:bg-green-100"
                                                     : "hover:bg-gray-50"
                                             }
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {semester.name}
+                                                    <div>
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            {semester.name}
+                                                        </div>
+                                                        {semester.academic_year_name && (
+                                                            <div className="text-xs text-gray-500">
+                                                                {semester.academic_year_name}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
@@ -364,8 +425,8 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                                 >
                                                     {semester.status ===
                                                     "active"
-                                                        ? "Active"
-                                                        : "Inactive"}
+                                                        ? "Aktif"
+                                                        : "Tidak Aktif"}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -379,7 +440,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                                             semester.id
                                                         )}
                                                         className="text-gray-500 hover:text-gray-700"
-                                                        title="View Details"
+                                                        title="Lihat Detail"
                                                     >
                                                         <Eye size="18" />
                                                     </Link>
@@ -404,7 +465,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                                             disabled={
                                                                 processing
                                                             }
-                                                            title="Set as Active"
+                                                            title="Jadikan Aktif"
                                                         >
                                                             <TickCircle size="18" />
                                                         </button>
@@ -452,7 +513,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                             colSpan="6"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No semesters found
+                                            Tidak ada semester pada filter ini.
                                         </td>
                                     </tr>
                                 )}
@@ -465,8 +526,9 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                         <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
                             <div className="flex items-center text-sm text-gray-500">
                                 <span>
-                                    Showing {pagination.from} to {pagination.to}{" "}
-                                    of {pagination.total} semesters
+                                    Menampilkan {pagination.from} sampai{" "}
+                                    {pagination.to} dari {pagination.total}{" "}
+                                    semester
                                 </span>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -475,7 +537,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                     className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                     disabled={currentPage === 1}
                                 >
-                                    Previous
+                                    Sebelumnya
                                 </button>
                                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                     <div>
@@ -511,7 +573,7 @@ const SemesterIndex = ({ semesters, pagination, filters, flash }) => {
                                         currentPage === pagination.last_page
                                     }
                                 >
-                                    Next
+                                    Berikutnya
                                 </button>
                             </div>
                         </div>

@@ -34,6 +34,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
     );
     const [sortBy, setSortBy] = useState(filters?.sort_by || "date");
     const [sortOrder, setSortOrder] = useState(filters?.sort_order || "desc");
+    const [showHelp, setShowHelp] = useState(false);
 
     // Function for page navigation
     const goToPage = (page) => {
@@ -195,9 +196,23 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
-                        <h1 className="font-bold text-xl text-gray-800">
-                            Sesi Absensi
-                        </h1>
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <h1 className="font-bold text-xl text-gray-800">
+                                    Sesi Absensi
+                                </h1>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowHelp(!showHelp)}
+                                    className="text-xs px-2 py-1 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50"
+                                >
+                                    Panduan
+                                </button>
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Daftar sesi QR untuk absensi harian. Gunakan pencarian dan filter di kanan untuk menemukan sesi tertentu.
+                            </p>
+                        </div>
                         <div className="flex items-center space-x-2">
                             {/* Search box */}
                             <form onSubmit={handleSearch} className="relative">
@@ -207,7 +222,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Cari berdasarkan PIN atau judul"
+                                    placeholder="Cari berdasarkan QR atau judul"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -215,7 +230,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
 
@@ -248,6 +263,43 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                             </Link>
                         </div>
                     </div>
+
+                    {showHelp && (
+                        <div className="px-6 py-3 bg-blue-50 border-b border-blue-100 text-xs md:text-sm text-blue-800">
+                            <p className="font-semibold mb-1">
+                                Tips untuk menggunakan halaman absensi:
+                            </p>
+                            <ul className="list-disc pl-5 space-y-1">
+                                <li>
+                                    Gunakan tombol kuning{" "}
+                                    <span className="font-semibold">
+                                        Tambah Jadwal
+                                    </span>{" "}
+                                    untuk membuat sesi absensi baru atau QR.
+                                </li>
+                                <li>
+                                    Filter{" "}
+                                    <span className="font-semibold">
+                                        Tanggal dari - hingga
+                                    </span>{" "}
+                                    untuk mencari sesi pada rentang waktu
+                                    tertentu.
+                                </li>
+                                <li>
+                                    Status{" "}
+                                    <span className="font-semibold">
+                                        Aktif
+                                    </span>{" "}
+                                    artinya sesi masih bisa dipakai siswa untuk
+                                    absen.{" "}
+                                    <span className="font-semibold">
+                                        Berakhir
+                                    </span>{" "}
+                                    artinya waktu absensi sudah ditutup.
+                                </li>
+                            </ul>
+                        </div>
+                    )}
 
                     {/* Filters Panel */}
                     {showFilters && (
@@ -367,7 +419,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Tanggal & PIN
+                                    Tanggal, Waktu & QR
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Judul & Deskripsi
@@ -392,18 +444,27 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex flex-col">
-                                                    <div className="text-sm font-medium text-gray-900 flex items-center">
-                                                        <Calendar
-                                                            size="16"
-                                                            className="mr-2 text-blue-500"
-                                                        />
-                                                        {session.date}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 mt-1">
-                                                        <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">
-                                                            {session.pin}
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                                        <Calendar size="16" className="text-blue-500" />
+                                                        <span>{session.date}</span>
+                                                        <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 capitalize">
+                                                            {session.session_type === "arrival"
+                                                                ? "Berangkat"
+                                                                : "Pulang"}
                                                         </span>
                                                     </div>
+                                                    <div className="text-xs text-gray-600">
+                                                        {session.start_time
+                                                            ? `${session.start_time} - ${session.expires_at}`
+                                                            : session.expires_at}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 mt-1">
+                                                        <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700 break-all">
+                                                            {session.qr_token}
+                                                        </span>
+                                                    </div>
+                                                </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -492,8 +553,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                             colSpan="5"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            Tidak ada sesi absensi yang
-                                            ditemukan
+                                            Tidak ada sesi absensi yang sesuai dengan filter ini.
                                         </td>
                                     </tr>
                                 )}

@@ -19,7 +19,8 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female'])->nullable();
             $table->date('birth_date')->nullable();
             $table->string('birth_place')->nullable();
-            $table->string('religion')->nullable();
+             $table->string('profile_picture')
+                ->default('/assets/images/default-avatar.png');
             $table->timestamps();
         });
     }

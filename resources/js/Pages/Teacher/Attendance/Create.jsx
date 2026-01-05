@@ -248,7 +248,7 @@ const TeacherAttendanceCreate = ({ subjects, active_semester }) => {
                                     )}
                                     <p className="mt-1 text-sm text-gray-500">
                                         This will determine how long the session
-                                        PIN will be valid.
+                                        QR absensi akan aktif.
                                     </p>
                                 </div>
 

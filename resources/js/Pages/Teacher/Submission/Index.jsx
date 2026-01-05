@@ -169,13 +169,13 @@ const TeacherSubmissionIndex = ({
     const getStatusText = (status) => {
         switch (status) {
             case "graded":
-                return "Graded";
+                return "Sudah Dinilai";
             case "submitted":
-                return "Submitted";
+                return "Sudah Mengumpulkan";
             case "not_submitted":
-                return "Not Submitted";
+                return "Belum Mengumpulkan";
             default:
-                return "Unknown";
+                return "Tidak Diketahui";
         }
     };
 
@@ -193,7 +193,7 @@ const TeacherSubmissionIndex = ({
     );
 
     return (
-        <TeacherLayout title={`Submissions - ${assignment.title}`}>
+        <TeacherLayout title={`Pengumpulan - ${assignment.title}`}>
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -223,7 +223,7 @@ const TeacherSubmissionIndex = ({
                             </Link>
                             <div>
                                 <h1 className="font-bold text-xl text-gray-800">
-                                    Assignment Submissions
+                                    Pengumpulan Tugas
                                 </h1>
                                 <div className="text-sm text-gray-600 flex items-center gap-2">
                                     <span>
@@ -251,7 +251,7 @@ const TeacherSubmissionIndex = ({
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search by student name or NISN"
+                                    placeholder="Cari berdasarkan nama siswa atau NISN"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -259,7 +259,7 @@ const TeacherSubmissionIndex = ({
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
 
@@ -267,7 +267,7 @@ const TeacherSubmissionIndex = ({
                             <button
                                 onClick={handleExport}
                                 className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-                                title="Export to CSV"
+                                title="Ekspor ke CSV"
                             >
                                 <Export size="24" />
                             </button>
@@ -279,7 +279,7 @@ const TeacherSubmissionIndex = ({
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg border">
                                 <div className="text-gray-500 text-sm">
-                                    Total Students
+                                    Total Siswa
                                 </div>
                                 <div className="text-2xl font-bold text-gray-800">
                                     {stats.total_students}
@@ -287,7 +287,7 @@ const TeacherSubmissionIndex = ({
                             </div>
                             <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg border">
                                 <div className="text-gray-500 text-sm">
-                                    Submitted
+                                    Sudah Mengumpulkan
                                 </div>
                                 <div className="text-2xl font-bold text-blue-600">
                                     {stats.submitted_count}
@@ -298,7 +298,7 @@ const TeacherSubmissionIndex = ({
                             </div>
                             <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg border">
                                 <div className="text-gray-500 text-sm">
-                                    Graded
+                                    Sudah Dinilai
                                 </div>
                                 <div className="text-2xl font-bold text-green-600">
                                     {stats.graded_count}
@@ -306,7 +306,7 @@ const TeacherSubmissionIndex = ({
                             </div>
                             <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg border">
                                 <div className="text-gray-500 text-sm">
-                                    Pending
+                                    Menunggu Dinilai
                                 </div>
                                 <div className="text-2xl font-bold text-amber-600">
                                     {stats.pending_count}
@@ -314,7 +314,7 @@ const TeacherSubmissionIndex = ({
                             </div>
                             <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg border">
                                 <div className="text-gray-500 text-sm">
-                                    Not Submitted
+                                    Belum Mengumpulkan
                                 </div>
                                 <div className="text-2xl font-bold text-red-600">
                                     {stats.not_submitted_count}
@@ -327,7 +327,7 @@ const TeacherSubmissionIndex = ({
                     <div className="px-6 py-3 border-b flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-500">
-                                Filter by status:
+                                Filter berdasarkan status:
                             </span>
                             <div className="flex space-x-1">
                                 <button
@@ -338,7 +338,7 @@ const TeacherSubmissionIndex = ({
                                             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                     }`}
                                 >
-                                    All
+                                    Semua
                                 </button>
                                 <button
                                     onClick={() =>

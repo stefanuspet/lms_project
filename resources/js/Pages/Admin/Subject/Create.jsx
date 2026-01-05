@@ -26,7 +26,7 @@ const SubjectCreate = ({ classes, teachers }) => {
     };
 
     return (
-        <AuthenticatedLayout title="Add New Subject">
+        <AuthenticatedLayout title="Tambah Mata Pelajaran">
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -42,7 +42,7 @@ const SubjectCreate = ({ classes, teachers }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Add New Subject
+                                Tambah Mata Pelajaran
                             </h1>
                         </div>
                     </div>
@@ -54,7 +54,7 @@ const SubjectCreate = ({ classes, teachers }) => {
                                 {/* Subject Details Section */}
                                 <div className="md:col-span-2">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Subject Details
+                                        Detail Mata Pelajaran
                                     </h2>
                                 </div>
 
@@ -62,7 +62,7 @@ const SubjectCreate = ({ classes, teachers }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="name"
-                                        value="Subject Name"
+                                        value="Nama Mata Pelajaran"
                                     />
                                     <TextInput
                                         id="name"
@@ -81,7 +81,10 @@ const SubjectCreate = ({ classes, teachers }) => {
 
                                 {/* Class */}
                                 <div>
-                                    <InputLabel htmlFor="class_id" value="Class" />
+                                    <InputLabel
+                                        htmlFor="class_id"
+                                        value="Kelas"
+                                    />
                                     <SelectInput
                                         id="class_id"
                                         name="class_id"
@@ -90,7 +93,7 @@ const SubjectCreate = ({ classes, teachers }) => {
                                         onChange={handleChange}
                                         required
                                     >
-                                        <option value="">Select Class</option>
+                                        <option value="">Pilih Kelas</option>
                                         {classes.map((classItem) => (
                                             <option key={classItem.id} value={classItem.id}>
                                                 {classItem.name}
@@ -105,7 +108,10 @@ const SubjectCreate = ({ classes, teachers }) => {
 
                                 {/* Teacher */}
                                 <div>
-                                    <InputLabel htmlFor="teacher_id" value="Teacher" />
+                                    <InputLabel
+                                        htmlFor="teacher_id"
+                                        value="Guru"
+                                    />
                                     <SelectInput
                                         id="teacher_id"
                                         name="teacher_id"
@@ -114,7 +120,7 @@ const SubjectCreate = ({ classes, teachers }) => {
                                         onChange={handleChange}
                                         required
                                     >
-                                        <option value="">Select Teacher</option>
+                                        <option value="">Pilih Guru</option>
                                         {teachers.map((teacher) => (
                                             <option key={teacher.id} value={teacher.id}>
                                                 {teacher.name}
@@ -129,7 +135,10 @@ const SubjectCreate = ({ classes, teachers }) => {
 
                                 {/* Description - Full width */}
                                 <div className="md:col-span-2">
-                                    <InputLabel htmlFor="description" value="Description" />
+                                    <InputLabel
+                                        htmlFor="description"
+                                        value="Deskripsi"
+                                    />
                                     <textarea
                                         id="description"
                                         name="description"
@@ -137,7 +146,7 @@ const SubjectCreate = ({ classes, teachers }) => {
                                         onChange={handleChange}
                                         rows="4"
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="Enter subject description here..."
+                                        placeholder="Masukkan deskripsi mata pelajaran di sini..."
                                     ></textarea>
                                     <InputError
                                         message={errors.description}
@@ -152,14 +161,14 @@ const SubjectCreate = ({ classes, teachers }) => {
                                     href={route("admin.subjects.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
                                 >
-                                    Save Subject
+                                    Simpan Mata Pelajaran
                                 </button>
                             </div>
                         </form>

@@ -9,6 +9,7 @@ import {
     Filter,
     Add,
     Setting4,
+    Printer,
 } from "iconsax-reactjs";
 
 const StudentsIndex = ({ students, pagination, filters, flash }) => {
@@ -117,7 +118,7 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
     }, [pagination]);
 
     return (
-        <AuthenticatedLayout title="Students Management">
+        <AuthenticatedLayout title="Manajemen Siswa">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -132,55 +133,77 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
-                        <h1 className="font-bold text-xl text-gray-800">
-                            All Students List
-                        </h1>
-                        <div className="flex items-center space-x-2">
-                            {/* Search box */}
-                            <form onSubmit={handleSearch} className="relative">
-                                <SearchNormal1
-                                    size="20"
-                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Search by Name, NISN, or Email"
-                                    className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
-                                    value={searchTerm}
-                                    onChange={(e) =>
-                                        setSearchTerm(e.target.value)
-                                    }
-                                />
-                                <button type="submit" className="hidden">
-                                    Search
+                        <div>
+                            <h1 className="font-bold text-xl text-gray-800">
+                                Daftar Siswa
+                            </h1>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Gunakan kotak pencarian di kanan untuk mencari
+                                siswa berdasarkan nama, NISN, atau email.
+                            </p>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2 ">
+                                {/* Search box */}
+                                <form
+                                    onSubmit={handleSearch}
+                                    className="relative"
+                                >
+                                    <SearchNormal1
+                                        size="20"
+                                        className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Cari berdasarkan Nama, NISN, atau Email"
+                                        className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
+                                        value={searchTerm}
+                                        onChange={(e) =>
+                                            setSearchTerm(e.target.value)
+                                        }
+                                    />
+                                    <button type="submit" className="hidden">
+                                        Cari
+                                    </button>
+                                </form>
+                            </div>
+                            <div className="flex items-center space-x-3 ">
+                                {/* Placeholder jika nanti mau ada filter tambahan siswa */}
+                                <button className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors">
+                                    <Setting4
+                                        color="black"
+                                        variant="Bold"
+                                        size="24"
+                                    />
                                 </button>
-                            </form>
+                                <button className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors">
+                                    <Filter
+                                        color="black"
+                                        variant="Bold"
+                                        size="24"
+                                    />
+                                </button>
+                                {/* Export button */}
+                                <a
+                                    href={route("admin.students.export")}
+                                    className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors"
+                                    title="Export ke Excel"
+                                >
+                                    <Printer color="black" size="24" />
+                                </a>
 
-                            {/* Filter button */}
-                            <button className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors">
-                                <Setting4
-                                    color="black"
-                                    variant="Bold"
-                                    size="24"
-                                />
-                            </button>
-                            <button className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors">
-                                <Filter
-                                    color="black"
-                                    variant="Bold"
-                                    size="24"
-                                />
-                            </button>
-
-                            {/* Add button */}
-                            <Link
-                                href={route("admin.students.create")}
-                                className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors"
-                            >
-                                <Add color="black" size="24" />
-                            </Link>
+                                {/* Add button */}
+                                <Link
+                                    href={route("admin.students.create")}
+                                    className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors"
+                                >
+                                    <Add color="black" size="24" />
+                                </Link>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Toolbar bawah (filter + export + tambah) */}
 
                     {/* Table */}
                     <div className="overflow-x-auto">
@@ -188,7 +211,7 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Student Name
+                                        Nama
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         NISN
@@ -197,16 +220,13 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                                         Email
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Gender
+                                        Jenis Kelamin
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Religion
-                                    </th>
-                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Class(es)
+                                        Kelas
                                     </th>
                                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Action
+                                        Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -225,6 +245,18 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
+                                                    <img
+                                                        src={`${
+                                                            student.profile_picture ||
+                                                            "/assets/images/default-avatar.png"
+                                                        }${
+                                                            student.updated_at
+                                                                ? `?v=${student.updated_at}`
+                                                                : ""
+                                                        }`}
+                                                        alt={student.name}
+                                                        className="h-10 w-10 rounded-full object-cover mr-3 border"
+                                                    />
                                                     <div className="text-sm font-medium text-gray-900">
                                                         {student.name}
                                                     </div>
@@ -238,9 +270,6 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {student.gender}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {student.religion}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 truncate overflow-hidden text-ellipsis max-w-[200px]">
                                                 {student.classes}
@@ -279,7 +308,7 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                                 ) : (
                                     <tr>
                                         <td
-                                            colSpan="7"
+                                            colSpan="6"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
                                             Tidak ada data siswa yang ditemukan
@@ -298,7 +327,7 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -330,7 +359,7 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Berikutnya
                             </button>
                         </div>
                     )}

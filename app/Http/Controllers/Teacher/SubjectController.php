@@ -9,6 +9,9 @@ use App\Models\Material;
 use App\Models\Assignment;
 use App\Models\Teacher;
 use App\Models\AssignmentSubmission;
+use App\Models\Quiz;
+use App\Models\QuizSubmission;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -225,6 +228,130 @@ class SubjectController extends Controller
                 ];
             });
 
+            // Kumpulkan semua aktivitas (materi, tugas, kuis, presensi, diskusi)
+            $activities = [];
+
+            // Materi
+            foreach (Material::where('subject_id', $subject->id)->latest()->get() as $material) {
+                $activities[] = [
+                    'type' => 'Materi',
+                    'title' => $material->title ?? 'Materi baru',
+                    'date' => $material->created_at
+                        ? $material->created_at->format('d M Y H:i')
+                        : '',
+                    'created_at' => $material->created_at,
+                    'url' => route('teacher.materials.edit', $material->id),
+                ];
+            }
+
+            // Tugas
+            foreach (Assignment::where('subject_id', $subject->id)->latest()->get() as $assignment) {
+                $activities[] = [
+                    'type' => 'Tugas',
+                    'title' => $assignment->title ?? 'Tugas baru',
+                    'date' => $assignment->created_at
+                        ? $assignment->created_at->format('d M Y H:i')
+                        : '',
+                    'created_at' => $assignment->created_at,
+                    'url' => route('teacher.assignments.edit', $assignment->id),
+                ];
+            }
+
+            // Kuis
+            try {
+                $quizModel = \App\Models\Quiz::class;
+                if (class_exists($quizModel)) {
+                    foreach ($quizModel::where('subject_id', $subject->id)
+                        ->latest()
+                        ->get() as $quiz) {
+                        $activities[] = [
+                            'type' => 'Kuis',
+                            'title' => $quiz->title ?? 'Kuis baru',
+                            'date' => $quiz->created_at
+                                ? $quiz->created_at->format('d M Y H:i')
+                                : '',
+                            'created_at' => $quiz->created_at,
+                            // Belum ada route detail kuis guru, arahkan ke index kuis dengan filter subject
+                            'url' => route('teacher.quizzes.index', [
+                                'subject_id' => $subject->id,
+                            ]),
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not get quizzes for activity list: ' . $e->getMessage());
+            }
+
+            // Presensi
+            try {
+                $attendanceSessions = DB::table('attendance_sessions')
+                    ->where('subject_id', $subject->id)
+                    ->latest()
+                    ->get();
+
+                foreach ($attendanceSessions as $session) {
+                    $activities[] = [
+                        'type' => 'Presensi',
+                        'title' => $session->title ?? 'Sesi presensi',
+                        'date' => $session->created_at
+                            ? \Carbon\Carbon::parse($session->created_at)->format('d M Y H:i')
+                            : '',
+                        'created_at' => $session->created_at
+                            ? \Carbon\Carbon::parse($session->created_at)
+                            : null,
+                        // Arahkan ke daftar presensi, opsional dengan subject_id
+                        'url' => route('teacher.attendance.index', [
+                            'subject_id' => $subject->id,
+                        ]),
+                    ];
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not get attendance sessions for activity list: ' . $e->getMessage());
+            }
+
+            // Diskusi
+            try {
+                $threadModel = \App\Models\DiscussionThread::class;
+                if (class_exists($threadModel)) {
+                    foreach ($threadModel::where('subject_id', $subject->id)
+                        ->latest()
+                        ->get() as $thread) {
+                        $activities[] = [
+                            'type' => 'Diskusi',
+                            'title' => $thread->title ?? 'Topik diskusi',
+                            'date' => $thread->created_at
+                                ? $thread->created_at->format('d M Y H:i')
+                                : '',
+                            'created_at' => $thread->created_at,
+                            'url' => route('teacher.discussions.show', [
+                                'subject' => $subject->id,
+                                'thread' => $thread->id,
+                            ]),
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Could not get discussion threads for activity list: ' . $e->getMessage());
+            }
+
+            // Urutkan aktivitas berdasarkan created_at terbaru
+            usort($activities, function ($a, $b) {
+                if (empty($a['created_at']) || empty($b['created_at'])) {
+                    return 0;
+                }
+                return $b['created_at'] <=> $a['created_at'];
+            });
+
+            // Format tanggal & URL untuk frontend dan buang created_at mentah
+            $recentActivities = array_map(function ($item) {
+                return [
+                    'type' => $item['type'],
+                    'title' => $item['title'],
+                    'date' => $item['date'],
+                    'url' => $item['url'] ?? null,
+                ];
+            }, $activities);
+
             // Format data for view
             $formattedSubject = [
                 'id' => $subject->id,
@@ -239,6 +366,7 @@ class SubjectController extends Controller
                 'pending_submissions_count' => $pendingSubmissions,
                 'students' => $formattedStudents,
                 'created_at' => $subject->created_at->format('d-m-Y'),
+                'recent_activities' => $recentActivities,
             ];
 
             // Log successful access
@@ -256,6 +384,182 @@ class SubjectController extends Controller
 
             return redirect()->route('teacher.subjects.index')
                 ->with('error', 'Error displaying subject details. Please try again.');
+        }
+    }
+
+    /**
+     * Export grades for this subject (per class) as CSV.
+     * Includes assignment grades and quiz scores.
+     */
+    public function exportGrades(Subject $subject)
+    {
+        try {
+            $user = Auth::user();
+            $teacher = Teacher::where('user_id', $user->id)->firstOrFail();
+
+            // Pastikan subject milik guru ini
+            if ($subject->teacher_id !== $teacher->id) {
+                return redirect()->route('teacher.subjects.index')
+                    ->with('error', 'You do not have permission to export grades for this subject.');
+            }
+
+            // Ambil semua siswa di kelas subject ini
+            $students = Student::whereHas('classes', function ($query) use ($subject) {
+                $query->where('class_id', $subject->class_id);
+            })->get();
+
+            // Ambil semua tugas dan submission untuk subject ini
+            $assignments = Assignment::where('subject_id', $subject->id)
+                ->orderBy('created_at')
+                ->get();
+            $assignmentIds = $assignments->pluck('id');
+
+            $assignmentSubmissions = AssignmentSubmission::whereIn('assignment_id', $assignmentIds)
+                ->whereNotNull('grade')
+                ->get();
+
+            // Ambil semua quiz dan submission untuk subject ini
+            $quizzes = Quiz::where('subject_id', $subject->id)
+                ->orderBy('created_at')
+                ->get();
+            $quizIds = $quizzes->pluck('id');
+
+            $quizSubmissions = QuizSubmission::whereIn('quiz_id', $quizIds)
+                ->whereNotNull('score')
+                ->get();
+
+            $exportRows = [];
+
+            foreach ($students as $student) {
+                // Nilai tugas per tugas
+                $studentAssignmentSubs = $assignmentSubmissions->where('student_id', $student->id);
+
+                // Nilai kuis per kuis
+                $studentQuizSubs = $quizSubmissions->where('student_id', $student->id);
+
+                $row = [
+                    'nisn' => $student->nisn,
+                    'name' => $student->name,
+                ];
+
+                // Kolom per tugas
+                foreach ($assignments as $assignment) {
+                    $sub = $studentAssignmentSubs->where('assignment_id', $assignment->id)->first();
+                    $row['assignment_' . $assignment->id] =
+                        $sub && $sub->grade !== null ? $sub->grade : '-';
+                }
+
+                // Kolom per kuis
+                foreach ($quizzes as $quiz) {
+                    $sub = $studentQuizSubs->where('quiz_id', $quiz->id)->first();
+                    $row['quiz_' . $quiz->id] =
+                        $sub && $sub->score !== null ? $sub->score : '-';
+                }
+
+                // Rata-rata tugas
+                $assignmentGrades = $studentAssignmentSubs
+                    ->pluck('grade')
+                    ->filter(function ($g) {
+                        return $g !== null;
+                    })
+                    ->all();
+                $assignmentAvg = count($assignmentGrades) > 0
+                    ? round(array_sum($assignmentGrades) / count($assignmentGrades), 2)
+                    : null;
+
+                // Rata-rata kuis
+                $quizScores = $studentQuizSubs
+                    ->pluck('score')
+                    ->filter(function ($s) {
+                        return $s !== null;
+                    })
+                    ->all();
+                $quizAvg = count($quizScores) > 0
+                    ? round(array_sum($quizScores) / count($quizScores), 2)
+                    : null;
+
+                // Nilai akhir sederhana: rata-rata dari komponen yang ada
+                $components = [];
+                if (!is_null($assignmentAvg)) {
+                    $components[] = $assignmentAvg;
+                }
+                if (!is_null($quizAvg)) {
+                    $components[] = $quizAvg;
+                }
+                $finalScore = count($components) > 0
+                    ? round(array_sum($components) / count($components), 2)
+                    : null;
+
+                $row['assignment_avg'] = $assignmentAvg !== null ? $assignmentAvg : '-';
+                $row['quiz_avg'] = $quizAvg !== null ? $quizAvg : '-';
+                $row['final_score'] = $finalScore !== null ? $finalScore : '-';
+
+                $exportRows[] = $row;
+            }
+
+            // Nama file
+            $filename = 'nilai_' . Str::slug($subject->name ?? 'subject') . '_' . date('Ymd_His') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"$filename\"",
+            ];
+
+            $callback = function () use ($exportRows, $assignments, $quizzes) {
+                $output = fopen('php://output', 'w');
+
+                // BOM UTF-8 agar Excel Indonesia membaca dengan benar
+                fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+                // Header kolom dinamis
+                $header = ['NISN', 'Nama Siswa'];
+
+                foreach ($assignments as $assignment) {
+                    $header[] = 'Tugas: ' . ($assignment->title ?? ('ID ' . $assignment->id));
+                }
+
+                foreach ($quizzes as $quiz) {
+                    $header[] = 'Kuis: ' . ($quiz->title ?? ('ID ' . $quiz->id));
+                }
+
+                $header[] = 'Rata-rata Tugas';
+                $header[] = 'Rata-rata Kuis';
+                $header[] = 'Nilai Akhir (Rata-rata)';
+
+                fputcsv($output, $header, ';');
+
+                // Data
+                foreach ($exportRows as $row) {
+                    $data = [
+                        $row['nisn'],
+                        $row['name'],
+                    ];
+
+                    foreach ($assignments as $assignment) {
+                        $data[] = $row['assignment_' . $assignment->id] ?? '-';
+                    }
+
+                    foreach ($quizzes as $quiz) {
+                        $data[] = $row['quiz_' . $quiz->id] ?? '-';
+                    }
+
+                    $data[] = $row['assignment_avg'];
+                    $data[] = $row['quiz_avg'];
+                    $data[] = $row['final_score'];
+
+                    fputcsv($output, $data, ';');
+                }
+
+                fclose($output);
+            };
+
+            // Log aktivitas
+            $this->logActivity($user->id, 'export_grades', "Exported grades for subject: {$subject->name}");
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            Log::error('Error exporting grades: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to export grades: ' . $e->getMessage());
         }
     }
 

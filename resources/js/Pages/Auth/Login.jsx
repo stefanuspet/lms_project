@@ -36,9 +36,11 @@ export default function Login({ status, canResetPassword }) {
                     alt="logo"
                     className="w-20"
                 />
-                <h1 className="font-extrabold text-3xl text-center py-4">
-                    SchoolHub Login
-                </h1>
+                <div>
+                    <h1 className="font-extrabold text-3xl text-center py-4">
+                        SMK <br></br> Amaliyah Jakarta
+                    </h1>
+                </div>
             </div>
 
             <form onSubmit={submit}>

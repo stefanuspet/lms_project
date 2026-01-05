@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Semester;
+use App\Models\AcademicYear;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,7 @@ class SemesterController extends Controller
             'per_page' => 'nullable|integer|min:1|max:100',
             'sort_by' => 'nullable|string|in:name,start_date,end_date,created_at',
             'sort_order' => 'nullable|string|in:asc,desc',
+            'academic_year_id' => 'nullable|integer|exists:academic_years,id',
         ]);
 
         // Set default values if not provided
@@ -30,15 +32,20 @@ class SemesterController extends Controller
         $sortBy = $request->input('sort_by', 'start_date');
         $sortOrder = $request->input('sort_order', 'desc');
         $page = $request->input('page', 1);
+        $academicYearId = $request->input('academic_year_id');
 
         // Query semesters
-        $query = Semester::query();
+        $query = Semester::query()->with('academicYear');
 
         // Apply search filters
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%");
             });
+        }
+
+        if (!empty($academicYearId)) {
+            $query->where('academic_year_id', $academicYearId);
         }
 
         // Apply sorting
@@ -54,6 +61,7 @@ class SemesterController extends Controller
             return [
                 'id' => $semester->id,
                 'name' => $semester->name,
+                'academic_year_name' => optional($semester->academicYear)->name,
                 'start_date' => $semester->start_date->format('Y-m-d'),
                 'end_date' => $semester->end_date->format('Y-m-d'),
                 'formatted_start_date' => $semester->start_date->format('d M Y'),
@@ -80,7 +88,9 @@ class SemesterController extends Controller
                 'search' => $search,
                 'sort_by' => $sortBy,
                 'sort_order' => $sortOrder,
+                'academic_year_id' => $academicYearId,
             ],
+            'academic_years' => AcademicYear::orderBy('name', 'desc')->get(['id', 'name']),
         ]);
     }
 
@@ -89,7 +99,9 @@ class SemesterController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Semester/Create');
+        return Inertia::render('Admin/Semester/Create', [
+            'academic_years' => AcademicYear::orderBy('name', 'desc')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -99,6 +111,7 @@ class SemesterController extends Controller
     {
         // Validasi input
         $validated = $request->validate([
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
@@ -109,6 +122,7 @@ class SemesterController extends Controller
 
             // Buat semester baru
             $semester = Semester::create([
+                'academic_year_id' => $request->academic_year_id,
                 'name' => $request->name,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
@@ -186,9 +200,11 @@ class SemesterController extends Controller
             'semester' => [
                 'id' => $semester->id,
                 'name' => $semester->name,
+                'academic_year_id' => $semester->academic_year_id,
                 'start_date' => $semester->start_date->format('Y-m-d'),
                 'end_date' => $semester->end_date->format('Y-m-d'),
             ],
+            'academic_years' => AcademicYear::orderBy('name', 'desc')->get(['id', 'name']),
         ]);
     }
 
@@ -199,6 +215,7 @@ class SemesterController extends Controller
     {
         // Validasi input
         $validated = $request->validate([
+            'academic_year_id' => 'required|integer|exists:academic_years,id',
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
@@ -209,6 +226,7 @@ class SemesterController extends Controller
 
             // Update semester
             $semester->update([
+                'academic_year_id' => $request->academic_year_id,
                 'name' => $request->name,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,

@@ -25,7 +25,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
     };
 
     return (
-        <AuthenticatedLayout title="Edit Class">
+        <AuthenticatedLayout title="Edit Kelas">
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -41,7 +41,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Edit Class
+                                Edit Kelas
                             </h1>
                         </div>
                     </div>
@@ -53,7 +53,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                 {/* Class Details Section */}
                                 <div className="md:col-span-2">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Class Details
+                                        Detail Kelas
                                     </h2>
                                 </div>
 
@@ -61,7 +61,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="name"
-                                        value="Class Name"
+                                        value="Nama Kelas"
                                     />
                                     <TextInput
                                         id="name"
@@ -82,7 +82,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="semester_id"
-                                        value="Active Semester (Optional)"
+                                        value="Semester Aktif (opsional)"
                                     />
                                     <SelectInput
                                         id="semester_id"
@@ -92,7 +92,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                         onChange={handleChange}
                                     >
                                         <option value="">
-                                            No Active Semester
+                                            Tidak ada Semester Aktif
                                         </option>
                                         {semesters.map((semester) => (
                                             <option
@@ -108,8 +108,8 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                         className="mt-2"
                                     />
                                     <p className="mt-1 text-xs text-gray-500">
-                                        An active semester is needed for student
-                                        enrollment.
+                                        Semester aktif diperlukan untuk
+                                        pendaftaran siswa.
                                     </p>
                                 </div>
 
@@ -117,7 +117,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                 <div className="md:col-span-2">
                                     <InputLabel
                                         htmlFor="description"
-                                        value="Description (Optional)"
+                                        value="Deskripsi (opsional)"
                                     />
                                     <textarea
                                         id="description"
@@ -126,7 +126,7 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                         onChange={handleChange}
                                         rows="4"
                                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="Enter class description here..."
+                                        placeholder="Masukkan deskripsi kelas di sini..."
                                     ></textarea>
                                     <InputError
                                         message={errors.description}
@@ -141,14 +141,14 @@ const ClassroomEdit = ({ classroom, semesters }) => {
                                     href={route("admin.classrooms.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
                                 >
-                                    Update Class
+                                    Perbarui Kelas
                                 </button>
                             </div>
                         </form>

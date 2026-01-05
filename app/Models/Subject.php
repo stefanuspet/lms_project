@@ -54,6 +54,14 @@ class Subject extends Model
     }
 
     /**
+     * Get schedules for this subject.
+     */
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    /**
      * Search subjects by name or description.
      */
     public function scopeSearch($query, $search)

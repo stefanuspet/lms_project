@@ -40,7 +40,11 @@ const AllMaterials = ({
 
     // Fungsi untuk menghapus materi
     const handleDelete = (materialId) => {
-        if (confirm("Are you sure you want to delete this material?")) {
+        if (
+            confirm(
+                "Apakah Anda yakin ingin menghapus materi ini?"
+            )
+        ) {
             setProcessing(true);
 
             router.delete(route("teacher.materials.destroy", materialId), {
@@ -50,7 +54,7 @@ const AllMaterials = ({
                 },
                 onError: () => {
                     setProcessing(false);
-                    alert("An error occurred while deleting the material.");
+                    alert("Terjadi kesalahan saat menghapus materi.");
                 },
             });
         }
@@ -219,7 +223,7 @@ const AllMaterials = ({
     );
 
     return (
-        <TeacherLayout title="All Teaching Materials">
+        <TeacherLayout title="Semua Materi Ajar">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -236,11 +240,11 @@ const AllMaterials = ({
                     <div className="flex justify-between items-center px-6 py-5 border-b">
                         <div>
                             <h1 className="font-bold text-xl text-gray-800">
-                                All Teaching Materials
+                                Semua Materi Ajar
                             </h1>
                             <p className="text-sm text-gray-600">
-                                Manage all teaching materials across your
-                                subjects
+                                Kelola semua materi ajar di seluruh mata
+                                pelajaran Anda
                             </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -252,7 +256,7 @@ const AllMaterials = ({
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search materials"
+                                    placeholder="Cari materi"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -483,7 +487,7 @@ const AllMaterials = ({
                                                     }
                                                     className="text-red-600 hover:text-red-900 inline-block"
                                                     disabled={processing}
-                                                    title="Delete Material"
+                                                    title="Hapus Materi"
                                                 >
                                                     <Trash size="20" />
                                                 </button>
@@ -496,8 +500,8 @@ const AllMaterials = ({
                                             colSpan="6"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No materials found. Click the +
-                                            button to add a new material.
+                                            Belum ada materi. Klik tombol +
+                                            untuk menambahkan materi baru.
                                         </td>
                                     </tr>
                                 )}
@@ -513,7 +517,7 @@ const AllMaterials = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -545,7 +549,7 @@ const AllMaterials = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Berikutnya
                             </button>
                         </div>
                     )}

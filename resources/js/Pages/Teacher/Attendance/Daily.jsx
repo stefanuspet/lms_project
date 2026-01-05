@@ -198,8 +198,8 @@ const TeacherAttendanceDaily = ({
                                                 key={session.id}
                                                 value={session.id}
                                             >
-                                                {session.title} (PIN:{" "}
-                                                {session.pin})
+                                                {session.title} ({session.session_type === "arrival" ? "Berangkat" : "Pulang"}) -{" "}
+                                                {session.start_time || "??"} (QR: {session.qr_token})
                                             </option>
                                         ))}
                                     </>
@@ -262,7 +262,7 @@ const TeacherAttendanceDaily = ({
                                                 />
                                                 <div>
                                                     <p className="text-sm text-gray-500">
-                                                        Status
+                                                        Status & Waktu
                                                     </p>
                                                     <p
                                                         className={`${
@@ -271,20 +271,24 @@ const TeacherAttendanceDaily = ({
                                                                 : "text-red-600"
                                                         }`}
                                                     >
+                                                        {attendanceData.session_type === "arrival"
+                                                            ? "Berangkat"
+                                                            : "Pulang"}{" "}
+                                                        {attendanceData.start_time
+                                                            ? `${attendanceData.start_time} - ${attendanceData.expires_at}`
+                                                            : `hingga ${attendanceData.expires_at}`}
                                                         {attendanceData.is_active
-                                                            ? "Aktif"
-                                                            : "Berakhir"}
-                                                        {attendanceData.is_active &&
-                                                            ` hingga ${attendanceData.expires_at}`}
+                                                            ? " (Aktif)"
+                                                            : " (Berakhir)"}
                                                     </p>
                                                 </div>
                                             </div>
                                             <div className="flex items-start">
                                                 <div className="bg-gray-100 px-2 py-1 rounded text-gray-700 font-mono">
-                                                    {attendanceData.pin}
+                                                    {attendanceData.qr_token}
                                                 </div>
                                                 <div className="ml-2 text-sm text-gray-500">
-                                                    Kode PIN
+                                                    QR Token
                                                 </div>
                                             </div>
                                         </div>

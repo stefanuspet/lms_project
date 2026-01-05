@@ -12,7 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Inertia\Inertia;
+    use Inertia\Inertia;
+    use Illuminate\Support\Str;
+    use App\Models\Extracurricular;
 
 class AttendanceController extends Controller
 {
@@ -47,14 +49,14 @@ class AttendanceController extends Controller
             $query = AttendanceSession::with(['semester'])
                 ->withCount(['attendances']);
 
-            // Apply search filters
-            if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('pin', 'like', "%{$search}%")
-                        ->orWhere('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
-                });
-            }
+        // Apply search filters
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('qr_token', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
 
             // Apply additional filters
             if ($filterDateFrom) {
@@ -77,20 +79,25 @@ class AttendanceController extends Controller
             // Execute paginated query
             $sessions = $query->paginate($perPage)->withQueryString();
 
-            // Format data for frontend
-            $formattedSessions = $sessions->map(function ($session) {
-                $isActive = Carbon::parse($session->expires_at)->isFuture();
-                $presentCount = $session->attendances()->where('status', 'hadir')->count();
-                $absentCount = $session->attendances()->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
-                $totalStudents = $presentCount + $absentCount;
-                $attendanceRate = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100, 1) : 0;
+        // Format data for frontend
+        $formattedSessions = $sessions->map(function ($session) {
+            if (empty($session->qr_token)) {
+                $session->update(['qr_token' => $this->generateUniqueQrToken()]);
+            }
+            $isActive = Carbon::parse($session->expires_at)->isFuture();
+            $presentCount = $session->attendances()->where('status', 'hadir')->count();
+            $absentCount = $session->attendances()->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
+            $totalStudents = $presentCount + $absentCount;
+            $attendanceRate = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100, 1) : 0;
 
                 return [
                     'id' => $session->id,
-                    'pin' => $session->pin,
+                    'qr_token' => $session->qr_token,
                     'title' => $session->title,
+                    'session_type' => $session->session_type,
                     'description' => $session->description,
                     'date' => Carbon::parse($session->date)->format('d-m-Y'),
+                    'start_time' => $session->start_time?->format('H:i'),
                     'semester' => $session->semester ? $session->semester->name : '-',
                     'expires_at' => Carbon::parse($session->expires_at)->format('d-m-Y H:i'),
                     'is_active' => $isActive,
@@ -210,10 +217,12 @@ class AttendanceController extends Controller
                 // Format session data
                 $attendanceData = [
                     'id' => $selectedSession->id,
-                    'pin' => $selectedSession->pin,
+                    'qr_token' => $selectedSession->qr_token,
                     'title' => $selectedSession->title,
+                    'session_type' => $selectedSession->session_type,
                     'description' => $selectedSession->description,
                     'date' => Carbon::parse($selectedSession->date)->format('d-m-Y'),
+                    'start_time' => $selectedSession->start_time?->format('H:i'),
                     'semester' => $selectedSession->semester ? $selectedSession->semester->name : '-',
                     'expires_at' => Carbon::parse($selectedSession->expires_at)->format('d-m-Y H:i:s'),
                     'is_active' => Carbon::parse($selectedSession->expires_at)->isFuture(),
@@ -225,7 +234,9 @@ class AttendanceController extends Controller
                 return [
                     'id' => $session->id,
                     'title' => $session->title,
-                    'pin' => $session->pin,
+                    'qr_token' => $session->qr_token,
+                    'session_type' => $session->session_type,
+                    'start_time' => $session->start_time?->format('H:i'),
                 ];
             });
 
@@ -252,18 +263,21 @@ class AttendanceController extends Controller
     {
         try {
             // Get active sessions
-            $activeSessions = AttendanceSession::where('expires_at', '>', now())
+            $activeSessions = AttendanceSession::active()
                 ->with(['semester'])
                 ->withCount(['attendances'])
                 ->orderBy('expires_at')
                 ->get();
 
             // Format data for frontend
-            $formattedSessions = $activeSessions->map(function ($session) {
-                $presentCount = $session->attendances()->where('status', 'hadir')->count();
-                $absentCount = $session->attendances()->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
-                $totalStudents = $presentCount + $absentCount;
-                $attendanceRate = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100, 1) : 0;
+        $formattedSessions = $activeSessions->map(function ($session) {
+            if (empty($session->qr_token)) {
+                $session->update(['qr_token' => $this->generateUniqueQrToken()]);
+            }
+            $presentCount = $session->attendances()->where('status', 'hadir')->count();
+            $absentCount = $session->attendances()->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
+            $totalStudents = $presentCount + $absentCount;
+            $attendanceRate = $totalStudents > 0 ? round(($presentCount / $totalStudents) * 100, 1) : 0;
 
                 // Calculate remaining time
                 $expiresAt = Carbon::parse($session->expires_at);
@@ -281,10 +295,12 @@ class AttendanceController extends Controller
 
                 return [
                     'id' => $session->id,
-                    'pin' => $session->pin,
+                    'qr_token' => $session->qr_token,
                     'title' => $session->title,
+                    'session_type' => $session->session_type,
                     'description' => $session->description,
                     'date' => Carbon::parse($session->date)->format('d-m-Y'),
+                    'start_time' => $session->start_time?->format('H:i'),
                     'semester' => $session->semester ? $session->semester->name : '-',
                     'expires_at' => Carbon::parse($session->expires_at)->format('d-m-Y H:i'),
                     'remaining_time' => $remainingTime,
@@ -304,5 +320,48 @@ class AttendanceController extends Controller
                 'error' => 'Failed to load active sessions: ' . $e->getMessage()
             ]);
         }
+    }
+
+    private function generateUniqueQrToken()
+    {
+        do {
+            $token = Str::uuid()->toString() . '-' . bin2hex(random_bytes(6));
+            $exists = AttendanceSession::where('qr_token', $token)
+                ->where('expires_at', '>', now())
+                ->exists();
+        } while ($exists);
+
+        return $token;
+    }
+
+    /**
+     * Create a new attendance session for an extracurricular activity.
+     */
+    public function createExtracurricularSession(Request $request, Extracurricular $extracurricular)
+    {
+        $request->validate([
+            'session_type' => 'required|string|max:50',
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'duration_minutes' => 'required|integer|min:5|max:240',
+        ]);
+
+        $expiresAt = now()->addMinutes($request->input('duration_minutes'));
+
+        $session = AttendanceSession::create([
+            'qr_token' => $this->generateUniqueQrToken(),
+            'session_type' => $request->input('session_type'),
+            'title' => $request->input('title') ?: $extracurricular->name,
+            'description' => $request->input('description'),
+            'date' => now()->toDateString(),
+            'start_time' => now(),
+            'semester_id' => $extracurricular->semester_id,
+            'extracurricular_id' => $extracurricular->id,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return redirect()
+            ->route('teacher.extracurriculars.show', $extracurricular->id)
+            ->with('success', 'Sesi presensi ekskul berhasil dibuat.');
     }
 }

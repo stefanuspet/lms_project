@@ -99,7 +99,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
     console.log(subjects);
 
     return (
-        <StudentLayout title="My Subjects">
+        <StudentLayout title="Mata Pelajaran Saya">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -115,10 +115,10 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
                         <h1 className="font-bold text-xl text-gray-800">
-                            My Subjects
+                            Mata Pelajaran Saya
                         </h1>
                         <div className="flex items-center space-x-2">
-                            {/* Search box */}
+                            {/* Kotak Pencarian */}
                             <form onSubmit={handleSearch} className="relative">
                                 <SearchNormal1
                                     size="20"
@@ -126,7 +126,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search subjects"
+                                    placeholder="Cari mata pelajaran"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -134,11 +134,11 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
 
-                            {/* Filter button */}
+                            {/* Tombol Filter */}
                             <button className="p-2 rounded-full bg-[#D6E4FF] text-blue-600 hover:bg-blue-200 transition-colors">
                                 <Setting4
                                     color="blue"
@@ -171,21 +171,20 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                                 {subject.name}
                                             </h3>
                                             <div className="flex items-center text-sm text-gray-600 mb-3">
-                                                <span>
-                                                    Teacher:{" "}
-                                                    {subject.teacher_name}
-                                                </span>
+                                            <span>
+                                                Guru: {subject.teacher_name}
+                                            </span>
                                             </div>
                                             <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                                                 {subject.description ||
-                                                    "No description available."}
+                                                    "Belum ada deskripsi."}
                                             </p>
 
                                             <div className="grid grid-cols-2 gap-2 mb-4">
                                                 <div className="bg-blue-50 p-2 rounded-lg">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs text-gray-500">
-                                                            Materials
+                                                            Materi
                                                         </span>
                                                         <span className="text-sm font-semibold text-blue-700">
                                                             {
@@ -197,7 +196,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                                 <div className="bg-green-50 p-2 rounded-lg">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs text-gray-500">
-                                                            Assignments
+                                                            Tugas
                                                         </span>
                                                         <span className="text-sm font-semibold text-green-700">
                                                             {
@@ -215,7 +214,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                                         className="text-blue-600"
                                                     />
                                                     <span>
-                                                        Browse Materials
+                                                        Lihat Materi
                                                     </span>
                                                 </div>
 
@@ -225,7 +224,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                                         {
                                                             subject.pending_assignments
                                                         }{" "}
-                                                        due
+                                                        belum dikumpulkan
                                                     </span>
                                                 )}
                                             </div>
@@ -240,9 +239,9 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                     className="mx-auto text-gray-300"
                                 />
                                 <p className="mt-4 text-gray-500">
-                                    No subjects found. Please contact your
-                                    administrator if you believe this is an
-                                    error.
+                                    Tidak ada mata pelajaran. Silakan hubungi
+                                    administrator jika Anda merasa ini adalah
+                                    kesalahan.
                                 </p>
                             </div>
                         )}
@@ -256,7 +255,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -288,7 +287,7 @@ const StudentSubjectIndex = ({ subjects, pagination, filters, flash }) => {
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Selanjutnya
                             </button>
                         </div>
                     )}

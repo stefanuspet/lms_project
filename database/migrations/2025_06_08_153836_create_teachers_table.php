@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('nip')->unique();
             $table->string('phone');      // Tambahkan nomor telepon
             $table->string('address');    // Tambahkan alamat
+            $table->string('profile_picture')
+                ->default('/assets/images/default-avatar.png');
             $table->timestamps();
         });
     }

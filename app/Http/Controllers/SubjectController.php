@@ -5,9 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\Student;
+use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
+use App\Models\Quiz;
+use App\Models\QuizSubmission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class SubjectController extends Controller
@@ -256,6 +262,198 @@ class SubjectController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => 'Error: ' . $e->getMessage()])
                 ->withInput();
+        }
+    }
+
+    /**
+     * Export subjects as CSV (bisa dibuka di Excel).
+     */
+    public function export(Request $request)
+    {
+        $subjects = Subject::with(['classroom', 'teacher'])->get();
+
+        $filename = 'data_mata_pelajaran_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($subjects) {
+            $output = fopen('php://output', 'w');
+
+            // Tambah BOM supaya Excel membaca UTF-8 dengan benar
+            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            $delimiter = ';';
+
+            // Header kolom
+            fputcsv($output, ['Nama Mapel', 'Deskripsi', 'Kelas', 'Guru'], $delimiter);
+
+            foreach ($subjects as $subject) {
+                fputcsv($output, [
+                    $subject->name,
+                    $subject->description,
+                    optional($subject->classroom)->name,
+                    optional($subject->teacher)->name,
+                ], $delimiter);
+            }
+
+            fclose($output);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
+    }
+
+    /**
+     * Export grades for a subject as CSV (admin view).
+     * Mirip dengan export guru, tetapi tanpa cek pemilik guru.
+     */
+    public function exportGrades(Subject $subject)
+    {
+        try {
+            // Ambil semua siswa di kelas subject ini
+            $students = Student::whereHas('classes', function ($query) use ($subject) {
+                $query->where('class_id', $subject->class_id);
+            })->get();
+
+            // Ambil semua tugas dan submission untuk subject ini
+            $assignments = Assignment::where('subject_id', $subject->id)
+                ->orderBy('created_at')
+                ->get();
+            $assignmentIds = $assignments->pluck('id');
+
+            $assignmentSubmissions = AssignmentSubmission::whereIn('assignment_id', $assignmentIds)
+                ->whereNotNull('grade')
+                ->get();
+
+            // Ambil semua quiz dan submission untuk subject ini
+            $quizzes = Quiz::where('subject_id', $subject->id)
+                ->orderBy('created_at')
+                ->get();
+            $quizIds = $quizzes->pluck('id');
+
+            $quizSubmissions = QuizSubmission::whereIn('quiz_id', $quizIds)
+                ->whereNotNull('score')
+                ->get();
+
+            $exportRows = [];
+
+            foreach ($students as $student) {
+                $studentAssignmentSubs = $assignmentSubmissions->where('student_id', $student->id);
+                $studentQuizSubs = $quizSubmissions->where('student_id', $student->id);
+
+                $row = [
+                    'nisn' => $student->nisn,
+                    'name' => $student->name,
+                ];
+
+                foreach ($assignments as $assignment) {
+                    $sub = $studentAssignmentSubs->where('assignment_id', $assignment->id)->first();
+                    $row['assignment_' . $assignment->id] =
+                        $sub && $sub->grade !== null ? $sub->grade : '-';
+                }
+
+                foreach ($quizzes as $quiz) {
+                    $sub = $studentQuizSubs->where('quiz_id', $quiz->id)->first();
+                    $row['quiz_' . $quiz->id] =
+                        $sub && $sub->score !== null ? $sub->score : '-';
+                }
+
+                $assignmentGrades = $studentAssignmentSubs
+                    ->pluck('grade')
+                    ->filter(function ($g) {
+                        return $g !== null;
+                    })
+                    ->all();
+                $assignmentAvg = count($assignmentGrades) > 0
+                    ? round(array_sum($assignmentGrades) / count($assignmentGrades), 2)
+                    : null;
+
+                $quizScores = $studentQuizSubs
+                    ->pluck('score')
+                    ->filter(function ($s) {
+                        return $s !== null;
+                    })
+                    ->all();
+                $quizAvg = count($quizScores) > 0
+                    ? round(array_sum($quizScores) / count($quizScores), 2)
+                    : null;
+
+                $components = [];
+                if (!is_null($assignmentAvg)) {
+                    $components[] = $assignmentAvg;
+                }
+                if (!is_null($quizAvg)) {
+                    $components[] = $quizAvg;
+                }
+                $finalScore = count($components) > 0
+                    ? round(array_sum($components) / count($components), 2)
+                    : null;
+
+                $row['assignment_avg'] = $assignmentAvg !== null ? $assignmentAvg : '-';
+                $row['quiz_avg'] = $quizAvg !== null ? $quizAvg : '-';
+                $row['final_score'] = $finalScore !== null ? $finalScore : '-';
+
+                $exportRows[] = $row;
+            }
+
+            $filename = 'nilai_mapel_admin_' . Str::slug($subject->name ?? 'subject') . '_' . date('Ymd_His') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"$filename\"",
+            ];
+
+            $callback = function () use ($exportRows, $assignments, $quizzes) {
+                $output = fopen('php://output', 'w');
+
+                fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+                $header = ['NISN', 'Nama Siswa'];
+
+                foreach ($assignments as $assignment) {
+                    $header[] = 'Tugas: ' . ($assignment->title ?? ('ID ' . $assignment->id));
+                }
+
+                foreach ($quizzes as $quiz) {
+                    $header[] = 'Kuis: ' . ($quiz->title ?? ('ID ' . $quiz->id));
+                }
+
+                $header[] = 'Rata-rata Tugas';
+                $header[] = 'Rata-rata Kuis';
+                $header[] = 'Nilai Akhir (Rata-rata)';
+
+                fputcsv($output, $header, ';');
+
+                foreach ($exportRows as $row) {
+                    $data = [
+                        $row['nisn'],
+                        $row['name'],
+                    ];
+
+                    foreach ($assignments as $assignment) {
+                        $data[] = $row['assignment_' . $assignment->id] ?? '-';
+                    }
+
+                    foreach ($quizzes as $quiz) {
+                        $data[] = $row['quiz_' . $quiz->id] ?? '-';
+                    }
+
+                    $data[] = $row['assignment_avg'];
+                    $data[] = $row['quiz_avg'];
+                    $data[] = $row['final_score'];
+
+                    fputcsv($output, $data, ';');
+                }
+
+                fclose($output);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } catch (\Exception $e) {
+            Log::error('Error exporting subject grades (admin): ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to export grades: ' . $e->getMessage());
         }
     }
 

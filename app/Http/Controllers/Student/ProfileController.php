@@ -45,7 +45,6 @@ class ProfileController extends Controller
                     'gender' => $student->gender,
                     'birth_date' => $student->birth_date ? date('Y-m-d', strtotime($student->birth_date)) : null,
                     'birth_place' => $student->birth_place,
-                    'religion' => $student->religion,
                 ],
                 'current_class' => $currentSemesterStudent ? [
                     'class_name' => $currentSemesterStudent->class_name,
@@ -81,7 +80,6 @@ class ProfileController extends Controller
                 'gender' => 'nullable|in:male,female',
                 'birth_date' => 'nullable|date',
                 'birth_place' => 'nullable|string|max:255',
-                'religion' => 'nullable|string|max:255',
                 'current_password' => 'nullable|string',
                 'new_password' => 'nullable|string|min:8|confirmed',
             ]);
@@ -94,7 +92,6 @@ class ProfileController extends Controller
             $student->gender = $validated['gender'];
             $student->birth_date = $validated['birth_date'];
             $student->birth_place = $validated['birth_place'];
-            $student->religion = $validated['religion'];
             $student->save();
 
             // Update user email if changed

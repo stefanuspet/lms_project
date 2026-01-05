@@ -16,10 +16,12 @@ class AttendanceSession extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'pin',
+        'qr_token',
+        'session_type',
         'title',
         'description',
         'date',
+        'start_time',
         'semester_id',
         'expires_at',
     ];
@@ -32,6 +34,7 @@ class AttendanceSession extends Model
     protected $casts = [
         'date' => 'date',
         'expires_at' => 'datetime',
+        'start_time' => 'datetime:H:i',
     ];
 
     /**
@@ -55,7 +58,12 @@ class AttendanceSession extends Model
      */
     public function isActive()
     {
-        return Carbon::parse($this->expires_at)->isFuture();
+        $now = now();
+        $start = $this->start_time
+            ? Carbon::parse($this->date->format('Y-m-d') . ' ' . $this->start_time->format('H:i:s'))
+            : Carbon::parse($this->date->format('Y-m-d') . ' 00:00:00');
+
+        return $now->between($start, Carbon::parse($this->expires_at));
     }
 
     /**
@@ -77,7 +85,12 @@ class AttendanceSession extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('expires_at', '>', now());
+        $now = now();
+        return $query->where('expires_at', '>', $now)
+            ->where(function ($q) use ($now) {
+                $q->whereNull('start_time')
+                    ->orWhereRaw("TIMESTAMP(date, start_time) <= ?", [$now]);
+            });
     }
 
     /**

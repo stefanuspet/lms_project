@@ -123,7 +123,11 @@ const TeacherNotificationIndex = ({
 
     // Handle delete notification
     const handleDeleteNotification = (id) => {
-        if (confirm("Are you sure you want to delete this notification?")) {
+        if (
+            confirm(
+                "Apakah Anda yakin ingin menghapus notifikasi ini?"
+            )
+        ) {
             router.delete(route("teacher.notifications.destroy", id), {
                 preserveState: true,
                 preserveScroll: true,
@@ -558,7 +562,7 @@ const TeacherNotificationIndex = ({
                                                                     );
                                                                 }}
                                                                 className="text-blue-600 hover:text-blue-800"
-                                                                title="View Details"
+                                                                title="Lihat Detail"
                                                             >
                                                                 <Eye size="18" />
                                                             </button>
@@ -570,7 +574,7 @@ const TeacherNotificationIndex = ({
                                                                 )
                                                             }
                                                             className="text-red-600 hover:text-red-800"
-                                                            title="Delete"
+                                                            title="Hapus"
                                                         >
                                                             <Trash size="18" />
                                                         </button>
@@ -588,7 +592,7 @@ const TeacherNotificationIndex = ({
                                     className="text-gray-300 mx-auto mb-2"
                                 />
                                 <p className="text-gray-500">
-                                    No notifications found
+                                    Tidak ada notifikasi
                                 </p>
                             </div>
                         )}
@@ -605,7 +609,7 @@ const TeacherNotificationIndex = ({
                                     disabled={pagination.current_page === 1}
                                     className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Previous
+                                    Sebelumnya
                                 </button>
                                 <button
                                     onClick={() =>
@@ -617,25 +621,25 @@ const TeacherNotificationIndex = ({
                                     }
                                     className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Next
+                                    Selanjutnya
                                 </button>
                             </div>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-sm text-gray-700">
-                                        Showing{" "}
+                                        Menampilkan{" "}
                                         <span className="font-medium">
                                             {pagination.from || 0}
                                         </span>{" "}
-                                        to{" "}
+                                        sampai{" "}
                                         <span className="font-medium">
                                             {pagination.to || 0}
                                         </span>{" "}
-                                        of{" "}
+                                        dari{" "}
                                         <span className="font-medium">
                                             {pagination.total}
                                         </span>{" "}
-                                        results
+                                        data
                                     </p>
                                 </div>
                                 <div>

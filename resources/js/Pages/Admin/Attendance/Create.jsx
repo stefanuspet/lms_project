@@ -14,7 +14,10 @@ const AttendanceCreate = ({ semesters }) => {
         description: "",
         date: new Date().toISOString().substr(0, 10), // Today's date
         semester_id: semesters.length > 0 ? semesters[0].id : "",
-        duration: "60", // Default 60 minutes
+        arrival_start_time: "07:00",
+        arrival_duration: "45",
+        departure_start_time: "15:00",
+        departure_duration: "45",
     });
 
     const handleSubmit = (e) => {
@@ -39,7 +42,7 @@ const AttendanceCreate = ({ semesters }) => {
     };
 
     return (
-        <AuthenticatedLayout title="Create Attendance Session">
+        <AuthenticatedLayout title="Buat Sesi Presensi">
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -55,7 +58,7 @@ const AttendanceCreate = ({ semesters }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Create Attendance Session
+                                Buat Sesi Presensi
                             </h1>
                         </div>
                     </div>
@@ -67,7 +70,7 @@ const AttendanceCreate = ({ semesters }) => {
                                 {/* Session Details Section */}
                                 <div className="md:col-span-2">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Attendance Session Details
+                                        Detail Sesi Presensi
                                     </h2>
                                 </div>
 
@@ -75,7 +78,7 @@ const AttendanceCreate = ({ semesters }) => {
                                 <div className="md:col-span-2">
                                     <InputLabel
                                         htmlFor="title"
-                                        value="Session Title"
+                                        value="Judul Sesi"
                                     />
                                     <TextInput
                                         id="title"
@@ -84,7 +87,7 @@ const AttendanceCreate = ({ semesters }) => {
                                         value={data.title}
                                         className="mt-1 block w-full"
                                         onChange={handleChange}
-                                        placeholder="Enter a descriptive title for this attendance session (e.g., 'Morning Assembly', 'Class Meeting')"
+                                        placeholder="Masukkan judul yang jelas untuk sesi presensi (misalnya 'Apel Pagi', 'Pertemuan Kelas')"
                                         required
                                     />
                                     <InputError
@@ -97,7 +100,7 @@ const AttendanceCreate = ({ semesters }) => {
                                 <div className="md:col-span-2">
                                     <InputLabel
                                         htmlFor="description"
-                                        value="Description (Optional)"
+                                        value="Deskripsi (opsional)"
                                     />
                                     <TextArea
                                         id="description"
@@ -116,7 +119,10 @@ const AttendanceCreate = ({ semesters }) => {
 
                                 {/* Date */}
                                 <div>
-                                    <InputLabel htmlFor="date" value="Date" />
+                                    <InputLabel
+                                        htmlFor="date"
+                                        value="Tanggal"
+                                    />
                                     <TextInput
                                         id="date"
                                         type="date"
@@ -147,7 +153,7 @@ const AttendanceCreate = ({ semesters }) => {
                                         required
                                     >
                                         <option value="">
-                                            Select Semester
+                                            Pilih Semester
                                         </option>
                                         {semesters.map((semester) => (
                                             <option
@@ -164,57 +170,110 @@ const AttendanceCreate = ({ semesters }) => {
                                     />
                                 </div>
 
-                                {/* Duration */}
-                                <div>
-                                    <InputLabel
-                                        htmlFor="duration"
-                                        value="Duration (minutes)"
-                                    />
-                                    <SelectInput
-                                        id="duration"
-                                        name="duration"
-                                        value={data.duration}
-                                        className="mt-1 block w-full"
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="15">15 minutes</option>
-                                        <option value="30">30 minutes</option>
-                                        <option value="60">1 hour</option>
-                                        <option value="120">2 hours</option>
-                                        <option value="240">4 hours</option>
-                                        <option value="480">8 hours</option>
-                                        <option value="720">12 hours</option>
-                                        <option value="1440">24 hours</option>
-                                    </SelectInput>
-                                    <InputError
-                                        message={errors.duration}
-                                        className="mt-2"
-                                    />
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        The PIN code will be valid for this
-                                        duration.
-                                    </p>
+                                {/* Jam & durasi berangkat */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="arrival_start_time"
+                                            value="Jam Mulai Berangkat"
+                                        />
+                                        <TextInput
+                                            id="arrival_start_time"
+                                            name="arrival_start_time"
+                                            type="time"
+                                            value={data.arrival_start_time}
+                                            className="mt-1 block w-full"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        <InputError
+                                            message={errors.arrival_start_time}
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="arrival_duration"
+                                            value="Durasi Berangkat (menit)"
+                                        />
+                                        <TextInput
+                                            id="arrival_duration"
+                                            name="arrival_duration"
+                                            type="number"
+                                            min="5"
+                                            max="300"
+                                            value={data.arrival_duration}
+                                            className="mt-1 block w-full"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        <InputError
+                                            message={errors.arrival_duration}
+                                            className="mt-2"
+                                        />
+                                    </div>
                                 </div>
 
-                                {/* Note about PIN */}
+                                {/* Jam & durasi pulang */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="departure_start_time"
+                                            value="Jam Mulai Pulang"
+                                        />
+                                        <TextInput
+                                            id="departure_start_time"
+                                            name="departure_start_time"
+                                            type="time"
+                                            value={data.departure_start_time}
+                                            className="mt-1 block w-full"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        <InputError
+                                            message={
+                                                errors.departure_start_time
+                                            }
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="departure_duration"
+                                            value="Durasi Pulang (menit)"
+                                        />
+                                        <TextInput
+                                            id="departure_duration"
+                                            name="departure_duration"
+                                            type="number"
+                                            min="5"
+                                            max="300"
+                                            value={data.departure_duration}
+                                            className="mt-1 block w-full"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                        <InputError
+                                            message={errors.departure_duration}
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Note about QR */}
                                 <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg mt-2">
                                     <h3 className="text-sm font-medium text-blue-800 mb-2">
                                         Cara Penggunaan Absensi
                                     </h3>
                                     <p className="text-sm text-blue-600">
-                                        Sistem ini akan membuat kode PIN 6 digit
-                                        yang dapat digunakan oleh semua siswa
-                                        dari semua kelas untuk menandai
-                                        kehadiran mereka. Kode PIN ini aktif
-                                        selama durasi yang ditentukan. Anda
-                                        dapat membagikan PIN ini kepada siswa
-                                        melalui berbagai cara (pengumuman,
-                                        WhatsApp, dll) atau menandai kehadiran
-                                        mereka secara manual di sistem. Cocok
-                                        untuk kegiatan sekolah seperti upacara,
-                                        kegiatan ekstrakurikuler, atau pertemuan
-                                        umum.
+                                        Sistem ini akan membuat QR unik yang dapat
+                                        dipindai oleh siswa melalui aplikasi mobile
+                                        untuk menandai kehadiran. QR aktif selama
+                                        durasi yang ditentukan. Bagikan QR atau token
+                                        kepada siswa melalui pengumuman/WhatsApp atau
+                                        tampilkan di layar kelas. Cocok untuk kegiatan
+                                        sekolah seperti upacara, kegiatan ekstrakurikuler,
+                                        atau pertemuan umum.
                                     </p>
                                 </div>
                             </div>

@@ -67,7 +67,7 @@ export default function AuthenticatedLayout({ title, children }) {
                             className="w-6"
                         />
                         <h1 className="font-extrabold text-xl text-center pl-2">
-                            SchoolHub
+                            SMK Amaliyah Jakarta
                         </h1>
                     </div>
                 </div>
@@ -97,7 +97,7 @@ export default function AuthenticatedLayout({ title, children }) {
 
                     {/* Header - visible on all screen sizes except mobile */}
                     <div className="hidden md:block">
-                        <Header toggleSidebar={toggleSidebar} />
+                        <Header toggleSidebar={toggleSidebar} title={title} />
                     </div>
 
                     {/* Page content */}

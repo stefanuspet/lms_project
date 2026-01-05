@@ -25,7 +25,6 @@ const StudentProfileEdit = ({ student, current_class }) => {
             gender: student.gender || "",
             birth_date: student.birth_date || "",
             birth_place: student.birth_place || "",
-            religion: student.religion || "",
             current_password: "",
             new_password: "",
             new_password_confirmation: "",
@@ -48,8 +47,8 @@ const StudentProfileEdit = ({ student, current_class }) => {
     };
 
     return (
-        <StudentLayout title="My Profile">
-            <Head title="My Profile" />
+        <StudentLayout title="Profil Saya">
+            <Head title="Profil Saya" />
 
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm mb-6">
@@ -59,18 +58,21 @@ const StudentProfileEdit = ({ student, current_class }) => {
                             className="text-blue-600 mr-3"
                         />
                         <h1 className="font-bold text-xl text-gray-800">
-                            My Profile
+                            Profil Saya
                         </h1>
                     </div>
 
                     {/* Profile Header */}
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6">
                         <div className="flex flex-col md:flex-row items-center gap-6">
-                            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center">
-                                <UserOctagon
-                                    variant="Bold"
-                                    size="60"
-                                    className="text-blue-600"
+                            <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-white">
+                                <img
+                                    src={
+                                        student.profile_picture ||
+                                        "/assets/images/default-avatar.png"
+                                    }
+                                    alt={student.name}
+                                    className="w-full h-full object-cover"
                                 />
                             </div>
                             <div className="text-center md:text-left">
@@ -114,18 +116,18 @@ const StudentProfileEdit = ({ student, current_class }) => {
                                         </div>
                                     ) : (
                                         <p className="ml-7 text-gray-500 italic">
-                                            No class information available
+                                            Tidak ada informasi kelas
                                         </p>
                                     )}
                                 </div>
 
                                 <h3 className="font-semibold text-gray-800 border-b pb-2">
-                                    Update Profile Information
+                                    Perbarui Informasi Profil
                                 </h3>
 
                                 {recentlySuccessful && (
                                     <div className="bg-green-100 text-green-700 p-4 rounded-lg">
-                                        Profile updated successfully.
+                                        Profil berhasil diperbarui.
                                     </div>
                                 )}
 
@@ -224,30 +226,6 @@ const StudentProfileEdit = ({ student, current_class }) => {
                                             </div>
                                             <InputError
                                                 message={errors.gender}
-                                                className="mt-1"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Religion
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="text"
-                                                    value={data.religion || ""}
-                                                    onChange={(e) =>
-                                                        setData(
-                                                            "religion",
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    className="pl-3 pr-3 py-2 w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="Your religion"
-                                                />
-                                            </div>
-                                            <InputError
-                                                message={errors.religion}
                                                 className="mt-1"
                                             />
                                         </div>
@@ -463,7 +441,7 @@ const StudentProfileEdit = ({ student, current_class }) => {
                             <div className="space-y-6">
                                 <div className="bg-gray-50 p-5 rounded-lg border">
                                     <h3 className="font-semibold text-gray-800 mb-3">
-                                        Student Information
+                                        Informasi Siswa
                                     </h3>
                                     <div className="space-y-3">
                                         <div className="flex items-center">

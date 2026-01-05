@@ -30,14 +30,15 @@ const StudentDashboard = ({
     recent_materials = [],
     notifications = [],
     current_subjects = [],
+    extracurricular_summary = { total: 0, next: null },
     error,
 }) => {
     // Buat nilai default untuk student
     const studentData = student || {
-        name: "Student",
+        name: "Siswa",
         nisn: "-",
         email: "-",
-        class_name: "Not assigned",
+        class_name: "Belum ditempatkan",
     };
 
     console.log("Student data received:", studentData);
@@ -45,13 +46,13 @@ const StudentDashboard = ({
     // Tampilkan error jika ada
     if (error) {
         return (
-            <StudentLayout title="Dashboard Error">
+            <StudentLayout title="Kesalahan Dashboard">
                 <div className="py-6 w-full">
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-6">
                         <p>{error}</p>
                         <p className="mt-2">
-                            Please try refreshing the page or contact support if
-                            the issue persists.
+                            Silakan coba muat ulang halaman atau hubungi admin
+                            jika masalah tetap terjadi.
                         </p>
                     </div>
                 </div>
@@ -60,17 +61,17 @@ const StudentDashboard = ({
     }
 
     return (
-        <StudentLayout title="Student Dashboard">
+        <StudentLayout title="Dashboard Siswa">
             <div className="py-6 w-full">
                 {/* Welcome Banner */}
                 <div className="bg-gradient-to-r from-blue-500 to-blue-400 rounded-xl shadow-sm mb-6">
                     <div className="px-6 py-5 flex items-center justify-between">
                         <div>
                             <h1 className="text-white text-2xl font-bold">
-                                Welcome back, {studentData.name}!
+                                Selamat datang kembali, {studentData.name}!
                             </h1>
                             <p className="text-blue-100 mt-1">
-                                {new Date().toLocaleDateString("en-US", {
+                                {new Date().toLocaleDateString("id-ID", {
                                     weekday: "long",
                                     year: "numeric",
                                     month: "long",
@@ -92,7 +93,9 @@ const StudentDashboard = ({
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-gray-500 text-sm">My Subjects</p>
+                            <p className="text-gray-500 text-sm">
+                                Mata Pelajaran Saya
+                            </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.total_subjects}
                             </p>
@@ -106,10 +109,40 @@ const StudentDashboard = ({
                         </div>
                     </div>
 
+                    {/* Ringkasan Ekstrakurikuler */}
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
                             <p className="text-gray-500 text-sm">
-                                Pending Assignments
+                                Ekstrakurikuler
+                            </p>
+                            <p className="text-2xl font-bold text-gray-800">
+                                {extracurricular_summary?.total || 0}
+                            </p>
+                            {extracurricular_summary?.next && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Berikutnya:{" "}
+                                    <span className="font-medium">
+                                        {extracurricular_summary.next.name}
+                                    </span>{" "}
+                                    • {extracurricular_summary.next.day_of_week}{" "}
+                                    {extracurricular_summary.next.start_time &&
+                                        `(${extracurricular_summary.next.start_time})`}
+                                </p>
+                            )}
+                        </div>
+                        <div className="p-3 bg-purple-100 rounded-full">
+                            <People
+                                variant="Bold"
+                                size="24"
+                                className="text-purple-600"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
+                        <div>
+                            <p className="text-gray-500 text-sm">
+                                Tugas Belum Selesai
                             </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.pending_assignments}
@@ -127,7 +160,7 @@ const StudentDashboard = ({
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
                             <p className="text-gray-500 text-sm">
-                                Completed Assignments
+                                Tugas Selesai
                             </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.completed_assignments}
@@ -145,7 +178,7 @@ const StudentDashboard = ({
                     <div className="bg-white rounded-xl shadow-sm p-5 flex items-center justify-between">
                         <div>
                             <p className="text-gray-500 text-sm">
-                                Attendance Rate
+                                Persentase Kehadiran
                             </p>
                             <p className="text-2xl font-bold text-gray-800">
                                 {stats.attendance_rate}
@@ -233,7 +266,7 @@ const StudentDashboard = ({
                                                             {
                                                                 subject.assignments_count
                                                             }{" "}
-                                                            Completed
+                                                            Selesai
                                                         </span>
                                                     </div>
                                                 </div>
@@ -243,8 +276,8 @@ const StudentDashboard = ({
                                 ) : (
                                     <div className="text-center py-4 text-gray-500">
                                         <p>
-                                            You don't have any subjects assigned
-                                            yet.
+                                            Anda belum memiliki mata pelajaran
+                                            yang diassign.
                                         </p>
                                     </div>
                                 )}
@@ -262,11 +295,14 @@ const StudentDashboard = ({
                             <div className="h-20 bg-gradient-to-r from-blue-500 to-blue-600"></div>
                             <div className="-mt-12 px-6 pb-6">
                                 <div className="flex justify-center">
-                                    <div className="h-24 w-24 rounded-full border-4 border-white bg-white flex items-center justify-center">
-                                        <UserOctagon
-                                            variant="Bold"
-                                            size="60"
-                                            className="text-blue-600"
+                                    <div className="h-24 w-24 rounded-full border-4 border-white bg-white flex items-center justify-center overflow-hidden">
+                                        <img
+                                            src={
+                                                studentData.profile_picture ||
+                                                "/assets/images/default-avatar.png"
+                                            }
+                                            alt={studentData.name}
+                                            className="h-full w-full object-cover"
                                         />
                                     </div>
                                 </div>
@@ -285,7 +321,7 @@ const StudentDashboard = ({
                                     <div className="flex items-center justify-center">
                                         <div className="flex flex-col items-center">
                                             <span className="text-gray-500 text-xs">
-                                                Class
+                                                Kelas
                                             </span>
                                             <span className="text-gray-900 font-bold">
                                                 {studentData.class_name}
@@ -298,7 +334,7 @@ const StudentDashboard = ({
                                         href={route("student.profile.edit")}
                                         className="block text-center w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                                     >
-                                        Edit Profile
+                                        Edit Profil
                                     </Link>
                                 </div>
                             </div>

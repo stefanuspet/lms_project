@@ -713,13 +713,13 @@ const StudentNotificationIndex = ({
                                     className="mx-auto text-gray-300 mb-3"
                                 />
                                 <h3 className="text-lg font-medium text-gray-800 mb-2">
-                                    No Notifications Found
+                                    Tidak ada notifikasi
                                 </h3>
                                 <p className="text-gray-500">
                                     {filterType !== "all" ||
                                     filterRead !== "all"
-                                        ? "Try adjusting your filters to see more notifications"
-                                        : "You have no notifications at the moment"}
+                                        ? "Coba ubah filter untuk melihat notifikasi lainnya"
+                                        : "Anda belum memiliki notifikasi saat ini"}
                                 </p>
                             </div>
                         )}
@@ -733,7 +733,7 @@ const StudentNotificationIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -769,7 +769,7 @@ const StudentNotificationIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Selanjutnya
                             </button>
                         </div>
                     )}

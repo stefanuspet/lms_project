@@ -17,7 +17,6 @@ const StudentCreate = () => {
         gender: "",
         birth_date: "",
         birth_place: "",
-        religion: "",
     });
 
     const [clientErrors, setClientErrors] = useState({});
@@ -33,28 +32,29 @@ const StudentCreate = () => {
         const newErrors = {};
 
         // Required fields validation
-        if (!data.name) newErrors.name = "Name is required";
-        if (!data.email) newErrors.email = "Email is required";
-        if (!data.nisn) newErrors.nisn = "NISN is required";
+        if (!data.name) newErrors.name = "Nama wajib diisi";
+        if (!data.email) newErrors.email = "Email wajib diisi";
+        if (!data.nisn) newErrors.nisn = "NISN wajib diisi";
 
         // Email format validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (data.email && !emailRegex.test(data.email)) {
-            newErrors.email = "Please enter a valid email address";
+            newErrors.email = "Masukkan alamat email yang valid";
         }
 
         // Password validation
         if (!data.password) {
-            newErrors.password = "Password is required";
+            newErrors.password = "Password wajib diisi";
         } else if (data.password.length < 8) {
-            newErrors.password = "Password must be at least 8 characters";
+            newErrors.password =
+                "Password harus terdiri dari minimal 8 karakter";
         }
 
         // Password confirmation validation
         if (data.password && !data.password_confirmation) {
-            newErrors.password_confirmation = "Please confirm your password";
+            newErrors.password_confirmation = "Konfirmasi password wajib diisi";
         } else if (data.password !== data.password_confirmation) {
-            newErrors.password_confirmation = "Passwords do not match";
+            newErrors.password_confirmation = "Password tidak sama";
         }
 
         setClientErrors(newErrors);
@@ -85,7 +85,7 @@ const StudentCreate = () => {
     };
 
     return (
-        <AuthenticatedLayout title="Add New Student">
+        <AuthenticatedLayout title="Tambah Siswa Baru">
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -101,7 +101,7 @@ const StudentCreate = () => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Add New Student
+                                Tambah Siswa Baru
                             </h1>
                         </div>
                     </div>
@@ -113,7 +113,7 @@ const StudentCreate = () => {
                                 {/* Student Profile Section */}
                                 <div className="md:col-span-2">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Student Profile
+                                        Profil Siswa
                                     </h2>
                                 </div>
 
@@ -121,7 +121,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="name"
-                                        value="Student Name"
+                                        value="Nama Siswa"
                                     />
                                     <TextInput
                                         id="name"
@@ -160,7 +160,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="gender"
-                                        value="Gender"
+                                        value="Jenis Kelamin"
                                     />
                                     <SelectInput
                                         id="gender"
@@ -169,43 +169,16 @@ const StudentCreate = () => {
                                         className="mt-1 block w-full"
                                         onChange={handleChange}
                                     >
-                                        <option value="">Select Gender</option>
-                                        <option value="male">Male</option>
-                                        <option value="female">Female</option>
+                                        <option value="">
+                                            Pilih Jenis Kelamin
+                                        </option>
+                                        <option value="male">Laki-laki</option>
+                                        <option value="female">
+                                            Perempuan
+                                        </option>
                                     </SelectInput>
                                     <InputError
                                         message={getErrorMessage("gender")}
-                                        className="mt-2"
-                                    />
-                                </div>
-
-                                {/* Religion */}
-                                <div>
-                                    <InputLabel
-                                        htmlFor="religion"
-                                        value="Religion"
-                                    />
-                                    <SelectInput
-                                        id="religion"
-                                        name="religion"
-                                        value={data.religion}
-                                        className="mt-1 block w-full"
-                                        onChange={handleChange}
-                                    >
-                                        <option value="">
-                                            Select Religion
-                                        </option>
-                                        <option value="Islam">Islam</option>
-                                        <option value="Kristen">Kristen</option>
-                                        <option value="Katolik">Katolik</option>
-                                        <option value="Hindu">Hindu</option>
-                                        <option value="Buddha">Buddha</option>
-                                        <option value="Konghucu">
-                                            Konghucu
-                                        </option>
-                                    </SelectInput>
-                                    <InputError
-                                        message={getErrorMessage("religion")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -214,7 +187,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="birth_date"
-                                        value="Birth Date"
+                                        value="Tanggal Lahir"
                                     />
                                     <TextInput
                                         id="birth_date"
@@ -234,7 +207,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="birth_place"
-                                        value="Birth Place"
+                                        value="Tempat Lahir"
                                     />
                                     <TextInput
                                         id="birth_place"
@@ -253,7 +226,7 @@ const StudentCreate = () => {
                                 {/* Account Information Section */}
                                 <div className="md:col-span-2 mt-4">
                                     <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                        Login Information
+                                        Informasi Login
                                     </h2>
                                 </div>
 
@@ -261,7 +234,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="email"
-                                        value="Email Address"
+                                        value="Alamat Email"
                                     />
                                     <TextInput
                                         id="email"
@@ -282,7 +255,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password"
-                                        value="Password (minimum 8 characters)"
+                                        value="Password (minimal 8 karakter)"
                                     />
                                     <TextInput
                                         id="password"
@@ -304,7 +277,7 @@ const StudentCreate = () => {
                                 <div>
                                     <InputLabel
                                         htmlFor="password_confirmation"
-                                        value="Confirm Password"
+                                        value="Konfirmasi Password"
                                     />
                                     <TextInput
                                         id="password_confirmation"
@@ -328,7 +301,8 @@ const StudentCreate = () => {
                             {/* Password Requirements Hint */}
                             <div className="mt-4 text-sm text-gray-500">
                                 <p>
-                                    Password must be at least 8 characters long.
+                                    Password harus terdiri dari minimal 8
+                                    karakter.
                                 </p>
                             </div>
 
@@ -338,14 +312,14 @@ const StudentCreate = () => {
                                     href={route("admin.students.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing || !isFormValid}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
                                 >
-                                    Save Student
+                                    Simpan Siswa
                                 </button>
                             </div>
                         </form>

@@ -7,9 +7,9 @@ import {
     User,
 } from "iconsax-reactjs";
 
-const Header = ({ toggleSidebar }) => {
+const Header = ({ toggleSidebar, title }) => {
     return (
-        <header className="bg-white border-b border-gray-200 py-2 px-4">
+        <header className="bg-white border-b border-gray-200 pt-5 pb-4 px-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     {/* Mobile only menu toggle */}
@@ -35,7 +35,7 @@ const Header = ({ toggleSidebar }) => {
 
                     {/* Page Title - show on larger screens */}
                     <h1 className="text-xl font-semibold text-gray-800 hidden md:block">
-                        Dashboard
+                        {title || "Dashboard"}
                     </h1>
                 </div>
 

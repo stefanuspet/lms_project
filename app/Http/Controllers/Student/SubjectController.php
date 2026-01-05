@@ -8,6 +8,7 @@ use App\Models\Subject;
 use App\Models\Material;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
+use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -381,6 +382,121 @@ class SubjectController extends Controller
         $upcomingAssignments = $this->getUpcomingAssignments($subject->id, $student->id);
         $completedAssignments = $this->getCompletedAssignments($subject->id, $student->id);
 
+        // Kumpulkan semua aktivitas (materi, tugas, kuis, presensi, diskusi)
+        $activities = [];
+
+        // Materi
+        foreach (Material::where('subject_id', $subject->id)->latest()->get() as $material) {
+            $activities[] = [
+                'type' => 'Materi',
+                'title' => $material->title ?? 'Materi baru',
+                'date' => $material->created_at
+                    ? $material->created_at->format('d M Y H:i')
+                    : '',
+                'created_at' => $material->created_at,
+                'url' => route('student.materials.show', $material->id),
+            ];
+        }
+
+        // Tugas
+        foreach (Assignment::where('subject_id', $subject->id)->latest()->get() as $assignment) {
+            $activities[] = [
+                'type' => 'Tugas',
+                'title' => $assignment->title ?? 'Tugas baru',
+                'date' => $assignment->created_at
+                    ? $assignment->created_at->format('d M Y H:i')
+                    : '',
+                'created_at' => $assignment->created_at,
+                'url' => route('student.assignments.show', $assignment->id),
+            ];
+        }
+
+        // Kuis
+        try {
+            foreach (Quiz::where('subject_id', $subject->id)->latest()->get() as $quiz) {
+                $activities[] = [
+                    'type' => 'Kuis',
+                    'title' => $quiz->title ?? 'Kuis baru',
+                    'date' => $quiz->created_at
+                        ? $quiz->created_at->format('d M Y H:i')
+                        : '',
+                    'created_at' => $quiz->created_at,
+                    'url' => route('student.quizzes.show', $quiz->id),
+                ];
+            }
+        } catch (Throwable $e) {
+            Log::warning('Could not get quizzes for student activity list: ' . $e->getMessage());
+        }
+
+        // Presensi
+        try {
+            $attendanceSessions = DB::table('attendance_sessions')
+                ->where('subject_id', $subject->id)
+                ->latest()
+                ->get();
+
+            foreach ($attendanceSessions as $session) {
+                $activities[] = [
+                    'type' => 'Presensi',
+                    'title' => $session->title ?? 'Sesi presensi',
+                    'date' => $session->created_at
+                        ? \Carbon\Carbon::parse($session->created_at)->format('d M Y H:i')
+                        : '',
+                    'created_at' => $session->created_at
+                        ? \Carbon\Carbon::parse($session->created_at)
+                        : null,
+                    'url' => route('student.attendance.history', [
+                        'subject_id' => $subject->id,
+                    ]),
+                ];
+            }
+        } catch (Throwable $e) {
+            Log::warning('Could not get attendance sessions for student activity list: ' . $e->getMessage());
+        }
+
+        // Diskusi
+        try {
+            $threadModel = \App\Models\DiscussionThread::class;
+            if (class_exists($threadModel)) {
+                foreach ($threadModel::where('subject_id', $subject->id)->latest()->get() as $thread) {
+                    $activities[] = [
+                        'type' => 'Diskusi',
+                        'title' => $thread->title ?? 'Topik diskusi',
+                        'date' => $thread->created_at
+                            ? $thread->created_at->format('d M Y H:i')
+                            : '',
+                        'created_at' => $thread->created_at,
+                        'url' => route('student.discussions.show', [
+                            'subject' => $subject->id,
+                            'thread' => $thread->id,
+                        ]),
+                    ];
+                }
+            }
+        } catch (Throwable $e) {
+            Log::warning('Could not get discussion threads for student activity list: ' . $e->getMessage());
+        }
+
+        // Urutkan aktivitas berdasarkan created_at terbaru
+        if (!empty($activities)) {
+            usort($activities, function ($a, $b) {
+                if (empty($a['created_at']) || empty($b['created_at'])) {
+                    return 0;
+                }
+                return $b['created_at'] <=> $a['created_at'];
+            });
+        }
+
+        // Format tanggal & URL untuk frontend dan buang created_at mentah
+        $recentActivities = array_map(function ($item) {
+            return [
+                'type' => $item['type'],
+                'title' => $item['title'],
+                'date' => $item['date'],
+                'url' => $item['url'] ?? null,
+            ];
+        }, $activities);
+
         // Return formatted data with null checks
         return [
             'id' => $subject->id,
@@ -395,6 +511,7 @@ class SubjectController extends Controller
             'recent_materials' => $recentMaterials,
             'upcoming_assignments' => $upcomingAssignments,
             'completed_assignments_list' => $completedAssignments,
+            'recent_activities' => $recentActivities,
             'created_at' => $subject->created_at->format('d-m-Y'),
         ];
     }

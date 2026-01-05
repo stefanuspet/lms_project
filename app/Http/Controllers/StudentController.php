@@ -23,10 +23,9 @@ class StudentController extends Controller
             'search' => 'nullable|string|max:50',
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
-            'sort_by' => 'nullable|string|in:name,nisn,email,gender,religion,created_at',
+            'sort_by' => 'nullable|string|in:name,nisn,email,gender,created_at',
             'sort_order' => 'nullable|string|in:asc,desc',
             'filter_gender' => 'nullable|string|in:male,female',
-            'filter_religion' => 'nullable|string',
             'filter_class' => 'nullable|integer',
         ]);
 
@@ -37,7 +36,6 @@ class StudentController extends Controller
         $sortOrder = $request->input('sort_order', 'asc');
         $page = $request->input('page', 1);
         $filterGender = $request->input('filter_gender');
-        $filterReligion = $request->input('filter_religion');
         $filterClass = $request->input('filter_class');
 
         // Query student dengan relasi user
@@ -61,10 +59,6 @@ class StudentController extends Controller
             $query->where('gender', $filterGender);
         }
 
-        if ($filterReligion) {
-            $query->where('religion', $filterReligion);
-        }
-
         if ($filterClass) {
             $query->whereHas('classes', function ($q) use ($filterClass) {
                 $q->where('class_id', $filterClass);
@@ -83,14 +77,11 @@ class StudentController extends Controller
         // Execute paginated query
         $students = $query->paginate($perPage)->withQueryString();
 
-        // Get unique religion values for filter dropdown
-        $religions = Student::distinct()->whereNotNull('religion')->pluck('religion');
-
         // Get all classes for filter dropdown
         $classes = Classroom::select('id', 'name')->orderBy('name')->get();
 
         // Format data untuk frontend
-        $formattedStudents = $students->map(function ($student) {
+            $formattedStudents = $students->map(function ($student) {
             // Ambil daftar kelas
             $classes = $student->classes->map(function ($class) {
                 return $class->name;
@@ -100,18 +91,19 @@ class StudentController extends Controller
             $birthDate = $student->birth_date ? date('d-m-Y', strtotime($student->birth_date)) : '-';
 
             // Format data siswa untuk tampilan
-            return [
-                'id' => $student->id,
-                'name' => $student->name,
-                'nisn' => $student->nisn,
-                'email' => $student->user->email,
-                'gender' => $student->gender ? ucfirst($student->gender) : '-',
-                'birth_date' => $birthDate,
-                'birth_place' => $student->birth_place ?? '-',
-                'religion' => $student->religion ?? '-',
-                'classes' => $classes ?: '-',
-                'created_at' => $student->created_at->format('d-m-Y H:i'),
-            ];
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'nisn' => $student->nisn,
+                    'email' => $student->user->email,
+                    'gender' => $student->gender ? ucfirst($student->gender) : '-',
+                    'birth_date' => $birthDate,
+                    'birth_place' => $student->birth_place ?? '-',
+                    'classes' => $classes ?: '-',
+                    'created_at' => $student->created_at->format('d-m-Y H:i'),
+                    'profile_picture' => $student->profile_picture ?? '/assets/images/default-avatar.png',
+                    'updated_at' => $student->updated_at ? $student->updated_at->timestamp : null,
+                ];
         });
 
         // Return data ke view
@@ -130,11 +122,9 @@ class StudentController extends Controller
                 'sort_by' => $sortBy,
                 'sort_order' => $sortOrder,
                 'filter_gender' => $filterGender,
-                'filter_religion' => $filterReligion,
                 'filter_class' => $filterClass,
             ],
             'filterOptions' => [
-                'religions' => $religions,
                 'classes' => $classes,
             ],
         ]);
@@ -163,7 +153,7 @@ class StudentController extends Controller
             'gender' => 'nullable|in:male,female',
             'birth_date' => 'nullable|date',
             'birth_place' => 'nullable|string|max:255',
-            'religion' => 'nullable|string|max:255',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'class_id' => 'nullable|array',
             'class_id.*' => 'exists:classes,id',
             'semester_id' => 'nullable|exists:semesters,id',
@@ -180,6 +170,15 @@ class StudentController extends Controller
             ]);
 
             // Buat student baru
+            // Tentukan path foto profil (default atau upload)
+            $profilePicturePath = '/assets/images/default-avatar.png';
+            if ($request->hasFile('profile_picture')) {
+                $path = $request
+                    ->file('profile_picture')
+                    ->store('avatars/students', 'public');
+                $profilePicturePath = '/storage/' . $path;
+            }
+
             $student = Student::create([
                 'user_id' => $user->id,
                 'name' => $request->name,
@@ -187,7 +186,7 @@ class StudentController extends Controller
                 'gender' => $request->gender,
                 'birth_date' => $request->birth_date,
                 'birth_place' => $request->birth_place,
-                'religion' => $request->religion,
+                'profile_picture' => $profilePicturePath,
             ]);
 
             // Jika ada kelas yang dipilih dan semester yang dipilih
@@ -242,7 +241,7 @@ class StudentController extends Controller
                 'gender' => $student->gender,
                 'birth_date' => $student->birth_date ? date('Y-m-d', strtotime($student->birth_date)) : null,
                 'birth_place' => $student->birth_place,
-                'religion' => $student->religion,
+                'profile_picture' => $student->profile_picture ?? '/assets/images/default-avatar.png',
                 'user' => [
                     'id' => $student->user->id,
                     'email' => $student->user->email,
@@ -316,7 +315,6 @@ class StudentController extends Controller
                 'gender' => $student->gender ?? '',
                 'birth_date' => $student->birth_date ? date('Y-m-d', strtotime($student->birth_date)) : null,
                 'birth_place' => $student->birth_place ?? '',
-                'religion' => $student->religion ?? '',
                 'user' => [
                     'id' => $student->user->id ?? null,
                     'email' => $student->user->email ?? '',
@@ -364,7 +362,8 @@ class StudentController extends Controller
                 'gender' => 'nullable|in:male,female',
                 'birth_date' => 'nullable|date',
                 'birth_place' => 'nullable|string|max:255',
-                'religion' => 'nullable|string|max:255',
+                // Pakai validasi file image karena update bisa mengubah foto profil
+                'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             ]);
 
             Log::info('Validation passed');
@@ -395,6 +394,13 @@ class StudentController extends Controller
                 $user->update($userData);
                 Log::info('User updated successfully');
 
+                // Tentukan path foto profil (tetap, atau upload baru jika ada)
+                $profilePicturePath = $student->profile_picture ?? '/assets/images/default-avatar.png';
+                if ($request->hasFile('profile_picture')) {
+                    $path = $request->file('profile_picture')->store('avatars/students', 'public');
+                    $profilePicturePath = '/storage/' . $path;
+                }
+
                 // Update student data
                 $student->update([
                     'name' => $request->name,
@@ -402,7 +408,7 @@ class StudentController extends Controller
                     'gender' => $request->gender,
                     'birth_date' => $request->birth_date,
                     'birth_place' => $request->birth_place,
-                    'religion' => $request->religion,
+                    'profile_picture' => $profilePicturePath,
                 ]);
 
                 Log::info('Student updated successfully');
@@ -575,22 +581,44 @@ class StudentController extends Controller
 
     public function export(Request $request)
     {
-        // Validasi filter yang sama dengan index
-        $validated = $request->validate([
-            'search' => 'nullable|string|max:50',
-            'sort_by' => 'nullable|string|in:name,nisn,email,gender,religion,created_at',
-            'sort_order' => 'nullable|string|in:asc,desc',
-            'filter_gender' => 'nullable|string|in:male,female',
-            'filter_religion' => 'nullable|string',
-            'filter_class' => 'nullable|integer',
-            'export_format' => 'required|in:csv,excel,pdf',
-        ]);
+        $students = Student::with('user', 'classes')->get();
 
-        // Logika untuk mengekspor data akan diimplementasikan di sini
-        // Misalnya menggunakan package Laravel Excel atau DomPDF
+        $filename = 'data_siswa_' . now()->format('Ymd_His') . '.csv';
 
-        // Untuk contoh, kita hanya akan mengembalikan pesan
-        return redirect()->route('admin.students.index')->with('success', 'Export functionality will be implemented here');
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($students) {
+            $output = fopen('php://output', 'w');
+
+            // Tambah BOM supaya Excel membaca UTF-8 dengan benar
+            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            $delimiter = ';';
+
+            // Header kolom
+            fputcsv($output, ['Nama', 'NISN', 'Email', 'Jenis Kelamin', 'Kelas'], $delimiter);
+
+            foreach ($students as $student) {
+                $classes = $student->classes
+                    ? $student->classes->pluck('name')->unique()->implode(', ')
+                    : '';
+
+                fputcsv($output, [
+                    $student->name,
+                    $student->nisn,
+                    optional($student->user)->email,
+                    $student->gender,
+                    $classes,
+                ], $delimiter);
+            }
+
+            fclose($output);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
     }
 
     // Fungsi untuk mencatat aktivitas

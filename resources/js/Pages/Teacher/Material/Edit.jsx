@@ -41,7 +41,7 @@ const TeacherMaterialEdit = ({ material, subject }) => {
     };
 
     return (
-        <TeacherLayout title={`Edit Material - ${subject.name}`}>
+        <TeacherLayout title={`Edit Materi - ${subject.name}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -60,7 +60,7 @@ const TeacherMaterialEdit = ({ material, subject }) => {
                             </Link>
                             <div>
                                 <h1 className="font-bold text-xl text-gray-800">
-                                    Edit Material
+                                    Edit Materi
                                 </h1>
                                 <p className="text-sm text-gray-600">
                                     {subject.name} - {subject.class_name}
@@ -80,7 +80,7 @@ const TeacherMaterialEdit = ({ material, subject }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="title"
-                                        value="Material Title"
+                                        value="Judul Materi"
                                         className="text-base"
                                     />
                                     <TextInput
@@ -91,7 +91,7 @@ const TeacherMaterialEdit = ({ material, subject }) => {
                                         className="mt-1 block w-full"
                                         onChange={handleChange}
                                         required
-                                        placeholder="Enter material title"
+                                        placeholder="Masukkan judul materi"
                                     />
                                     <InputError
                                         message={errors.title}
@@ -103,7 +103,7 @@ const TeacherMaterialEdit = ({ material, subject }) => {
                                 <div>
                                     <InputLabel
                                         htmlFor="content"
-                                        value="Content"
+                                        value="Konten"
                                         className="text-base"
                                     />
                                     <textarea
@@ -187,11 +187,11 @@ const TeacherMaterialEdit = ({ material, subject }) => {
                                             <span className="mt-2 text-sm font-medium">
                                                 {selectedFile
                                                     ? selectedFile
-                                                    : "Upload a file or drag and drop"}
+                                                    : "Unggah file atau seret dan lepas di sini"}
                                             </span>
                                             <span className="mt-1 text-xs text-gray-500">
                                                 PDF, Word, Excel, PowerPoint,
-                                                Images, or Videos
+                                                Gambar, atau Video
                                             </span>
                                             <input
                                                 id="file"
@@ -210,15 +210,17 @@ const TeacherMaterialEdit = ({ material, subject }) => {
 
                                 {/* Form Info */}
                                 <div className="bg-blue-50 p-4 rounded-lg text-sm text-blue-700">
-                                    <p className="font-medium">Information:</p>
+                                    <p className="font-medium">
+                                        Informasi:
+                                    </p>
                                     <ul className="list-disc list-inside space-y-1 mt-1">
                                         <li>
-                                            You can provide text content, a
-                                            file, or both.
+                                            Anda dapat mengisi konten teks,
+                                            mengunggah file, atau keduanya.
                                         </li>
-                                        <li>File size limit is 20MB.</li>
+                                        <li>Batas ukuran file 20MB.</li>
                                         <li>
-                                            Supported file types: PDF, DOC,
+                                            Tipe file yang didukung: PDF, DOC,
                                             DOCX, XLS, XLSX, PPT, PPTX, JPG,
                                             PNG, MP4.
                                         </li>
@@ -234,14 +236,14 @@ const TeacherMaterialEdit = ({ material, subject }) => {
                                     })}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-75"
                                 >
-                                    Update Material
+                                    Perbarui Materi
                                 </button>
                             </div>
                         </form>

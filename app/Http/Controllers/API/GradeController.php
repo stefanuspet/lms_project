@@ -205,10 +205,10 @@ class GradeController extends Controller
                     'id' => $subject->id,
                     'name' => $subject->name,
                     'description' => $subject->description,
-                    'teacher' => [
+                    'teacher' => $subject->teacher ? [
                         'id' => $subject->teacher->id,
                         'name' => $subject->teacher->name
-                    ]
+                    ] : null
                 ],
                 'stats' => [
                     'total_assignments' => $stats['total_assignments'],

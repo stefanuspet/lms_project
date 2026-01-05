@@ -13,6 +13,7 @@ import {
     Book1,
     People,
     Calendar,
+    Printer,
 } from "iconsax-reactjs";
 
 const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
@@ -28,7 +29,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
 
     // Function to delete classroom
     const handleDelete = (classroomId) => {
-        if (confirm("Are you sure you want to delete this class?")) {
+        if (confirm("Apakah Anda yakin ingin menghapus kelas ini?")) {
             setProcessing(true);
 
             router.delete(route("admin.classrooms.destroy", classroomId), {
@@ -39,7 +40,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                 },
                 onError: () => {
                     setProcessing(false);
-                    alert("Error occurred while deleting the class.");
+                    alert("Terjadi kesalahan saat menghapus kelas.");
                 },
             });
         }
@@ -158,13 +159,13 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
     // Handle bulk delete
     const handleBulkDelete = () => {
         if (selectedClassrooms.length === 0) {
-            alert("Please select at least one class to delete");
+            alert("Pilih minimal satu kelas untuk dihapus");
             return;
         }
 
         if (
             confirm(
-                `Are you sure you want to delete ${selectedClassrooms.length} selected classes?`
+                `Apakah Anda yakin ingin menghapus ${selectedClassrooms.length} kelas yang dipilih?`
             )
         ) {
             setProcessing(true);
@@ -222,7 +223,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
     }, [pagination]);
 
     return (
-        <AuthenticatedLayout title="Class Management">
+        <AuthenticatedLayout title="Manajemen Kelas">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -246,9 +247,16 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
-                        <h1 className="font-bold text-xl text-gray-800">
-                            All Classes
-                        </h1>
+                        <div>
+                            <h1 className="font-bold text-xl text-gray-800">
+                                Daftar Kelas
+                            </h1>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Gunakan pencarian di kanan dan filter di bawah
+                                untuk melihat kelas beserta jumlah siswa dan
+                                mata pelajarannya.
+                            </p>
+                        </div>
                         <div className="flex items-center space-x-2">
                             {/* Search box */}
                             <form onSubmit={handleSearch} className="relative">
@@ -258,7 +266,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search by Class Name"
+                                    placeholder="Cari berdasarkan Nama Kelas"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -266,11 +274,11 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
-
-                            {/* Settings button */}
+                        </div>
+                        <div className="flex items-center space-x-2">
                             <button
                                 className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors"
                                 onClick={() => setShowFilters(!showFilters)}
@@ -281,7 +289,13 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                     size="24"
                                 />
                             </button>
-
+                            <a
+                                href={route("admin.classrooms.export")}
+                                className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors"
+                                title="Export ke Excel"
+                            >
+                                <Printer color="black" size="24" />
+                            </a>
                             {/* Add button */}
                             <Link
                                 href={route("admin.classrooms.create")}
@@ -310,9 +324,9 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                             setSortBy(e.target.value)
                                         }
                                     >
-                                        <option value="name">Class Name</option>
+                                        <option value="name">Nama Kelas</option>
                                         <option value="created_at">
-                                            Date Created
+                                            Tanggal Dibuat
                                         </option>
                                     </select>
                                 </div>
@@ -340,7 +354,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                     {selectedClassrooms.length > 0 && (
                         <div className="px-6 py-3 bg-blue-50 border-b flex justify-between items-center">
                             <div className="text-sm text-blue-600">
-                                {selectedClassrooms.length} classes selected
+                                {selectedClassrooms.length} kelas dipilih
                             </div>
                             <div>
                                 <button
@@ -349,7 +363,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                     className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-75 flex items-center space-x-1"
                                 >
                                     <Trash size="16" />
-                                    <span>Delete Selected</span>
+                                    <span>Hapus Terpilih</span>
                                 </button>
                             </div>
                         </div>
@@ -373,22 +387,22 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                         />
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Class Name
+                                        Nama Kelas
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Description
+                                        Deskripsi
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Active Semester
+                                        Semester Aktif
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Students
+                                        Siswa
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Subjects
+                                        Mata Pelajaran
                                     </th>
                                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Action
+                                        Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -519,7 +533,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                             colSpan="7"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No classes found
+                                            Tidak ada kelas
                                         </td>
                                     </tr>
                                 )}
@@ -535,7 +549,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -567,7 +581,7 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Berikutnya
                             </button>
                         </div>
                     )}

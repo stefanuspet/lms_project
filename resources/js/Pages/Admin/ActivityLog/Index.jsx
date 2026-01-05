@@ -229,7 +229,7 @@ const ActivityLogIndex = ({
     };
 
     return (
-        <AuthenticatedLayout title="Activity Logs">
+        <AuthenticatedLayout title="Log Aktivitas">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -254,7 +254,7 @@ const ActivityLogIndex = ({
                     {/* Header */}
                     <div className="flex justify-between items-center px-6 py-5 border-b">
                         <h1 className="font-bold text-xl text-gray-800">
-                            Activity Logs
+                            Log Aktivitas
                         </h1>
                         <div className="flex items-center space-x-2">
                             {/* Search box */}
@@ -265,7 +265,7 @@ const ActivityLogIndex = ({
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search logs..."
+                                    placeholder="Cari log aktivitas..."
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -273,7 +273,7 @@ const ActivityLogIndex = ({
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
 
@@ -313,12 +313,12 @@ const ActivityLogIndex = ({
                     {showFilters && (
                         <div className="px-6 py-4 bg-gray-50 border-b">
                             <h2 className="text-sm font-medium text-gray-700 mb-3">
-                                Filters & Sorting
+                                Filter & Pengurutan
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">
-                                        User
+                                        Pengguna
                                     </label>
                                     <select
                                         className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
@@ -327,7 +327,7 @@ const ActivityLogIndex = ({
                                             setFilterUser(e.target.value)
                                         }
                                     >
-                                        <option value="">All Users</option>
+                                        <option value="">Semua Pengguna</option>
                                         {filterOptions.users.map((user) => (
                                             <option
                                                 key={user.id}
@@ -341,7 +341,7 @@ const ActivityLogIndex = ({
 
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">
-                                        Action
+                                        Aksi
                                     </label>
                                     <select
                                         className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
@@ -350,7 +350,7 @@ const ActivityLogIndex = ({
                                             setFilterAction(e.target.value)
                                         }
                                     >
-                                        <option value="">All Actions</option>
+                                        <option value="">Semua Aksi</option>
                                         {filterOptions.actions.map((action) => (
                                             <option key={action} value={action}>
                                                 {action
@@ -366,7 +366,7 @@ const ActivityLogIndex = ({
 
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">
-                                        Sort By
+                                        Urutkan Berdasarkan
                                     </label>
                                     <select
                                         className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
@@ -376,9 +376,9 @@ const ActivityLogIndex = ({
                                         }
                                     >
                                         <option value="created_at">
-                                            Date & Time
+                                            Tanggal & Waktu
                                         </option>
-                                        <option value="user_id">User</option>
+                                        <option value="user_id">Pengguna</option>
                                         <option value="action">Action</option>
                                     </select>
                                 </div>
@@ -453,7 +453,7 @@ const ActivityLogIndex = ({
 
                     {/* Logs Table */}
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="w-full table-auto divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -531,7 +531,7 @@ const ActivityLogIndex = ({
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-900 max-w-lg truncate">
+                                                <div className="text-sm text-gray-900 break-words">
                                                     {log.description}
                                                 </div>
                                             </td>
@@ -546,7 +546,7 @@ const ActivityLogIndex = ({
                                             colSpan="5"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No activity logs found
+                                            Tidak ada log aktivitas
                                         </td>
                                     </tr>
                                 )}
@@ -562,7 +562,7 @@ const ActivityLogIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -594,7 +594,7 @@ const ActivityLogIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Berikutnya
                             </button>
                         </div>
                     )}

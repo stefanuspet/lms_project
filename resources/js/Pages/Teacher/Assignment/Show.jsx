@@ -20,11 +20,15 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
     // Handle assignment deletion
     const handleDelete = () => {
         if (assignment.stats.submitted_count > 0) {
-            alert("Cannot delete an assignment that already has submissions.");
+            alert(
+                "Tidak dapat menghapus tugas yang sudah memiliki pengumpulan."
+            );
             return;
         }
 
-        if (confirm("Are you sure you want to delete this assignment?")) {
+        if (
+            confirm("Apakah Anda yakin ingin menghapus tugas ini?")
+        ) {
             router.delete(route("teacher.assignments.destroy", assignment.id), {
                 onSuccess: () => {
                     router.visit(
@@ -55,13 +59,13 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
     const getStatusText = (status) => {
         switch (status) {
             case "graded":
-                return "Graded";
+                return "Sudah Dinilai";
             case "submitted":
-                return "Submitted";
+                return "Sudah Mengumpulkan";
             case "not_submitted":
-                return "Not Submitted";
+                return "Belum Mengumpulkan";
             default:
-                return "Unknown";
+                return "Tidak Diketahui";
         }
     };
 
@@ -74,7 +78,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
     };
 
     return (
-        <TeacherLayout title={`Assignment: ${assignment.title}`}>
+        <TeacherLayout title={`Tugas: ${assignment.title}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -93,7 +97,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                             </Link>
                             <div>
                                 <h1 className="font-bold text-xl text-gray-800">
-                                    Assignment Details
+                                    Detail Tugas
                                 </h1>
                                 <p className="text-sm text-gray-600">
                                     {subject.name} - {subject.class_name}
@@ -109,7 +113,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                 className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                             >
                                 <MessageEdit size="20" />
-                                <span>Grade Submissions</span>
+                                <span>Nilai Pengumpulan</span>
                             </Link>
                             <Link
                                 href={route(
@@ -119,7 +123,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                 className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                             >
                                 <Edit2 size="20" />
-                                <span>Edit</span>
+                                <span>Edit Tugas</span>
                             </Link>
                             {assignment.stats.submitted_count === 0 && (
                                 <button
@@ -192,7 +196,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                         </div>
                                     ) : (
                                         <p className="text-gray-500 italic">
-                                            No instructions provided.
+                                            Belum ada instruksi yang diisi.
                                         </p>
                                     )}
                                 </div>
@@ -201,7 +205,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                 {assignment.file_path && (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h3 className="text-lg font-medium text-gray-700 mb-2">
-                                            Attachment
+                                            Lampiran
                                         </h3>
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-700">
@@ -215,25 +219,25 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                 className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                                             >
                                                 <DocumentDownload size="18" />
-                                                <span>Download</span>
+                                                <span>Unduh</span>
                                             </a>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Submission Statistics */}
+                            {/* Statistik Pengumpulan */}
                             <div className="space-y-6">
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h3 className="text-lg font-medium text-gray-700 mb-3">
-                                        Submission Summary
+                                        Ringkasan Pengumpulan
                                     </h3>
 
                                     <div className="space-y-4">
                                         {/* Progress Bar */}
                                         <div>
                                             <div className="flex justify-between text-sm mb-1">
-                                                <span>Submission Rate</span>
+                                                <span>Persentase Pengumpulan</span>
                                                 <span className="font-medium">
                                                     {
                                                         assignment.stats
@@ -262,7 +266,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                     }
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                                    Submitted
+                                                    Sudah Mengumpulkan
                                                 </div>
                                             </div>
                                             <div className="bg-white p-3 rounded-lg border">
@@ -273,7 +277,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                     }
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                                    Graded
+                                                    Sudah Dinilai
                                                 </div>
                                             </div>
                                             <div className="bg-white p-3 rounded-lg border">
@@ -284,7 +288,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                     }
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                                    Pending
+                                                    Menunggu Dinilai
                                                 </div>
                                             </div>
                                             <div className="bg-white p-3 rounded-lg border">
@@ -295,7 +299,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                     }
                                                 </div>
                                                 <div className="text-sm text-gray-500">
-                                                    Not Submitted
+                                                    Belum Mengumpulkan
                                                 </div>
                                             </div>
                                         </div>
@@ -307,7 +311,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                         >
                                             <Export size="18" />
                                             <span>
-                                                Export Submissions as CSV
+                                                Ekspor Pengumpulan ke CSV
                                             </span>
                                         </button>
                                     </div>
@@ -317,7 +321,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                 <div className="bg-blue-50 p-4 rounded-lg">
                                     <h3 className="flex items-center gap-2 text-lg font-medium text-blue-700 mb-3">
                                         <InfoCircle size="18" />
-                                        <span>Quick Actions</span>
+                                        <span>Aksi Cepat</span>
                                     </h3>
                                     <div className="space-y-2">
                                         <Link
@@ -328,7 +332,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                             className="w-full flex items-center justify-between px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
                                         >
                                             <span>
-                                                View & Grade Submissions
+                                                Lihat & Nilai Pengumpulan
                                             </span>
                                             <MessageEdit
                                                 size="18"
@@ -352,10 +356,10 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                 </div>
                             </div>
 
-                            {/* Student Submissions List */}
+                            {/* Daftar Pengumpulan Siswa */}
                             <div className="md:col-span-3 mt-6">
                                 <h3 className="text-lg font-medium text-gray-700 pb-2 border-b mb-4">
-                                    Student Submission Status
+                                    Status Pengumpulan Siswa
                                 </h3>
 
                                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -364,7 +368,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                             <thead className="bg-gray-100">
                                                 <tr>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Student
+                                                        Siswa
                                                     </th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         NISN
@@ -373,13 +377,13 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                         Status
                                                     </th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Submitted At
+                                                        Waktu Pengumpulan
                                                     </th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Grade
+                                                        Nilai
                                                     </th>
                                                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Action
+                                                        Aksi
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -443,8 +447,8 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                                             className="text-blue-600 hover:text-blue-900 inline-block"
                                                                         >
                                                                             {student.grade
-                                                                                ? "View"
-                                                                                : "Grade"}
+                                                                                ? "Lihat"
+                                                                                : "Nilai"}
                                                                         </Link>
                                                                     ) : (
                                                                         <span className="text-gray-400">
@@ -461,8 +465,8 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                                             colSpan="6"
                                                             className="px-6 py-4 text-center text-gray-500"
                                                         >
-                                                            No students found
-                                                            for this class.
+                                                            Tidak ada siswa
+                                                            untuk kelas ini.
                                                         </td>
                                                     </tr>
                                                 )}
@@ -480,7 +484,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                     })}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Back to Assignments
+                                    Kembali ke Daftar Tugas
                                 </Link>
                                 <Link
                                     href={route(
@@ -489,7 +493,7 @@ const TeacherAssignmentShow = ({ assignment, subject }) => {
                                     )}
                                     className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                                 >
-                                    View All Submissions
+                                    Lihat Semua Pengumpulan
                                 </Link>
                             </div>
                         </div>

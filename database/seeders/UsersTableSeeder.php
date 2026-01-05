@@ -21,21 +21,21 @@ class UsersTableSeeder extends Seeder
         ]);
 
         // Create teacher users
-        for ($i = 1; $i <= 10; $i++) {
-            User::create([
-                'email' => "guru{$i}@example.com",
-                'password' => Hash::make('password'),
-                'role' => 'guru',
-            ]);
-        }
+        // for ($i = 1; $i <= 10; $i++) {
+        // User::create([
+        //     'email' => "guru@example.com",
+        //     'password' => Hash::make('password'),
+        //     'role' => 'guru',
+        // ]);
+        // }
 
-        // Create student users
-        for ($i = 1; $i <= 100; $i++) {
-            User::create([
-                'email' => "siswa{$i}@example.com",
-                'password' => Hash::make('password'),
-                'role' => 'siswa',
-            ]);
-        }
+        // // Create student users
+        // for ($i = 1; $i <= 100; $i++) {
+        // User::create([
+        //     'email' => "siswa@example.com",
+        //     'password' => Hash::make('password'),
+        //     'role' => 'siswa',
+        // ]);
+        // }
     }
 }

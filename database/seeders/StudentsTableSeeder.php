@@ -20,8 +20,6 @@ class StudentsTableSeeder extends Seeder
 
         $faker = Faker::create('id_ID');
 
-        $religions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
-
         // Create student profiles
         foreach ($studentUsers as $index => $user) {
             $studentNumber = $index + 1;
@@ -35,7 +33,6 @@ class StudentsTableSeeder extends Seeder
                 'gender' => $gender,
                 'birth_date' => $faker->dateTimeBetween('-18 years', '-12 years'),
                 'birth_place' => $faker->city,
-                'religion' => $faker->randomElement($religions),
             ]);
         }
     }

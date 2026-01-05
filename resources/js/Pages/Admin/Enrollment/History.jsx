@@ -5,7 +5,7 @@ import { ArrowLeft2, Calendar, Book1, Clock } from "iconsax-reactjs";
 
 const EnrollmentHistory = ({ student, enrollments }) => {
     return (
-        <AuthenticatedLayout title={`Enrollment History: ${student.name}`}>
+        <AuthenticatedLayout title={`Riwayat Pendaftaran: ${student.name}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -15,26 +15,28 @@ const EnrollmentHistory = ({ student, enrollments }) => {
                                 href={route("admin.enrollments.index")}
                                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                             >
-                                <ArrowLeft2
-                                    size="24"
-                                    className="text-gray-600"
-                                />
+                                <ArrowLeft2 size="24" className="text-gray-600" />
                             </Link>
-                            <h1 className="font-bold text-xl text-gray-800">
-                                Enrollment History
-                            </h1>
+                            <div>
+                                <h1 className="font-bold text-xl text-gray-800">
+                                    Riwayat Pendaftaran Siswa
+                                </h1>
+                                <p className="mt-1 text-xs text-gray-500">
+                                    Menampilkan jejak siswa ini berpindah semester dan kelas dari waktu ke waktu.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
                     {/* Student Info */}
                     <div className="px-6 py-5 border-b">
                         <h2 className="font-semibold text-gray-700 mb-3">
-                            Student Information
+                            Informasi Siswa
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <div className="text-sm text-gray-500 mb-1">
-                                    Name
+                                    Nama
                                 </div>
                                 <div className="font-medium">
                                     {student.name}
@@ -62,7 +64,7 @@ const EnrollmentHistory = ({ student, enrollments }) => {
                     {/* Timeline */}
                     <div className="p-6">
                         <h2 className="font-semibold text-gray-700 mb-4">
-                            Enrollment Timeline
+                            Riwayat Pendaftaran
                         </h2>
 
                         {enrollments && enrollments.length > 0 ? (
@@ -121,7 +123,7 @@ const EnrollmentHistory = ({ student, enrollments }) => {
                                                             className="text-blue-500 mr-2"
                                                         />
                                                         <span className="text-sm">
-                                                            Class:{" "}
+                                                            Kelas:{" "}
                                                             <span className="font-medium">
                                                                 {
                                                                     enrollment
@@ -138,7 +140,7 @@ const EnrollmentHistory = ({ student, enrollments }) => {
                                                             className="text-gray-500 mr-2"
                                                         />
                                                         <span className="text-sm">
-                                                            Enrolled on:{" "}
+                                                            Terdaftar pada:{" "}
                                                             <span className="font-medium">
                                                                 {
                                                                     enrollment.enrolled_at
@@ -155,7 +157,7 @@ const EnrollmentHistory = ({ student, enrollments }) => {
                         ) : (
                             <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 text-center">
                                 <p className="text-gray-500">
-                                    No enrollment history found for this student
+                                    Belum ada riwayat pendaftaran untuk siswa ini.
                                 </p>
                             </div>
                         )}
@@ -167,13 +169,13 @@ const EnrollmentHistory = ({ student, enrollments }) => {
                             href={route("admin.enrollments.index")}
                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                         >
-                            Back to Enrollment Management
+                            Kembali ke Manajemen Pendaftaran
                         </Link>
                         <Link
                             href={route("admin.students.show", student.id)}
                             className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                         >
-                            View Student Profile
+                            Lihat Profil Siswa
                         </Link>
                     </div>
                 </div>

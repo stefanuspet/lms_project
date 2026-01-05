@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Models\Classroom;
 use App\Models\Semester;
 use App\Models\AttendanceSession;
 use App\Models\Attendance;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class AttendanceController extends Controller
 {
@@ -47,7 +49,7 @@ class AttendanceController extends Controller
         // Apply search filters
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
-                $q->where('pin', 'like', "%{$search}%")
+                $q->where('qr_token', 'like', "%{$search}%")
                     ->orWhere('title', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
             });
@@ -76,6 +78,9 @@ class AttendanceController extends Controller
 
         // Format data for frontend
         $formattedSessions = $sessions->map(function ($session) {
+            if (empty($session->qr_token)) {
+                $session->update(['qr_token' => $this->generateUniqueQrToken()]);
+            }
             $isActive = Carbon::parse($session->expires_at)->isFuture();
             $presentCount = $session->attendances()->where('status', 'hadir')->count();
             $absentCount = $session->attendances()->whereIn('status', ['izin', 'sakit', 'alpha'])->count();
@@ -84,10 +89,12 @@ class AttendanceController extends Controller
 
             return [
                 'id' => $session->id,
-                'pin' => $session->pin,
+                'qr_token' => $session->qr_token,
                 'title' => $session->title,
+                'session_type' => $session->session_type,
                 'description' => $session->description,
                 'date' => Carbon::parse($session->date)->format('d-m-Y'),
+                'start_time' => $session->start_time?->format('H:i'),
                 'semester' => $session->semester ? $session->semester->name : '-',
                 'expires_at' => Carbon::parse($session->expires_at)->format('d-m-Y H:i'),
                 'is_active' => $isActive,
@@ -147,36 +154,55 @@ class AttendanceController extends Controller
             'description' => 'nullable|string|max:500',
             'date' => 'required|date',
             'semester_id' => 'required|exists:semesters,id',
-            'duration' => 'required|integer|min:5|max:1440', // Durasi dalam menit
+            'arrival_start_time' => 'required|date_format:H:i',
+            'arrival_duration' => 'required|integer|min:5|max:300', // menit
+            'departure_start_time' => 'required|date_format:H:i',
+            'departure_duration' => 'required|integer|min:5|max:300', // menit
         ]);
 
         DB::beginTransaction();
 
         try {
-            // Generate random 6-digit PIN
-            $pin = $this->generateUniquePin();
+            $baseTitle = $request->title;
 
-            // Calculate expiration time
-            $duration = (int) $request->duration;
-            $expiresAt = now()->addMinutes($duration);
+            $payloads = [
+                [
+                    'session_type' => 'arrival',
+                    'title' => $baseTitle . ' - Berangkat',
+                    'start_time' => $request->arrival_start_time,
+                    'duration' => (int) $request->arrival_duration,
+                ],
+                [
+                    'session_type' => 'departure',
+                    'title' => $baseTitle . ' - Pulang',
+                    'start_time' => $request->departure_start_time,
+                    'duration' => (int) $request->departure_duration,
+                ],
+            ];
 
-            // Create new attendance session
-            $session = AttendanceSession::create([
-                'pin' => $pin,
-                'title' => $request->title,
-                'description' => $request->description,
-                'date' => $request->date,
-                'semester_id' => $request->semester_id,
-                'expires_at' => $expiresAt,
-            ]);
+            foreach ($payloads as $payload) {
+                $startDateTime = Carbon::parse($request->date . ' ' . $payload['start_time']);
+                $expiresAt = (clone $startDateTime)->addMinutes($payload['duration']);
+
+                AttendanceSession::create([
+                    'qr_token' => $this->generateUniqueQrToken(),
+                    'session_type' => $payload['session_type'],
+                    'title' => $payload['title'],
+                    'description' => $request->description,
+                    'date' => $request->date,
+                    'start_time' => $payload['start_time'],
+                    'semester_id' => $request->semester_id,
+                    'expires_at' => $expiresAt,
+                ]);
+            }
 
             DB::commit();
 
             // Log activity
-            $this->logActivity(auth()->id(), 'create', 'Created attendance session with PIN: ' . $pin);
+            $this->logActivity(auth()->id(), 'create', 'Created arrival & departure attendance sessions with QR.');
 
-            return redirect()->route('admin.attendance.show', $session->id)
-                ->with('success', 'Attendance session created successfully with PIN: ' . $pin);
+            return redirect()->route('admin.attendance.index')
+                ->with('success', 'Dua sesi absensi (berangkat & pulang) berhasil dibuat dengan QR masing-masing.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating attendance session: ' . $e->getMessage());
@@ -193,6 +219,9 @@ class AttendanceController extends Controller
     {
         // Load relations
         $session->load(['semester']);
+        if (empty($session->qr_token)) {
+            $session->update(['qr_token' => $this->generateUniqueQrToken()]);
+        }
 
         // Get all students
         $allStudents = Student::orderBy('name')->get();
@@ -230,10 +259,12 @@ class AttendanceController extends Controller
         // Prepare data for frontend
         $formattedSession = [
             'id' => $session->id,
-            'pin' => $session->pin,
+            'qr_token' => $session->qr_token,
+            'session_type' => $session->session_type,
             'title' => $session->title,
             'description' => $session->description,
             'date' => Carbon::parse($session->date)->format('d-m-Y'),
+            'start_time' => $session->start_time?->format('H:i'),
             'semester' => $session->semester ? [
                 'id' => $session->semester->id,
                 'name' => $session->semester->name,
@@ -334,7 +365,7 @@ class AttendanceController extends Controller
             $this->logActivity(
                 auth()->id(),
                 'extend',
-                "Extended attendance session PIN {$session->pin} for {$minutes} minutes"
+                "Extended attendance session QR for {$minutes} minutes"
             );
 
             return redirect()->back()->with('success', 'Attendance session extended successfully');
@@ -364,7 +395,7 @@ class AttendanceController extends Controller
             $this->logActivity(
                 auth()->id(),
                 'close',
-                "Closed attendance session PIN {$session->pin}"
+                "Closed attendance session QR"
             );
 
             return redirect()->back()->with('success', 'Attendance session closed successfully');
@@ -384,13 +415,20 @@ class AttendanceController extends Controller
         $validated = $request->validate([
             'semester_id' => 'nullable|exists:semesters,id',
             'student_id' => 'nullable|exists:students,id',
+            'class_id' => 'nullable|exists:classes,id',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
         // Get filter options
         $semesters = Semester::orderBy('start_date', 'desc')->get();
-        $students = Student::orderBy('name')->get();
+        $classes = Classroom::orderBy('name')->get();
+
+        $studentsQuery = Student::orderBy('name');
+        if ($request->class_id) {
+            $studentsQuery->filterByClass($request->class_id);
+        }
+        $students = $studentsQuery->get();
 
         // Apply filters
         $query = AttendanceSession::with(['semester']);
@@ -528,12 +566,14 @@ class AttendanceController extends Controller
             'filters' => [
                 'semester_id' => $request->semester_id,
                 'student_id' => $request->student_id,
+                'class_id' => $request->class_id,
                 'date_from' => $request->date_from,
                 'date_to' => $request->date_to,
             ],
             'filterOptions' => [
                 'semesters' => $semesters,
                 'students' => $students,
+                'classes' => $classes,
             ],
             'attendanceData' => $attendanceData ?? [],
             'sessionDates' => $sessionDates ?? [],
@@ -546,39 +586,173 @@ class AttendanceController extends Controller
      */
     public function exportReport(Request $request)
     {
-        // Implement CSV export functionality
-        // This would be similar to the reports method but outputs CSV instead
+        $validated = $request->validate([
+            'semester_id' => 'nullable|exists:semesters,id',
+            'student_id' => 'nullable|exists:students,id',
+            'class_id' => 'nullable|exists:classes,id',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ]);
 
-        // For example:
-        // return (new AttendanceExport($request))->download('attendance_report.csv');
+        $query = AttendanceSession::query();
 
-        // You could create a custom export class using Laravel Excel package
+        if ($request->semester_id) {
+            $query->where('semester_id', $request->semester_id);
+        }
 
-        return redirect()->back()->with('success', 'Export functionality will be implemented soon');
+        if ($request->date_from) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+
+        if ($request->date_to) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+
+        $sessions = $query->orderBy('date')->get();
+
+        if ($sessions->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada sesi absensi pada filter yang dipilih.');
+        }
+
+        // Jika ada student_id → export detail per sesi untuk siswa tersebut
+        if ($request->student_id) {
+            $student = Student::findOrFail($request->student_id);
+            $attendances = Attendance::whereIn('attendance_sessions_id', $sessions->pluck('id'))
+                ->where('student_id', $student->id)
+                ->get()
+                ->keyBy('attendance_sessions_id');
+
+            $filename = 'laporan_presensi_siswa_' . $student->nisn . '_' . now()->format('Ymd_His') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function () use ($sessions, $attendances, $student) {
+                $output = fopen('php://output', 'w');
+
+                // BOM untuk UTF-8
+                fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+                $delimiter = ';';
+
+                // Header
+                fputcsv($output, ['NISN', 'Nama', 'Tanggal', 'Judul', 'Status', 'Waktu Pengisian'], $delimiter);
+
+                foreach ($sessions as $session) {
+                    $attendance = $attendances->get($session->id);
+                    $status = $attendance ? $attendance->status : 'not_submitted';
+                    $submittedAt = $attendance && $attendance->submitted_at
+                        ? Carbon::parse($attendance->submitted_at)->format('d-m-Y H:i:s')
+                        : '-';
+
+                    fputcsv($output, [
+                        $student->nisn,
+                        $student->name,
+                        Carbon::parse($session->date)->format('d-m-Y'),
+                        $session->title,
+                        $status,
+                        $submittedAt,
+                    ], $delimiter);
+                }
+
+                fclose($output);
+            };
+
+            return response()->streamDownload($callback, $filename, $headers);
+        }
+
+        // Jika semester_id (tanpa student_id) → export rekap per siswa di semester (opsional per kelas)
+        if ($request->semester_id) {
+            $semester = Semester::findOrFail($request->semester_id);
+
+            // Untuk kesederhanaan, gunakan semua siswa di sistem (atau hanya satu kelas jika dipilih)
+            $studentsQuery = Student::orderBy('name');
+            if ($request->class_id) {
+                $studentsQuery->filterByClass($request->class_id);
+            }
+            $students = $studentsQuery->get();
+
+            $filename = 'rekap_presensi_semester_' . $semester->id . '_' . now()->format('Ymd_His') . '.csv';
+
+            $headers = [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function () use ($students, $sessions, $semester) {
+                $output = fopen('php://output', 'w');
+
+                // BOM UTF-8
+                fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+                $delimiter = ';';
+
+                // Header kolom
+                fputcsv($output, [
+                    'NISN',
+                    'Nama',
+                    'Total Sesi',
+                    'Hadir',
+                    'Sakit',
+                    'Izin',
+                    'Alpha',
+                    'Belum Mengisi',
+                    'Persentase Hadir (%)',
+                ], $delimiter);
+
+                foreach ($students as $student) {
+                    $attendances = Attendance::whereIn('attendance_sessions_id', $sessions->pluck('id'))
+                        ->where('student_id', $student->id)
+                        ->get();
+
+                    $totalSessions = $sessions->count();
+                    $presentCount = $attendances->where('status', 'hadir')->count();
+                    $sickCount = $attendances->where('status', 'sakit')->count();
+                    $excusedCount = $attendances->where('status', 'izin')->count();
+                    $absentCount = $attendances->where('status', 'alpha')->count();
+                    $notSubmittedCount = $totalSessions - $attendances->count();
+
+                    $attendanceRate = $totalSessions > 0
+                        ? round(($presentCount / $totalSessions) * 100, 1)
+                        : 0;
+
+                    fputcsv($output, [
+                        $student->nisn,
+                        $student->name,
+                        $totalSessions,
+                        $presentCount,
+                        $sickCount,
+                        $excusedCount,
+                        $absentCount,
+                        $notSubmittedCount,
+                        $attendanceRate,
+                    ], $delimiter);
+                }
+
+                fclose($output);
+            };
+
+            return response()->streamDownload($callback, $filename, $headers);
+        }
+
+        return redirect()->back()->with('error', 'Pilih minimal semester atau siswa sebelum melakukan export.');
     }
 
     /**
      * Generate a unique 6-digit PIN.
      */
-    private function generateUniquePin()
+    private function generateUniqueQrToken()
     {
-        $pin = null;
-        $unique = false;
-
-        while (!$unique) {
-            $pin = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-            // Check if PIN is unique
-            $exists = AttendanceSession::where('pin', $pin)
+        do {
+            $token = Str::uuid()->toString() . '-' . bin2hex(random_bytes(6));
+            $exists = AttendanceSession::where('qr_token', $token)
                 ->where('expires_at', '>', now())
                 ->exists();
+        } while ($exists);
 
-            if (!$exists) {
-                $unique = true;
-            }
-        }
-
-        return $pin;
+        return $token;
     }
 
     /**

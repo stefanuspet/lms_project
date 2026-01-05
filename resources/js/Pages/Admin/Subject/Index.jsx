@@ -1,14 +1,14 @@
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import React, { useState, useEffect } from "react";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Link, router } from "@inertiajs/react";
 import {
     Edit2,
     Trash,
     Eye,
     SearchNormal1,
-    Filter,
     Add,
     Setting4,
+    Printer,
 } from "iconsax-reactjs";
 
 const SubjectIndex = ({
@@ -298,6 +298,20 @@ const SubjectIndex = ({
                                 />
                             </button>
 
+                            {/* Print / Export button */}
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    window.location.assign(
+                                        route("admin.subjects.export")
+                                    )
+                                }
+                                className="p-2 rounded-full bg-[#FAE27C] text-amber-600 hover:bg-amber-200 transition-colors"
+                                title="Export ke Excel"
+                            >
+                                <Printer color="black" size="24" />
+                            </button>
+
                             {/* Add button */}
                             <Link
                                 href={route("admin.subjects.create")}
@@ -441,8 +455,33 @@ const SubjectIndex = ({
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <input
+                                            type="checkbox"
+                                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                            onChange={handleSelectAll}
+                                            checked={
+                                                subjects &&
+                                                subjects.length > 0 &&
+                                                selectedSubjects.length ===
+                                                    subjects.length
+                                            }
+                                        />
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Mata Pelajaran
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Kelas
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Guru
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Deskripsi
+                                    </th>
                                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Action
+                                        Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -482,7 +521,7 @@ const SubjectIndex = ({
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {subject.class}
+                                                {subject.classroom}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 {subject.teacher}
@@ -518,6 +557,21 @@ const SubjectIndex = ({
                                                 >
                                                     <Eye size="20" />
                                                 </Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        window.location.assign(
+                                                            route(
+                                                                "admin.subjects.export-grades",
+                                                                subject.id
+                                                            )
+                                                        )
+                                                    }
+                                                    className="text-green-600 hover:text-green-900 inline-block"
+                                                    title="Export Nilai Mapel"
+                                                >
+                                                    <Printer size="18" />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -527,7 +581,8 @@ const SubjectIndex = ({
                                             colSpan="6"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No subjects found
+                                            Tidak ada mata pelajaran pada filter
+                                            ini.
                                         </td>
                                     </tr>
                                 )}

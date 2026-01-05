@@ -22,6 +22,7 @@ const AttendanceReports = ({
 }) => {
     const [semesterId, setSemesterId] = useState(filters.semester_id || "");
     const [studentId, setStudentId] = useState(filters.student_id || "");
+    const [classId, setClassId] = useState(filters.class_id || "");
     const [dateFrom, setDateFrom] = useState(filters.date_from || "");
     const [dateTo, setDateTo] = useState(filters.date_to || "");
 
@@ -31,18 +32,23 @@ const AttendanceReports = ({
         router.get(route("admin.attendance.reports"), {
             semester_id: semesterId,
             student_id: studentId,
+            class_id: classId,
             date_from: dateFrom,
             date_to: dateTo,
         });
     };
 
     const handleExport = () => {
-        router.post(route("admin.attendance.export-report"), {
-            semester_id: semesterId,
-            student_id: studentId,
-            date_from: dateFrom,
-            date_to: dateTo,
-        });
+        const params = {
+            semester_id: semesterId || undefined,
+            student_id: studentId || undefined,
+            class_id: classId || undefined,
+            date_from: dateFrom || undefined,
+            date_to: dateTo || undefined,
+        };
+
+        // Gunakan GET biasa supaya browser memicu download CSV
+        window.location.href = route("admin.attendance.export-report", params);
     };
 
     // Function to get status badge color
@@ -433,8 +439,8 @@ const AttendanceReports = ({
 
                     <form onSubmit={handleGenerateReport}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                            {/* Semester filter */}
-                            <div>
+                          {/* Semester filter */}
+                          <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Semester
                                 </label>
@@ -455,9 +461,28 @@ const AttendanceReports = ({
                                         </option>
                                     ))}
                                 </select>
-                            </div>
+                          </div>
 
-                            {/* Student filter (optional) */}
+                          {/* Class filter (optional) */}
+                          <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Kelas (Opsional)
+                              </label>
+                              <select
+                                  value={classId}
+                                  onChange={(e) => setClassId(e.target.value)}
+                                  className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                              >
+                                  <option value="">Semua Kelas</option>
+                                  {filterOptions.classes?.map((cls) => (
+                                      <option key={cls.id} value={cls.id}>
+                                          {cls.name}
+                                      </option>
+                                  ))}
+                              </select>
+                          </div>
+
+                          {/* Student filter (optional) */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Siswa (Opsional)

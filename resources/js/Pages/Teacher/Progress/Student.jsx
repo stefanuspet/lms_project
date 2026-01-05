@@ -88,7 +88,7 @@ const TeacherProgressStudent = ({
     };
 
     return (
-        <TeacherLayout title={`Student Progress: ${student.name}`}>
+        <TeacherLayout title={`Progres Siswa: ${student.name}`}>
             <div className="py-8 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -104,7 +104,7 @@ const TeacherProgressStudent = ({
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Student Progress
+                                Progres Siswa
                             </h1>
                         </div>
                     </div>
@@ -133,22 +133,22 @@ const TeacherProgressStudent = ({
                                     <div className="grid grid-cols-2 gap-2 text-center">
                                         <div className="bg-blue-50 p-2 rounded">
                                             <p className="text-xs text-blue-600">
-                                                Gender
+                                                Jenis Kelamin
                                             </p>
                                             <p className="text-sm font-medium text-blue-800">
                                                 {student.gender === "male"
-                                                    ? "Male"
-                                                    : "Female"}
+                                                    ? "Laki-laki"
+                                                    : "Perempuan"}
                                             </p>
                                         </div>
                                         <div className="bg-purple-50 p-2 rounded">
                                             <p className="text-xs text-purple-600">
-                                                Class
+                                                Kelas
                                             </p>
                                             <p className="text-sm font-medium text-purple-800">
                                                 {student.classes.length > 0
                                                     ? student.classes[0].name
-                                                    : "Not Assigned"}
+                                                    : "Belum ditempatkan"}
                                             </p>
                                         </div>
                                     </div>
@@ -159,12 +159,12 @@ const TeacherProgressStudent = ({
                             <div className="w-full md:w-2/3">
                                 <div className="bg-blue-50 p-4 rounded-lg">
                                     <h3 className="text-sm font-medium text-blue-700 mb-3">
-                                        Academic Performance
+                                        Performa Akademik
                                     </h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         <div className="bg-white p-3 rounded border border-blue-100">
                                             <p className="text-xs text-gray-500">
-                                                Average Grade
+                                                Nilai Rata-rata
                                             </p>
                                             <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                                 <ChartSuccess
@@ -189,7 +189,7 @@ const TeacherProgressStudent = ({
                                         </div>
                                         <div className="bg-white p-3 rounded border border-blue-100">
                                             <p className="text-xs text-gray-500">
-                                                Completion Rate
+                                                Persentase Penyelesaian
                                             </p>
                                             <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                                 <Chart
@@ -203,7 +203,7 @@ const TeacherProgressStudent = ({
                                         </div>
                                         <div className="bg-white p-3 rounded border border-blue-100">
                                             <p className="text-xs text-gray-500">
-                                                Assignments
+                                                Tugas
                                             </p>
                                             <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                                 <ClipboardTick
@@ -219,7 +219,7 @@ const TeacherProgressStudent = ({
                                         </div>
                                         <div className="bg-white p-3 rounded border border-blue-100">
                                             <p className="text-xs text-gray-500">
-                                                Graded
+                                                Sudah Dinilai
                                             </p>
                                             <p className="text-xl font-bold text-gray-900 flex items-center gap-2">
                                                 <MessageText
@@ -239,7 +239,7 @@ const TeacherProgressStudent = ({
                         </div>
                     </div>
 
-                    {/* Navigation Tabs */}
+                        {/* Tab Navigasi */}
                     <div className="px-6 pt-4 border-b">
                         <div className="flex space-x-6">
                             <button
@@ -250,7 +250,7 @@ const TeacherProgressStudent = ({
                                         : "text-gray-500 hover:text-gray-700"
                                 }`}
                             >
-                                Overview
+                                Ringkasan
                             </button>
                             <button
                                 onClick={() => setActiveTab("assignments")}
@@ -260,7 +260,7 @@ const TeacherProgressStudent = ({
                                         : "text-gray-500 hover:text-gray-700"
                                 }`}
                             >
-                                Assignments
+                                Tugas
                             </button>
                             <button
                                 onClick={() => setActiveTab("attendance")}
@@ -270,18 +270,18 @@ const TeacherProgressStudent = ({
                                         : "text-gray-500 hover:text-gray-700"
                                 }`}
                             >
-                                Attendance
+                                Kehadiran
                             </button>
                         </div>
                     </div>
 
                     {/* Tab Content */}
                     <div className="p-6">
-                        {/* Overview Tab */}
+                        {/* Tab Ringkasan */}
                         {activeTab === "overview" && (
                             <div>
                                 <h2 className="text-lg font-semibold text-gray-700 mb-4">
-                                    Subject Performance Overview
+                                    Ringkasan Performa Mata Pelajaran
                                 </h2>
 
                                 {subjects.length > 0 ? (
@@ -314,8 +314,7 @@ const TeacherProgressStudent = ({
                                                 <div className="grid grid-cols-2 gap-4 mb-3">
                                                     <div>
                                                         <p className="text-xs text-gray-500">
-                                                            Assignment
-                                                            Completion
+                                                            Penyelesaian Tugas
                                                         </p>
                                                         <div className="flex items-center justify-between mt-1">
                                                             <span className="text-sm font-medium text-gray-700">
@@ -348,7 +347,7 @@ const TeacherProgressStudent = ({
 
                                                     <div>
                                                         <p className="text-xs text-gray-500">
-                                                            Average Grade
+                                                            Nilai Rata-rata
                                                         </p>
                                                         <p
                                                             className={`text-xl font-bold ${
@@ -375,12 +374,12 @@ const TeacherProgressStudent = ({
                                                 ] && (
                                                     <div className="mt-4 pt-3 border-t border-gray-200">
                                                         <p className="text-xs text-gray-500 mb-2">
-                                                            Attendance
+                                                            Kehadiran
                                                         </p>
                                                         <div className="grid grid-cols-4 gap-2 text-center">
                                                             <div className="bg-white p-1 rounded text-xs">
                                                                 <span className="text-gray-500">
-                                                                    Present
+                                                                    Hadir
                                                                 </span>
                                                                 <p className="font-medium text-green-600">
                                                                     {
@@ -394,7 +393,7 @@ const TeacherProgressStudent = ({
                                                             </div>
                                                             <div className="bg-white p-1 rounded text-xs">
                                                                 <span className="text-gray-500">
-                                                                    Absent
+                                                                    Alpha
                                                                 </span>
                                                                 <p className="font-medium text-red-600">
                                                                     {
@@ -408,7 +407,7 @@ const TeacherProgressStudent = ({
                                                             </div>
                                                             <div className="bg-white p-1 rounded text-xs">
                                                                 <span className="text-gray-500">
-                                                                    Excused
+                                                                    Izin
                                                                 </span>
                                                                 <p className="font-medium text-orange-600">
                                                                     {
@@ -422,7 +421,7 @@ const TeacherProgressStudent = ({
                                                             </div>
                                                             <div className="bg-white p-1 rounded text-xs">
                                                                 <span className="text-gray-500">
-                                                                    Rate
+                                                                    Persentase
                                                                 </span>
                                                                 <p className="font-medium text-blue-600">
                                                                     {
@@ -448,24 +447,24 @@ const TeacherProgressStudent = ({
                                             className="text-gray-300 mx-auto mb-2"
                                         />
                                         <p className="text-gray-600 font-medium">
-                                            No attendance data available
+                                            Tidak ada data kehadiran
                                         </p>
                                         <p className="text-sm text-gray-500 mt-1">
-                                            No attendance records found for this
-                                            student in the current semester.
+                                            Tidak ada catatan kehadiran untuk
+                                            siswa ini pada semester berjalan.
                                         </p>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        {/* Action Buttons */}
+                        {/* Tombol Aksi */}
                         <div className="mt-6 flex justify-end">
                             <Link
                                 href={route("teacher.progress.index")}
                                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                             >
-                                Back to Progress Overview
+                                Kembali ke Ringkasan Progres
                             </Link>
                         </div>
                     </div>

@@ -21,7 +21,7 @@ class Student extends Model
         'gender',
         'birth_date',
         'birth_place',
-        'religion',
+        'profile_picture',
     ];
 
     protected $casts = [
@@ -97,16 +97,6 @@ class Student extends Model
     {
         if (!empty($gender)) {
             return $query->where('gender', $gender);
-        }
-    }
-
-    /**
-     * Filter students by religion.
-     */
-    public function scopeFilterByReligion($query, $religion)
-    {
-        if (!empty($religion)) {
-            return $query->where('religion', $religion);
         }
     }
 

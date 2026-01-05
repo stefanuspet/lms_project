@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['admin', 'guru', 'siswa']);
+            // Tambahkan role 'staff' untuk akun staf/security
+            $table->enum('role', ['admin', 'guru', 'siswa', 'staff']);
             $table->rememberToken();
             $table->timestamps();
         });

@@ -11,16 +11,20 @@ import {
     CloseCircle,
 } from "iconsax-reactjs";
 
-const ClassroomShow = ({ classroom, flash }) => {
+const ClassroomShow = ({ classroom, semesters = [], flash }) => {
     const [showAddStudentModal, setShowAddStudentModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing } = useForm({
         student_ids: [],
-        semester_id: classroom.active_semester?.id || "",
+        semester_id:
+            classroom.active_semester?.id ||
+            semesters.find((s) => s.is_active)?.id ||
+            semesters[0]?.id ||
+            "",
     });
 
     // Function to search students
@@ -64,18 +68,13 @@ const ClassroomShow = ({ classroom, flash }) => {
     // Function to handle adding students
     const handleAddStudents = () => {
         if (selectedStudents.length === 0) {
-            alert("Please select at least one student to add");
-            return;
-        }
-
-        if (!classroom.active_semester?.id) {
-            alert("Please set an active semester first");
+            alert("Pilih minimal satu siswa untuk ditambahkan");
             return;
         }
 
         setData({
             student_ids: selectedStudents.map((student) => student.id),
-            semester_id: classroom.active_semester.id,
+            semester_id: data.semester_id,
         });
 
         post(route("admin.classrooms.add-students", classroom.id), {
@@ -92,19 +91,25 @@ const ClassroomShow = ({ classroom, flash }) => {
     const handleRemoveStudent = (studentId) => {
         if (
             !confirm(
-                "Are you sure you want to remove this student from the class?"
+                "Apakah Anda yakin ingin menghapus siswa ini dari kelas?"
             )
         )
             return;
 
-        post(route("admin.classrooms.remove-students", classroom.id), {
-            student_ids: [studentId],
-            semester_id: classroom.active_semester.id,
-        });
+        post(
+            route("admin.classrooms.remove-students", classroom.id),
+            {
+                student_ids: [studentId],
+                semester_id: data.semester_id,
+            },
+            {
+                preserveScroll: true,
+            }
+        );
     };
 
     return (
-        <AuthenticatedLayout title={`Class: ${classroom.name}`}>
+        <AuthenticatedLayout title={`Kelas: ${classroom.name}`}>
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -139,7 +144,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Class Details
+                                Detail Kelas
                             </h1>
                         </div>
                         <Link
@@ -147,7 +152,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                             className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                         >
                             <Edit2 size="20" />
-                            <span>Edit Class</span>
+                            <span>Edit Kelas</span>
                         </Link>
                     </div>
 
@@ -157,14 +162,14 @@ const ClassroomShow = ({ classroom, flash }) => {
                             {/* Class Overview Section */}
                             <div className="md:col-span-2">
                                 <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b">
-                                    Class Overview
+                                    Ringkasan Kelas
                                 </h2>
                             </div>
 
                             {/* Info boxes */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Subjects
+                                    Mata Pelajaran
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     <div className="flex items-center">
@@ -174,7 +179,8 @@ const ClassroomShow = ({ classroom, flash }) => {
                                             className="text-green-500 mr-2"
                                         />
                                         <span>
-                                            {classroom.subjects_count} subjects
+                                            {classroom.subjects_count} mata
+                                            pelajaran
                                         </span>
                                     </div>
                                 </p>
@@ -183,11 +189,11 @@ const ClassroomShow = ({ classroom, flash }) => {
                             {/* Description */}
                             <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Description
+                                    Deskripsi
                                 </h3>
                                 <p className="text-gray-900">
                                     {classroom.description ||
-                                        "No description provided."}
+                                        "Belum ada deskripsi."}
                                 </p>
                             </div>
 
@@ -195,13 +201,13 @@ const ClassroomShow = ({ classroom, flash }) => {
                             <div className="md:col-span-2 mt-4">
                                 <div className="flex justify-between items-center">
                                     <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b">
-                                        Subjects
+                                        Mata Pelajaran
                                     </h2>
                                     <Link
                                         href={route("admin.subjects.create")}
                                         className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                                     >
-                                        Add Subject
+                                        Tambah Mata Pelajaran
                                     </Link>
                                 </div>
                             </div>
@@ -215,16 +221,16 @@ const ClassroomShow = ({ classroom, flash }) => {
                                                 <thead className="bg-gray-100">
                                                     <tr>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Subject Name
+                                                            Nama Mata Pelajaran
                                                         </th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Teacher
+                                                            Guru
                                                         </th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Description
+                                                            Deskripsi
                                                         </th>
                                                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Actions
+                                                            Aksi
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -265,7 +271,9 @@ const ClassroomShow = ({ classroom, flash }) => {
                                                                         )}
                                                                         className="text-indigo-600 hover:text-indigo-900 mr-3"
                                                                     >
-                                                                        View
+                                                                        Lihat
+                                                                        Mata
+                                                                        Pelajaran
                                                                     </Link>
                                                                     <Link
                                                                         href={route(
@@ -287,8 +295,8 @@ const ClassroomShow = ({ classroom, flash }) => {
                                 ) : (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <p className="text-gray-500 italic">
-                                            No subjects assigned to this class
-                                            yet.
+                                            Belum ada mata pelajaran untuk
+                                            kelas ini.
                                         </p>
                                     </div>
                                 )}
@@ -300,26 +308,40 @@ const ClassroomShow = ({ classroom, flash }) => {
                                     <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b">
                                         Enrolled Students
                                     </h2>
-                                    {classroom.active_semester ? (
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            value={data.semester_id}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "semester_id",
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="border rounded-lg px-3 py-2 text-sm"
+                                        >
+                                            {semesters.map((sem) => (
+                                                <option
+                                                    key={sem.id}
+                                                    value={sem.id}
+                                                >
+                                                    {sem.name}
+                                                    {sem.is_active
+                                                        ? " (Active)"
+                                                        : ""}
+                                                </option>
+                                            ))}
+                                        </select>
                                         <button
                                             onClick={() =>
                                                 setShowAddStudentModal(true)
                                             }
                                             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                                            disabled={!data.semester_id}
                                         >
                                             <UserAdd size="20" />
                                             <span>Add Students</span>
                                         </button>
-                                    ) : (
-                                        <button
-                                            disabled
-                                            className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed flex items-center gap-2"
-                                            title="Set an active semester first"
-                                        >
-                                            <UserAdd size="20" />
-                                            <span>Add Students</span>
-                                        </button>
-                                    )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -396,8 +418,8 @@ const ClassroomShow = ({ classroom, flash }) => {
                                 ) : (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <p className="text-gray-500 italic">
-                                            No students enrolled in this class
-                                            yet.
+                                            Belum ada siswa terdaftar di kelas
+                                            ini.
                                         </p>
                                     </div>
                                 )}
@@ -432,7 +454,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                     <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col">
                         <div className="p-4 border-b flex justify-between items-center">
                             <h3 className="text-lg font-medium text-gray-900">
-                                Add Students to Class
+                                Tambah Siswa ke Kelas
                             </h3>
                             <button
                                 onClick={() => setShowAddStudentModal(false)}
@@ -446,7 +468,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                             <div className="flex space-x-2">
                                 <input
                                     type="text"
-                                    placeholder="Search students by name or NISN..."
+                                    placeholder="Cari siswa berdasarkan nama atau NISN..."
                                     className="flex-grow px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -464,7 +486,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                                     }
                                     className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
                                 >
-                                    {isSearching ? "Searching..." : "Search"}
+                                    {isSearching ? "Mencari..." : "Cari"}
                                 </button>
                             </div>
                         </div>
@@ -473,7 +495,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                             {selectedStudents.length > 0 && (
                                 <div className="mb-4">
                                     <h4 className="text-sm font-medium text-gray-700 mb-2">
-                                        Selected Students (
+                                        Siswa Terpilih (
                                         {selectedStudents.length})
                                     </h4>
                                     <div className="flex flex-wrap gap-2">
@@ -504,7 +526,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                             {searchResults.length > 0 ? (
                                 <div>
                                     <h4 className="text-sm font-medium text-gray-700 mb-2">
-                                        Search Results
+                                        Hasil Pencarian
                                     </h4>
                                     <div className="overflow-y-auto max-h-[300px]">
                                         <table className="min-w-full divide-y divide-gray-200">
@@ -537,7 +559,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                                                         />
                                                     </th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                        Student Name
+                                                        Nama Siswa
                                                     </th>
                                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                         NISN
@@ -594,21 +616,21 @@ const ClassroomShow = ({ classroom, flash }) => {
                                 searchTerm.trim().length >= 2 &&
                                 !isSearching && (
                                     <div className="text-center text-gray-500 py-8">
-                                        No students found. Try a different
-                                        search term.
+                                        Tidak ada siswa ditemukan. Coba kata
+                                        kunci lain.
                                     </div>
                                 )
                             )}
 
                             {searchTerm.trim().length < 2 && !isSearching && (
                                 <div className="text-center text-gray-500 py-8">
-                                    Search for students to add to this class.
+                                    Cari siswa untuk ditambahkan ke kelas ini.
                                 </div>
                             )}
 
                             {isSearching && (
                                 <div className="text-center text-gray-500 py-8">
-                                    Searching...
+                                    Mencari...
                                 </div>
                             )}
                         </div>
@@ -618,7 +640,7 @@ const ClassroomShow = ({ classroom, flash }) => {
                                 onClick={() => setShowAddStudentModal(false)}
                                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                             >
-                                Cancel
+                                Batal
                             </button>
                             <button
                                 onClick={handleAddStudents}
@@ -628,8 +650,8 @@ const ClassroomShow = ({ classroom, flash }) => {
                                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-blue-300"
                             >
                                 {processing
-                                    ? "Adding..."
-                                    : `Add ${selectedStudents.length} Students`}
+                                    ? "Menambahkan..."
+                                    : `Tambah ${selectedStudents.length} Siswa`}
                             </button>
                         </div>
                     </div>

@@ -50,7 +50,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                     className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                                 >
                                     <DocumentDownload size="20" />
-                                    <span>Download Submission</span>
+                                    <span>Unduh Pengumpulan</span>
                                 </a>
                             )}
 
@@ -183,7 +183,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                             <div className="ml-auto">
                                                 <div className="bg-white px-4 py-2 rounded-lg">
                                                     <p className="text-sm text-gray-500">
-                                                        Your Grade
+                                                        Nilai Anda
                                                     </p>
                                                     <p className="text-2xl font-bold text-green-600">
                                                         {submission.grade}
@@ -220,13 +220,13 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                 className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center gap-1 text-sm"
                                             >
                                                 <DocumentDownload size="16" />
-                                                <span>Download</span>
+                                                <span>Unduh</span>
                                             </a>
                                         </div>
                                     </div>
                                 )}
 
-                                {/* Submission Text */}
+                                {/* Teks Pengumpulan */}
                                 {submission.submission_text && (
                                     <div className="bg-white rounded-lg border p-5">
                                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -234,7 +234,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                 size="20"
                                                 className="text-blue-600"
                                             />
-                                            <span>Submission Text</span>
+                                            <span>Teks Pengumpulan</span>
                                         </h3>
 
                                         <div className="bg-gray-50 p-4 rounded-lg text-gray-700">
@@ -252,7 +252,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                     </div>
                                 )}
 
-                                {/* Teacher's Feedback */}
+                                {/* Umpan Balik Guru */}
                                 {submission.grade !== null && (
                                     <div className="bg-green-50 p-5 rounded-lg border border-green-200">
                                         <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
@@ -260,7 +260,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                 size="20"
                                                 className="text-green-600"
                                             />
-                                            <span>Teacher's Feedback</span>
+                                            <span>Umpan Balik Guru</span>
                                         </h3>
 
                                         {submission.message_eval ? (
@@ -278,8 +278,8 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                             </div>
                                         ) : (
                                             <p className="text-green-700 italic">
-                                                No specific feedback was
-                                                provided.
+                                                Tidak ada catatan khusus dari
+                                                guru.
                                             </p>
                                         )}
                                     </div>
@@ -288,20 +288,20 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
 
                             {/* Right Column */}
                             <div className="space-y-6">
-                                {/* Submission Info Card */}
+                                {/* Kartu Informasi Pengumpulan */}
                                 <div className="bg-white rounded-xl shadow-sm border p-5">
                                     <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                         <ClipboardTick
                                             size="20"
                                             className="text-blue-600"
                                         />
-                                        <span>Submission Info</span>
+                                        <span>Informasi Pengumpulan</span>
                                     </h3>
 
                                     <div className="space-y-4">
                                         <div>
                                             <p className="text-sm text-gray-500 mb-1">
-                                                Submitted On
+                                                Dikumpulkan pada
                                             </p>
                                             <p className="font-medium text-gray-800">
                                                 {submission.submitted_at}
@@ -322,17 +322,17 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                 }`}
                                             >
                                                 {submission.grade !== null
-                                                    ? "Graded"
+                                                    ? "Sudah Dinilai"
                                                     : submission.is_late
-                                                    ? "Submitted Late"
-                                                    : "Submitted On Time"}
+                                                    ? "Terlambat Mengumpulkan"
+                                                    : "Tepat Waktu"}
                                             </p>
                                         </div>
 
                                         {submission.grade !== null && (
                                             <div>
                                                 <p className="text-sm text-gray-500 mb-1">
-                                                    Grade
+                                                    Nilai
                                                 </p>
                                                 <p className="font-bold text-2xl text-green-600">
                                                     {submission.grade}
@@ -349,7 +349,7 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                     )}
                                                     className="block w-full px-4 py-2 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                                 >
-                                                    Resubmit Assignment
+                                                    Kirim Ulang Tugas
                                                 </Link>
                                             )}
 
@@ -360,26 +360,26 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                 )}
                                                 className="block w-full px-4 py-2 text-center bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors mt-2"
                                             >
-                                                View Assignment Details
+                                                Lihat Detail Tugas
                                             </Link>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Subject Card */}
+                                {/* Kartu Mata Pelajaran */}
                                 <div className="bg-blue-50 rounded-xl shadow-sm p-5 border border-blue-100">
                                     <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
                                         <Book1
                                             size="20"
                                             className="text-blue-600"
                                         />
-                                        <span>Subject Information</span>
+                                        <span>Informasi Mata Pelajaran</span>
                                     </h3>
 
                                     <div className="space-y-3">
                                         <div>
                                             <p className="text-sm text-blue-800 font-medium">
-                                                Subject
+                                                Mata Pelajaran
                                             </p>
                                             <p className="text-blue-700">
                                                 {
@@ -402,12 +402,12 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                             )}
                                             className="block w-full px-4 py-2 text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                         >
-                                            Go to Subject Page
+                                            Buka Halaman Mata Pelajaran
                                         </Link>
                                     </div>
                                 </div>
 
-                                {/* Info Card */}
+                                {/* Kartu Informasi Tambahan */}
                                 {!submission.grade && (
                                     <div className="bg-amber-50 rounded-xl shadow-sm p-5 border border-amber-100">
                                         <h3 className="text-lg font-semibold text-amber-800 mb-3 flex items-center gap-2">
@@ -415,21 +415,20 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                                                 size="20"
                                                 className="text-amber-600"
                                             />
-                                            <span>Submission Status</span>
+                                            <span>Status Pengumpulan</span>
                                         </h3>
 
                                         <p className="text-sm text-amber-700 mb-3">
-                                            Your submission has been received
-                                            and is waiting to be graded by your
-                                            teacher. You will receive a
-                                            notification once it has been
-                                            graded.
+                                            Pengumpulan Anda sudah diterima dan
+                                            menunggu untuk dinilai oleh guru.
+                                            Anda akan menerima notifikasi
+                                            setelah nilai diberikan.
                                         </p>
 
                                         {can_resubmit && (
                                             <p className="text-sm text-amber-700">
-                                                You can still resubmit this
-                                                assignment until the deadline.
+                                                Anda masih dapat mengirim ulang
+                                                tugas ini sampai batas waktu.
                                             </p>
                                         )}
                                     </div>
@@ -448,14 +447,14 @@ const StudentSubmissionShow = ({ submission, can_resubmit }) => {
                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
                         >
                             <ArrowLeft2 size="18" />
-                            <span>Back to Assignment</span>
+                            <span>Kembali ke Tugas</span>
                         </Link>
 
                         <Link
                             href={route("student.assignments.index")}
                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                         >
-                            View All Assignments
+                            Lihat Semua Tugas
                         </Link>
                     </div>
                 </div>

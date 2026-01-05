@@ -53,10 +53,11 @@ class ClassroomController extends Controller
 
         // Format data for frontend
         $formattedClasses = $classes->map(function ($class) {
-            // Get active semester data if any
-            $activeSemester = $class->semesters()
-                ->orderBy('start_date', 'desc')
-                ->first();
+            // Use globally active semester (or latest) for enrollment context
+            $activeSemester = Semester::where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->orderByDesc('start_date')
+                ->first() ?? Semester::orderBy('start_date', 'desc')->first();
 
             return [
                 'id' => $class->id,
@@ -89,6 +90,46 @@ class ClassroomController extends Controller
                 'sort_order' => $sortOrder,
             ],
         ]);
+    }
+
+    /**
+     * Export classes as CSV (bisa dibuka di Excel).
+     */
+    public function export(Request $request)
+    {
+        $classes = Classroom::withCount(['students', 'subjects'])->get();
+
+        $filename = 'data_kelas_' . now()->format('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($classes) {
+            $output = fopen('php://output', 'w');
+
+            // Tambah BOM supaya Excel membaca UTF-8 dengan benar
+            fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            $delimiter = ';';
+
+            // Header kolom
+            fputcsv($output, ['Nama Kelas', 'Deskripsi', 'Jumlah Siswa', 'Jumlah Mapel'], $delimiter);
+
+            foreach ($classes as $class) {
+                fputcsv($output, [
+                    $class->name,
+                    $class->description,
+                    $class->students_count,
+                    $class->subjects_count,
+                ], $delimiter);
+            }
+
+            fclose($output);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
     }
 
     /**
@@ -154,10 +195,11 @@ class ClassroomController extends Controller
                 $query->select('students.id', 'students.name', 'students.nisn');
             }]);
 
-            // Get active semester data
-            $activeSemester = $classroom->semesters()
-                ->orderBy('start_date', 'desc')
-                ->first();
+            // Use globally active semester (or latest) for enrollment context
+            $activeSemester = Semester::where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
+                ->orderByDesc('start_date')
+                ->first() ?? Semester::orderBy('start_date', 'desc')->first();
 
             // Format data for frontend
             $formattedClassroom = [
@@ -194,9 +236,16 @@ class ClassroomController extends Controller
                 'updated_at' => $classroom->updated_at->format('d-m-Y H:i'),
             ];
 
-            return Inertia::render('Admin/Classroom/Show', [
-                'classroom' => $formattedClassroom,
-            ]);
+        return Inertia::render('Admin/Classroom/Show', [
+            'classroom' => $formattedClassroom,
+            'semesters' => Semester::orderBy('start_date', 'desc')->get()->map(function ($semester) {
+                return [
+                    'id' => $semester->id,
+                    'name' => $semester->name,
+                    'is_active' => $semester->isActive(),
+                ];
+            }),
+        ]);
         } catch (\Exception $e) {
             Log::error('Error in classroom show method: ' . $e->getMessage());
             return redirect()->route('admin.classrooms.index')
@@ -378,12 +427,12 @@ class ClassroomController extends Controller
             $studentIds = $request->student_ids;
             $semester = Semester::find($semesterId);
 
-            // For each student, create a record in semesters_students
-            foreach ($studentIds as $studentId) {
-                // Check if the student is already enrolled in this class for this semester
-                $exists = DB::table('semesters_students')
-                    ->where('students_id', $studentId)
-                    ->where('class_id', $classroom->id)
+              // For each student, create a record in semesters_students
+              foreach ($studentIds as $studentId) {
+                  // Check if the student is already enrolled in this class for this semester
+                  $exists = DB::table('semesters_students')
+                      ->where('students_id', $studentId)
+                      ->where('class_id', $classroom->id)
                     ->where('semesters_id', $semesterId)
                     ->exists();
 

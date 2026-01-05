@@ -34,13 +34,14 @@ const EnrollmentIndex = ({
     const [selectAll, setSelectAll] = useState(false);
     const [showEnrollModal, setShowEnrollModal] = useState(false);
     const [showPromoteModal, setShowPromoteModal] = useState(false);
+    const currentSemester = active_semester || semesters[0] || null;
     const [enrollmentData, setEnrollmentData] = useState({
-        semester_id: active_semester?.id || "",
-        class_id: "",
+        semester_id: currentSemester?.id || "",
+        class_id: selected_class || classes[0]?.id || "",
         student_ids: [],
     });
     const [promotionData, setPromotionData] = useState({
-        from_semester_id: active_semester?.id || "",
+        from_semester_id: currentSemester?.id || "",
         to_semester_id: "",
         class_mapping: [],
         student_ids: [],
@@ -86,6 +87,20 @@ const EnrollmentIndex = ({
         }));
     }, [selectedStudents]);
 
+    // Sync semester/class defaults when props change
+    useEffect(() => {
+        setEnrollmentData((prev) => ({
+            ...prev,
+            semester_id: currentSemester?.id || "",
+            class_id: prev.class_id || selected_class || classes[0]?.id || "",
+        }));
+        setPromotionData((prev) => ({
+            ...prev,
+            from_semester_id: currentSemester?.id || "",
+        }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentSemester?.id, selected_class, classes]);
+
     console.log(selectedStudents);
 
     // Handle search form submit
@@ -96,7 +111,7 @@ const EnrollmentIndex = ({
             route("admin.enrollments.index"),
             {
                 search: searchTerm,
-                semester_id: active_semester?.id,
+                semester_id: currentSemester?.id,
                 class_id: selected_class,
                 page: 1, // Reset to page 1 when searching
             },
@@ -133,7 +148,7 @@ const EnrollmentIndex = ({
         router.get(
             route("admin.enrollments.index"),
             {
-                semester_id: active_semester?.id,
+                semester_id: currentSemester?.id,
                 class_id: classId,
                 search: searchTerm,
             },
@@ -160,7 +175,7 @@ const EnrollmentIndex = ({
             {
                 page: page,
                 search: searchTerm,
-                semester_id: active_semester?.id,
+                semester_id: currentSemester?.id,
                 class_id: selected_class,
             },
             {
@@ -214,7 +229,7 @@ const EnrollmentIndex = ({
     const handleUnenroll = () => {
         if (
             confirm(
-                `Are you sure you want to unenroll ${selectedStudents.length} students from ${active_semester?.name}?`
+                `Apakah Anda yakin ingin mengeluarkan ${selectedStudents.length} siswa dari ${currentSemester?.name || "semester ini"}?`
             )
         ) {
             setProcessing(true);
@@ -222,7 +237,7 @@ const EnrollmentIndex = ({
             router.post(
                 route("admin.enrollments.unenroll"),
                 {
-                    semester_id: active_semester?.id,
+                    semester_id: currentSemester?.id,
                     student_ids: selectedStudents,
                     class_id: selected_class,
                 },
@@ -309,7 +324,7 @@ const EnrollmentIndex = ({
     };
 
     return (
-        <AuthenticatedLayout title="Student Enrollment Management">
+        <AuthenticatedLayout title="Manajemen Pendaftaran Siswa">
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -334,13 +349,12 @@ const EnrollmentIndex = ({
                 <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                                Enrollment Management
-                            </h2>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Manage student enrollment across semesters and
-                                classes
-                            </p>
+                              <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                                  Manajemen Pendaftaran Siswa
+                              </h2>
+                              <p className="text-sm text-gray-600 mb-4">
+                                  Kelola pendaftaran siswa ke semester dan kelas
+                              </p>
                         </div>
 
                         <div className="flex flex-col sm:flex-row gap-3">
@@ -355,7 +369,7 @@ const EnrollmentIndex = ({
                                 <select
                                     id="semester_id"
                                     name="semester_id"
-                                    value={active_semester?.id || ""}
+                                    value={currentSemester?.id || ""}
                                     onChange={handleSemesterChange}
                                     className="w-full border-gray-300 focus:border-amber-500 focus:ring-amber-500 rounded-md shadow-sm"
                                 >
@@ -380,7 +394,7 @@ const EnrollmentIndex = ({
                                     htmlFor="class_id"
                                     className="block text-sm font-medium text-gray-700 mb-1"
                                 >
-                                    Class Filter
+                                    Filter Kelas
                                 </label>
                                 <select
                                     id="class_id"
@@ -389,7 +403,7 @@ const EnrollmentIndex = ({
                                     onChange={handleClassChange}
                                     className="w-full border-gray-300 focus:border-amber-500 focus:ring-amber-500 rounded-md shadow-sm"
                                 >
-                                    <option value="">All Classes</option>
+                                      <option value="">Semua Kelas</option>
                                     {classes.map((classItem) => (
                                         <option
                                             key={classItem.id}
@@ -404,13 +418,13 @@ const EnrollmentIndex = ({
                     </div>
 
                     {/* Class Statistics */}
-                    {active_semester &&
+                    {currentSemester &&
                         class_stats &&
                         class_stats.length > 0 && (
                             <div className="mt-6 pt-4 border-t">
-                                <h3 className="text-sm font-medium text-gray-700 mb-3">
-                                    Class Statistics for {active_semester.name}
-                                </h3>
+                                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                                      Statistik Kelas untuk {currentSemester.name}
+                                  </h3>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                                     {class_stats.map((stat) => (
                                         <div
@@ -452,40 +466,43 @@ const EnrollmentIndex = ({
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search by Name, NISN, or Email"
+                                    placeholder="Cari berdasarkan Nama, NISN, atau Email"
                                     className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent w-full placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
                                         setSearchTerm(e.target.value)
                                     }
                                 />
-                                <button type="submit" className="hidden">
-                                    Search
-                                </button>
+                                  <button type="submit" className="hidden">
+                                      Cari
+                                  </button>
                             </form>
                         </div>
 
                         <div className="flex flex-wrap gap-2">
+                            {/* Always visible enroll button */}
+                            <button
+                                onClick={() => setShowEnrollModal(true)}
+                                disabled={processing || !currentSemester}
+                                className="px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-sm"
+                            >
+                                <TickCircle size="16" />
+                                <span>
+                                    Daftarkan{" "}
+                                    {selectedStudents.length
+                                        ? `(${selectedStudents.length})`
+                                        : ""}
+                                </span>
+                            </button>
+
                             {selectedStudents.length > 0 && (
                                 <>
-                                    {/* Enroll Button */}
-                                    <button
-                                        onClick={() => setShowEnrollModal(true)}
-                                        disabled={
-                                            processing || !active_semester
-                                        }
-                                        className="px-3 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-sm"
-                                    >
-                                        <TickCircle size="16" />
-                                        <span>Enroll Selected</span>
-                                    </button>
-
                                     {/* Unenroll Button */}
                                     <button
                                         onClick={handleUnenroll}
                                         disabled={
                                             processing ||
-                                            !active_semester ||
+                                            !currentSemester ||
                                             selectedStudents.every(
                                                 (id) =>
                                                     !students.data.find(
@@ -497,7 +514,7 @@ const EnrollmentIndex = ({
                                         className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-sm"
                                     >
                                         <CloseCircle size="16" />
-                                        <span>Unenroll Selected</span>
+                                        <span>Batalkan Pendaftaran</span>
                                     </button>
 
                                     {/* Promote Button */}
@@ -507,7 +524,7 @@ const EnrollmentIndex = ({
                                         }
                                         disabled={
                                             processing ||
-                                            !active_semester ||
+                                            !currentSemester ||
                                             selectedStudents.every(
                                                 (id) =>
                                                     !students.data.find(
@@ -519,7 +536,7 @@ const EnrollmentIndex = ({
                                         className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 text-sm"
                                     >
                                         <ArrowRight size="16" />
-                                        <span>Promote Selected</span>
+                                        <span>Naikkan</span>
                                     </button>
                                 </>
                             )}
@@ -542,7 +559,7 @@ const EnrollmentIndex = ({
                                         </div>
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Student Name
+                                        Nama Siswa
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         NISN
@@ -551,13 +568,13 @@ const EnrollmentIndex = ({
                                         Email
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Gender
+                                          Jenis Kelamin
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Status
                                     </th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
+                                          Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -645,7 +662,7 @@ const EnrollmentIndex = ({
                                             colSpan="7"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No students found
+                                            Tidak ada siswa ditemukan
                                         </td>
                                     </tr>
                                 )}
@@ -668,7 +685,7 @@ const EnrollmentIndex = ({
                                     className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                     disabled={currentPage === 1}
                                 >
-                                    Previous
+                                    Sebelumnya
                                 </button>
                                 <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                     <div>
@@ -704,7 +721,7 @@ const EnrollmentIndex = ({
                                         currentPage === pagination.last_page
                                     }
                                 >
-                                    Next
+                                    Berikutnya
                                 </button>
                             </div>
                         </div>
@@ -718,7 +735,7 @@ const EnrollmentIndex = ({
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">
                         <div className="flex justify-between items-center px-6 py-4 border-b">
                             <h3 className="font-semibold text-lg text-gray-900">
-                                Enroll Students
+                                Daftarkan Siswa
                             </h3>
                             <button
                                 onClick={() => setShowEnrollModal(false)}
@@ -763,7 +780,7 @@ const EnrollmentIndex = ({
                                         required
                                     >
                                         <option value="">
-                                            Select Semester
+                                              Pilih Semester
                                         </option>
                                         {semesters.map((semester) => (
                                             <option
@@ -854,9 +871,9 @@ const EnrollmentIndex = ({
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">
                         <div className="flex justify-between items-center px-6 py-4 border-b">
-                            <h3 className="font-semibold text-lg text-gray-900">
-                                Promote Students to Next Semester
-                            </h3>
+                                      <h3 className="font-semibold text-lg text-gray-900">
+                                        Naikkan Siswa ke Semester Berikutnya
+                                      </h3>
                             <button
                                 onClick={() => setShowPromoteModal(false)}
                                 className="text-gray-400 hover:text-gray-600"
@@ -868,13 +885,13 @@ const EnrollmentIndex = ({
                         <form onSubmit={handlePromote}>
                             <div className="p-6">
                                 <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Selected Students
-                                    </label>
+                                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Siswa Terpilih
+                                      </label>
                                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                                         <div className="text-sm text-gray-600">
-                                            {selectedStudents.length} students
-                                            selected
+                                              {selectedStudents.length} siswa
+                                              dipilih
                                         </div>
                                     </div>
                                 </div>
@@ -900,9 +917,9 @@ const EnrollmentIndex = ({
                                         className="w-full border-gray-300 focus:border-amber-500 focus:ring-amber-500 rounded-md shadow-sm"
                                         required
                                     >
-                                        <option value="">
-                                            Select Semester
-                                        </option>
+                                          <option value="">
+                                              Pilih Semester
+                                          </option>
                                         {semesters.map((semester) => (
                                             <option
                                                 key={semester.id}

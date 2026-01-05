@@ -34,7 +34,11 @@ const TeacherAssignmentIndex = ({
 
     // Fungsi untuk menghapus tugas
     const handleDelete = (assignmentId) => {
-        if (confirm("Are you sure you want to delete this assignment?")) {
+        if (
+            confirm(
+                "Apakah Anda yakin ingin menghapus tugas ini?"
+            )
+        ) {
             setProcessing(true);
 
             router.delete(route("teacher.assignments.destroy", assignmentId), {
@@ -44,7 +48,7 @@ const TeacherAssignmentIndex = ({
                 },
                 onError: () => {
                     setProcessing(false);
-                    alert("An error occurred while deleting the assignment.");
+                    alert("Terjadi kesalahan saat menghapus tugas.");
                 },
             });
         }
@@ -150,7 +154,7 @@ const TeacherAssignmentIndex = ({
     }, [pagination]);
 
     return (
-        <TeacherLayout title={`Assignments - ${subject.name}`}>
+        <TeacherLayout title={`Tugas - ${subject.name}`}>
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -179,9 +183,9 @@ const TeacherAssignmentIndex = ({
                                 />
                             </Link>
                             <div>
-                                <h1 className="font-bold text-xl text-gray-800">
-                                    Assignments
-                                </h1>
+                            <h1 className="font-bold text-xl text-gray-800">
+                                Tugas
+                            </h1>
                                 <p className="text-sm text-gray-600">
                                     {subject.name} - {subject.class_name}
                                 </p>
@@ -196,7 +200,7 @@ const TeacherAssignmentIndex = ({
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search assignments"
+                                    placeholder="Cari tugas"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -204,7 +208,7 @@ const TeacherAssignmentIndex = ({
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
 
@@ -338,7 +342,7 @@ const TeacherAssignmentIndex = ({
                                                         assignment.id
                                                     )}
                                                     className="text-blue-600 hover:text-blue-900 inline-block"
-                                                    title="View Assignment"
+                                                    title="Lihat Tugas"
                                                 >
                                                     <Eye size="20" />
                                                 </Link>
@@ -348,7 +352,7 @@ const TeacherAssignmentIndex = ({
                                                         assignment.id
                                                     )}
                                                     className="text-amber-600 hover:text-amber-900 inline-block"
-                                                    title="Edit Assignment"
+                                                    title="Edit Tugas"
                                                 >
                                                     <Edit2 size="20" />
                                                 </Link>
@@ -358,7 +362,7 @@ const TeacherAssignmentIndex = ({
                                                         assignment.id
                                                     )}
                                                     className="text-purple-600 hover:text-purple-900 inline-block"
-                                                    title="View Submissions"
+                                                    title="Lihat Pengumpulan"
                                                 >
                                                     <MessageEdit size="20" />
                                                 </Link>
@@ -372,7 +376,7 @@ const TeacherAssignmentIndex = ({
                                                         }
                                                         className="text-red-600 hover:text-red-900 inline-block"
                                                         disabled={processing}
-                                                        title="Delete Assignment"
+                                                        title="Hapus Tugas"
                                                     >
                                                         <Trash size="20" />
                                                     </button>
@@ -386,9 +390,9 @@ const TeacherAssignmentIndex = ({
                                             colSpan="5"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No assignments found for this
-                                            subject. Click the + button to add a
-                                            new assignment.
+                                            Belum ada tugas untuk mata
+                                            pelajaran ini. Klik tombol + untuk
+                                            menambahkan tugas baru.
                                         </td>
                                     </tr>
                                 )}
@@ -404,7 +408,7 @@ const TeacherAssignmentIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -436,7 +440,7 @@ const TeacherAssignmentIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Berikutnya
                             </button>
                         </div>
                     )}

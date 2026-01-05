@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
 import StudentLayout from "@/Layouts/StudentLayout";
 import {
@@ -13,11 +13,17 @@ import {
     ClipboardTick,
     Timer1,
     TickCircle,
+    Message,
+    ArrowDown2,
+    ArrowUp2,
 } from "iconsax-reactjs";
 
 const StudentSubjectShow = ({ subject }) => {
+    const [showInfo, setShowInfo] = useState(false);
+    const [showGrades, setShowGrades] = useState(false);
+    const [showActivities, setShowActivities] = useState(false);
     return (
-        <StudentLayout title={`Subject: ${subject.name}`}>
+        <StudentLayout title={`Mata Pelajaran: ${subject.name}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -33,7 +39,7 @@ const StudentSubjectShow = ({ subject }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Subject Details
+                                Detail Mata Pelajaran
                             </h1>
                         </div>
 
@@ -57,96 +63,140 @@ const StudentSubjectShow = ({ subject }) => {
                                 <ClipboardText size="20" />
                                 <span>Assignments</span>
                             </Link>
+                            <Link
+                                href={route("student.quizzes.index", {
+                                    subject_id: subject.id,
+                                })}
+                                className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                            >
+                                <Timer1 size="20" />
+                                <span>Quiz</span>
+                            </Link>
+                            <Link
+                                href={route(
+                                    "student.discussions.index",
+                                    subject.id
+                                )}
+                                className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors"
+                            >
+                                <Message size="20" />
+                                <span>Diskusi</span>
+                            </Link>
                         </div>
                     </div>
 
                     {/* Content */}
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Subject Info Section */}
+                            {/* Bagian Informasi Mata Pelajaran */}
                             <div className="md:col-span-2">
-                                <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b">
-                                    Subject Information
-                                </h2>
-                            </div>
-
-                            {/* Info boxes */}
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Subject Name
-                                </h3>
-                                <div className="flex items-center gap-2">
-                                    <Book1
-                                        size="20"
-                                        className="text-blue-600"
-                                    />
-                                    <p className="text-lg font-medium text-gray-900">
-                                        {subject.name}
-                                    </p>
+                                <div className="flex items-center justify-between pb-2 border-b mb-2">
+                                    <h2 className="text-lg font-semibold text-gray-700">
+                                        Informasi Mata Pelajaran
+                                    </h2>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowInfo(!showInfo)
+                                        }
+                                        className="p-1 rounded-full hover:bg-gray-100"
+                                    >
+                                        {showInfo ? (
+                                            <ArrowUp2
+                                                size="20"
+                                                className="text-gray-600"
+                                            />
+                                        ) : (
+                                            <ArrowDown2
+                                                size="20"
+                                                className="text-gray-600"
+                                            />
+                                        )}
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Teacher
-                                </h3>
-                                <div className="flex items-center gap-2">
-                                    <Teacher
-                                        size="20"
-                                        className="text-blue-600"
-                                    />
-                                    <p className="text-lg font-medium text-gray-900">
-                                        {subject.teacher_name}
-                                    </p>
-                                </div>
-                            </div>
+                            {showInfo && (
+                                <>
+                                    {/* Kotak Info */}
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <h3 className="text-sm font-medium text-gray-500 mb-1">
+                                            Nama Mata Pelajaran
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <Book1
+                                                size="20"
+                                                className="text-blue-600"
+                                            />
+                                            <p className="text-lg font-medium text-gray-900">
+                                                {subject.name}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Class
-                                </h3>
-                                <div className="flex items-center gap-2">
-                                    <People
-                                        size="20"
-                                        className="text-blue-600"
-                                    />
-                                    <p className="text-lg font-medium text-gray-900">
-                                        {subject.class_name}
-                                    </p>
-                                </div>
-                            </div>
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <h3 className="text-sm font-medium text-gray-500 mb-1">
+                                            Guru
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <Teacher
+                                                size="20"
+                                                className="text-blue-600"
+                                            />
+                                            <p className="text-lg font-medium text-gray-900">
+                                                {subject.teacher_name}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Your Progress
-                                </h3>
-                                <div className="flex items-center gap-2">
-                                    <ClipboardTick
-                                        size="20"
-                                        className="text-green-600"
-                                    />
-                                    <p className="text-lg font-medium text-gray-900">
-                                        {subject.completed_assignments}/
-                                        {subject.assignments_count} Assignments
-                                        Completed
-                                    </p>
-                                </div>
-                            </div>
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <h3 className="text-sm font-medium text-gray-500 mb-1">
+                                            Kelas
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <People
+                                                size="20"
+                                                className="text-blue-600"
+                                            />
+                                            <p className="text-lg font-medium text-gray-900">
+                                                {subject.class_name}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                            {/* Description */}
-                            <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
-                                <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Description
-                                </h3>
-                                <p className="text-gray-900">
-                                    {subject.description ||
-                                        "No description available."}
-                                </p>
-                            </div>
+                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                        <h3 className="text-sm font-medium text-gray-500 mb-1">
+                                            Progres Anda
+                                        </h3>
+                                        <div className="flex items-center gap-2">
+                                            <ClipboardTick
+                                                size="20"
+                                                className="text-green-600"
+                                            />
+                                            <p className="text-lg font-medium text-gray-900">
+                                                {subject.completed_assignments}/
+                                                {subject.assignments_count}{" "}
+                                                Tugas Selesai
+                                            </p>
+                                        </div>
+                                    </div>
 
-                            {/* Learning Materials and Assignments */}
+                                    {/* Deskripsi */}
+                                    <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
+                                        <h3 className="text-sm font-medium text-gray-500 mb-1">
+                                            Deskripsi
+                                        </h3>
+                                        <p className="text-gray-900">
+                                            {subject.description ||
+                                                "Belum ada deskripsi untuk mata pelajaran ini."}
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Materi dan Tugas */}
                             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                                {/* Recent Materials */}
+                                {/* Materi Terbaru */}
                                 <div className="bg-white border rounded-lg shadow-sm">
                                     <div className="px-6 py-4 border-b flex items-center justify-between">
                                         <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -154,7 +204,7 @@ const StudentSubjectShow = ({ subject }) => {
                                                 size="20"
                                                 className="text-green-600"
                                             />
-                                            <span>Recent Materials</span>
+                                            <span>Materi Terbaru</span>
                                         </h2>
                                         <Link
                                             href={route(
@@ -163,7 +213,7 @@ const StudentSubjectShow = ({ subject }) => {
                                             )}
                                             className="text-sm text-blue-600 hover:text-blue-800"
                                         >
-                                            View All
+                                            Lihat Semua
                                         </Link>
                                     </div>
                                     <div className="px-6 py-4">
@@ -193,7 +243,7 @@ const StudentSubjectShow = ({ subject }) => {
                                                                 <div className="flex flex-col items-end">
                                                                     <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
                                                                         {material.file_type ||
-                                                                            "Text"}
+                                                                            "Teks"}
                                                                     </span>
                                                                     <span className="text-xs text-gray-500 mt-1">
                                                                         {
@@ -210,8 +260,7 @@ const StudentSubjectShow = ({ subject }) => {
                                                                     )}
                                                                     className="text-sm text-blue-600 hover:text-blue-800"
                                                                 >
-                                                                    View
-                                                                    Material
+                                                                    Lihat Materi
                                                                 </Link>
                                                             </div>
                                                         </div>
@@ -221,14 +270,15 @@ const StudentSubjectShow = ({ subject }) => {
                                         ) : (
                                             <div className="text-center py-4 text-gray-500">
                                                 <p>
-                                                    No materials available yet.
+                                                    Belum ada materi untuk mata
+                                                    pelajaran ini.
                                                 </p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Upcoming Assignments */}
+                                {/* Tugas Mendatang */}
                                 <div className="bg-white border rounded-lg shadow-sm">
                                     <div className="px-6 py-4 border-b flex items-center justify-between">
                                         <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -236,7 +286,7 @@ const StudentSubjectShow = ({ subject }) => {
                                                 size="20"
                                                 className="text-red-600"
                                             />
-                                            <span>Upcoming Assignments</span>
+                                            <span>Tugas Mendatang</span>
                                         </h2>
                                         <Link
                                             href={route(
@@ -245,7 +295,7 @@ const StudentSubjectShow = ({ subject }) => {
                                             )}
                                             className="text-sm text-blue-600 hover:text-blue-800"
                                         >
-                                            View All
+                                            Lihat Semua
                                         </Link>
                                     </div>
                                     <div className="px-6 py-4">
@@ -278,11 +328,11 @@ const StudentSubjectShow = ({ subject }) => {
                                                                         {
                                                                             assignment.days_remaining
                                                                         }{" "}
-                                                                        days
-                                                                        left
+                                                                        hari
+                                                                        lagi
                                                                     </span>
                                                                     <span className="text-xs text-gray-500 mt-1">
-                                                                        Due:{" "}
+                                                                        Tenggat:{" "}
                                                                         {
                                                                             assignment.deadline
                                                                         }
@@ -298,7 +348,7 @@ const StudentSubjectShow = ({ subject }) => {
                                                                                 className="text-green-600"
                                                                             />
                                                                             <span className="text-green-600">
-                                                                                Submitted
+                                                                                Sudah mengumpulkan
                                                                             </span>
                                                                         </>
                                                                     ) : (
@@ -308,8 +358,7 @@ const StudentSubjectShow = ({ subject }) => {
                                                                                 className="text-red-600"
                                                                             />
                                                                             <span className="text-red-600">
-                                                                                Not
-                                                                                submitted
+                                                                                Belum mengumpulkan
                                                                             </span>
                                                                         </>
                                                                     )}
@@ -322,8 +371,8 @@ const StudentSubjectShow = ({ subject }) => {
                                                                         )}
                                                                         className="text-sm text-blue-600 hover:text-blue-800"
                                                                     >
-                                                                        Submit
-                                                                        Now
+                                                                        Kumpulkan
+                                                                        Sekarang
                                                                     </Link>
                                                                 )}
                                                             </div>
@@ -333,106 +382,208 @@ const StudentSubjectShow = ({ subject }) => {
                                             </div>
                                         ) : (
                                             <div className="text-center py-4 text-gray-500">
-                                                <p>No upcoming assignments.</p>
+                                                <p>Belum ada tugas mendatang.</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Completed Assignments */}
+                            {/* Completed Assignments / My Grades */}
                             <div className="md:col-span-2 mt-4">
-                                <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b mb-4">
-                                    My Grades
-                                </h2>
+                                <div className="flex items-center justify-between pb-2 border-b mb-4">
+                                    <h2 className="text-lg font-semibold text-gray-700">
+                                        My Grades
+                                    </h2>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowGrades(!showGrades)
+                                        }
+                                        className="p-1 rounded-full hover:bg-gray-100"
+                                    >
+                                        {showGrades ? (
+                                            <ArrowUp2
+                                                size="20"
+                                                className="text-gray-600"
+                                            />
+                                        ) : (
+                                            <ArrowDown2
+                                                size="20"
+                                                className="text-gray-600"
+                                            />
+                                        )}
+                                    </button>
+                                </div>
 
-                                {subject.completed_assignments_list &&
-                                subject.completed_assignments_list.length >
-                                    0 ? (
-                                    <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
-                                        <div className="overflow-x-auto">
-                                            <table className="min-w-full divide-y divide-gray-200">
-                                                <thead className="bg-gray-50">
-                                                    <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Assignment
-                                                        </th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Submitted Date
-                                                        </th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Grade
-                                                        </th>
-                                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                            Action
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="bg-white divide-y divide-gray-200">
-                                                    {subject.completed_assignments_list.map(
-                                                        (submission) => (
-                                                            <tr
-                                                                key={
-                                                                    submission.id
-                                                                }
-                                                            >
-                                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                                    <div className="text-sm font-medium text-gray-900">
-                                                                        {
-                                                                            submission.title
-                                                                        }
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                                    <div className="text-sm text-gray-500">
-                                                                        {
-                                                                            submission.submitted_at
-                                                                        }
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                                    {submission.grade !==
-                                                                    null ? (
-                                                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                {showGrades &&
+                                    subject.completed_assignments_list &&
+                                    subject.completed_assignments_list.length >
+                                        0 && (
+                                        <div className="bg-white border rounded-lg shadow-sm overflow-hidden">
+                                            <div className="overflow-x-auto">
+                                                <table className="min-w-full divide-y divide-gray-200">
+                                                    <thead className="bg-gray-50">
+                                                        <tr>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Assignment
+                                                            </th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Submitted Date
+                                                            </th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Grade
+                                                            </th>
+                                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Action
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="bg-white divide-y divide-gray-200">
+                                                        {subject.completed_assignments_list.map(
+                                                            (submission) => (
+                                                                <tr
+                                                                    key={
+                                                                        submission.id
+                                                                    }
+                                                                >
+                                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                                        <div className="text-sm font-medium text-gray-900">
                                                                             {
-                                                                                submission.grade
+                                                                                submission.title
                                                                             }
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                                            Not
-                                                                            graded
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                                    <Link
-                                                                        href={route(
-                                                                            "student.submissions.show",
-                                                                            submission.id
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                                        <div className="text-sm text-gray-500">
+                                                                            {
+                                                                                submission.submitted_at
+                                                                            }
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                                        {submission.grade !==
+                                                                        null ? (
+                                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                                                {
+                                                                                    submission.grade
+                                                                                }
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                                                Belum
+                                                                                dinilai
+                                                                            </span>
                                                                         )}
-                                                                        className="text-blue-600 hover:text-blue-900"
-                                                                    >
-                                                                        View
-                                                                    </Link>
-                                                                </td>
-                                                            </tr>
-                                                        )
-                                                    )}
-                                                </tbody>
-                                            </table>
+                                                                    </td>
+                                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                                        <Link
+                                                                            href={route(
+                                                                                "student.submissions.show",
+                                                                                submission.id
+                                                                            )}
+                                                                            className="text-blue-600 hover:text-blue-900"
+                                                                        >
+                                                                            Lihat
+                                                                        </Link>
+                                                                    </td>
+                                                                </tr>
+                                                            )
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="bg-gray-50 p-8 rounded-lg text-center">
-                                        <MessageEdit
-                                            size="48"
-                                            className="mx-auto text-gray-300 mb-3"
-                                        />
-                                        <p className="text-gray-500">
-                                            You haven't completed any
-                                            assignments for this subject yet.
-                                        </p>
+                                    )}
+
+                                {showGrades &&
+                                    (!subject.completed_assignments_list ||
+                                        subject
+                                            .completed_assignments_list
+                                            .length === 0) && (
+                                        <div className="bg-gray-50 p-8 rounded-lg text-center">
+                                            <MessageEdit
+                                                size="48"
+                                                className="mx-auto text-gray-300 mb-3"
+                                            />
+                                            <p className="text-gray-500">
+                                                Anda belum menyelesaikan tugas
+                                                apa pun untuk mata pelajaran
+                                                ini.
+                                            </p>
+                                        </div>
+                                    )}
+                            </div>
+
+                            {/* Semua Aktivitas Mata Pelajaran */}
+                            <div className="md:col-span-2 mt-6">
+                                <div className="flex items-center justify-between pb-2 border-b mb-3">
+                                    <h2 className="text-lg font-semibold text-gray-700">
+                                        Semua Aktivitas Mata Pelajaran
+                                    </h2>
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowActivities(!showActivities)
+                                        }
+                                        className="p-1 rounded-full hover:bg-gray-100"
+                                    >
+                                        {showActivities ? (
+                                            <ArrowUp2
+                                                size="20"
+                                                className="text-gray-600"
+                                            />
+                                        ) : (
+                                            <ArrowDown2
+                                                size="20"
+                                                className="text-gray-600"
+                                            />
+                                        )}
+                                    </button>
+                                </div>
+                                {showActivities && (
+                                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+                                        <div className="divide-y divide-gray-100">
+                                            {(subject.recent_activities || [])
+                                                .length > 0 ? (
+                                                subject.recent_activities.map(
+                                                    (activity, index) => (
+                                                        <Link
+                                                            key={index}
+                                                            href={
+                                                                activity.url ||
+                                                                "#"
+                                                            }
+                                                            className="px-4 md:px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                                        >
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-800">
+                                                                    {
+                                                                        activity.title
+                                                                    }
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 mt-0.5">
+                                                                    {
+                                                                        activity.type
+                                                                    }{" "}
+                                                                    •{" "}
+                                                                    {
+                                                                        activity.date
+                                                                    }
+                                                                </p>
+                                                            </div>
+                                                        </Link>
+                                                    )
+                                                )
+                                            ) : (
+                                                <div className="px-4 md:px-6 py-4 text-sm text-gray-500">
+                                                    Belum ada aktivitas untuk
+                                                    mata pelajaran ini (materi,
+                                                    tugas, kuis, presensi, atau
+                                                    diskusi).
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -443,7 +594,7 @@ const StudentSubjectShow = ({ subject }) => {
                                     href={route("student.subjects.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Back to Subjects
+                                    Kembali ke Daftar Mapel
                                 </Link>
                             </div>
                         </div>

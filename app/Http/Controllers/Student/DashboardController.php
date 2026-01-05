@@ -9,6 +9,7 @@ use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\Material;
 use App\Models\Notification;
+use App\Models\Extracurricular;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -388,6 +389,50 @@ class DashboardController extends Controller
             }
 
             $debug['class_name'] = $className;
+            $debug['step'] = 'extracurricular_summary';
+
+            // Ringkasan ekstrakurikuler (jumlah & yang terdekat)
+            $extracurriculars = Extracurricular::with('teacher')
+                ->where('is_active', true)
+                ->whereHas('students', function ($q) use ($student) {
+                    $q->where('students.id', $student->id);
+                })
+                ->get();
+
+            $totalExtracurriculars = $extracurriculars->count();
+
+            $nextExtracurricular = $extracurriculars
+                ->sortBy(function ($extra) {
+                    // Urutkan kasar berdasarkan hari & jam (tanpa hitung tanggal)
+                    $dayOrder = [
+                        'monday' => 1,
+                        'tuesday' => 2,
+                        'wednesday' => 3,
+                        'thursday' => 4,
+                        'friday' => 5,
+                        'saturday' => 6,
+                        'sunday' => 7,
+                    ];
+                    $dayWeight = $dayOrder[$extra->day_of_week] ?? 99;
+                    return $dayWeight . ($extra->start_time ?? '00:00');
+                })
+                ->first();
+
+            $extracurricularSummary = [
+                'total' => $totalExtracurriculars,
+                'next' => $nextExtracurricular
+                    ? [
+                        'name' => $nextExtracurricular->name,
+                        'day_of_week' => $nextExtracurricular->day_of_week,
+                        'day_label' => $nextExtracurricular->day_of_week, // label bisa diformat di frontend
+                        'start_time' => $nextExtracurricular->start_time,
+                        'end_time' => $nextExtracurricular->end_time,
+                        'teacher_name' => optional($nextExtracurricular->teacher)->name,
+                    ]
+                    : null,
+            ];
+
+            $debug['extracurricular_total'] = $totalExtracurriculars;
             $debug['step'] = 'final_data_preparation';
 
             // Prepare final data safely
@@ -416,6 +461,7 @@ class DashboardController extends Controller
                 'recent_materials' => $recentMaterials,
                 'notifications' => $notifications,
                 'current_subjects' => $currentSubjects,
+                'extracurricular_summary' => $extracurricularSummary,
                 'debug_info' => $debug,
             ]);
         } catch (\Exception $e) {
@@ -447,6 +493,10 @@ class DashboardController extends Controller
                 'recent_materials' => [],
                 'notifications' => [],
                 'current_subjects' => [],
+                'extracurricular_summary' => [
+                    'total' => 0,
+                    'next' => null,
+                ],
                 'error' => 'Dashboard data could not be loaded. Error: ' . $e->getMessage(),
                 'error_details' => config('app.debug') ? $errorDetails : null,
             ]);

@@ -32,7 +32,11 @@ const TeacherMaterialIndex = ({
 
     // Fungsi untuk menghapus materi
     const handleDelete = (materialId) => {
-        if (confirm("Are you sure you want to delete this material?")) {
+        if (
+            confirm(
+                "Apakah Anda yakin ingin menghapus materi ini?"
+            )
+        ) {
             setProcessing(true);
 
             router.delete(route("teacher.materials.destroy", materialId), {
@@ -42,7 +46,7 @@ const TeacherMaterialIndex = ({
                 },
                 onError: () => {
                     setProcessing(false);
-                    alert("An error occurred while deleting the material.");
+                    alert("Terjadi kesalahan saat menghapus materi.");
                 },
             });
         }
@@ -155,7 +159,7 @@ const TeacherMaterialIndex = ({
     }, [pagination]);
 
     return (
-        <TeacherLayout title={`Materials - ${subject.name}`}>
+        <TeacherLayout title={`Materi - ${subject.name}`}>
             {/* Flash message */}
             {flash?.success && (
                 <div
@@ -185,7 +189,7 @@ const TeacherMaterialIndex = ({
                             </Link>
                             <div>
                                 <h1 className="font-bold text-xl text-gray-800">
-                                    Teaching Materials
+                                    Materi Ajar
                                 </h1>
                                 <p className="text-sm text-gray-600">
                                     {subject.name} - {subject.class_name}
@@ -201,7 +205,7 @@ const TeacherMaterialIndex = ({
                                 />
                                 <input
                                     type="text"
-                                    placeholder="Search materials"
+                                    placeholder="Cari materi"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
                                     onChange={(e) =>
@@ -209,7 +213,7 @@ const TeacherMaterialIndex = ({
                                     }
                                 />
                                 <button type="submit" className="hidden">
-                                    Search
+                                    Cari
                                 </button>
                             </form>
 
@@ -231,19 +235,19 @@ const TeacherMaterialIndex = ({
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Title
+                                        Judul
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Type
+                                        Tipe
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        File
+                                        Berkas
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Uploaded
+                                        Diunggah
                                     </th>
                                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
+                                        Aksi
                                     </th>
                                 </tr>
                             </thead>
@@ -282,11 +286,11 @@ const TeacherMaterialIndex = ({
                                                         className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                                                     >
                                                         <DocumentDownload size="18" />
-                                                        <span>Download</span>
+                                                        <span>Unduh</span>
                                                     </a>
                                                 ) : (
                                                     <span className="text-gray-500">
-                                                        No file
+                                                        Tidak ada berkas
                                                     </span>
                                                 )}
                                             </td>
@@ -322,7 +326,7 @@ const TeacherMaterialIndex = ({
                                                     }
                                                     className="text-red-600 hover:text-red-900 inline-block"
                                                     disabled={processing}
-                                                    title="Delete Material"
+                                                    title="Hapus Materi"
                                                 >
                                                     <Trash size="20" />
                                                 </button>
@@ -335,9 +339,9 @@ const TeacherMaterialIndex = ({
                                             colSpan="5"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            No materials found for this subject.
-                                            Click the + button to add a new
-                                            material.
+                                            Belum ada materi untuk mata
+                                            pelajaran ini. Klik tombol + untuk
+                                            menambahkan materi baru.
                                         </td>
                                     </tr>
                                 )}
@@ -353,7 +357,7 @@ const TeacherMaterialIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === 1}
                             >
-                                Previous
+                                Sebelumnya
                             </button>
                             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-center">
                                 <div>
@@ -385,7 +389,7 @@ const TeacherMaterialIndex = ({
                                 className="relative inline-flex items-center px-4 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                                 disabled={currentPage === pagination.last_page}
                             >
-                                Next
+                                Berikutnya
                             </button>
                         </div>
                     )}

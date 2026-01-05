@@ -13,10 +13,10 @@ import {
 } from "iconsax-reactjs";
 
 const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
-    // Function to copy PIN to clipboard
+    // Function to copy QR token to clipboard
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
-        alert(`PIN ${text} berhasil disalin!`);
+        alert(`QR token ${text} berhasil disalin!`);
     };
 
     return (
@@ -106,24 +106,24 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                         {/* Session Content */}
                                         <div className="p-6">
                                             <div className="grid grid-cols-1 gap-4">
-                                                {/* PIN Code */}
+                                                {/* QR Code */}
                                                 <div className="bg-amber-50 p-4 rounded-lg flex justify-between items-center">
                                                     <div>
                                                         <p className="text-sm text-amber-700 font-medium">
-                                                            PIN Absensi
+                                                            QR Absensi
                                                         </p>
-                                                        <p className="text-3xl font-bold font-mono text-amber-800 mt-1">
-                                                            {session.pin}
+                                                        <p className="text-3xl font-bold font-mono text-amber-800 mt-1 break-all">
+                                                            {session.qr_token}
                                                         </p>
                                                     </div>
                                                     <button
                                                         onClick={() =>
                                                             copyToClipboard(
-                                                                session.pin
+                                                                session.qr_token
                                                             )
                                                         }
                                                         className="p-2 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
-                                                        title="Salin PIN"
+                                                        title="Salin token"
                                                     >
                                                         <Copy
                                                             size="24"
@@ -134,29 +134,25 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
 
                                                 {/* Session Info */}
                                                 <div className="grid grid-cols-2 gap-4">
-                                                    <div className="bg-gray-50 p-4 rounded-lg">
-                                                        <div className="flex items-center">
-                                                            <Calendar
-                                                                size="18"
-                                                                className="text-gray-500 mr-2"
-                                                            />
-                                                            <div>
-                                                                <p className="text-xs text-gray-500">
-                                                                    Tanggal
-                                                                </p>
-                                                                <p className="text-sm font-medium text-gray-800">
-                                                                    {
-                                                                        session.date
-                                                                    }
-                                                                </p>
-                                                            </div>
+                                                <div className="bg-gray-50 p-4 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <Calendar size="18" className="text-gray-500" />
+                                                        <div>
+                                                            <p className="text-xs text-gray-500">Tanggal / Jenis</p>
+                                                            <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
+                                                                <span>{session.date}</span>
+                                                                <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 capitalize">
+                                                                    {session.session_type === "arrival" ? "Berangkat" : "Pulang"}
+                                                                </span>
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                    <div className="bg-gray-50 p-4 rounded-lg">
-                                                        <div className="flex items-center">
-                                                            <DocumentText
-                                                                size="18"
-                                                                className="text-gray-500 mr-2"
+                                                </div>
+                                                <div className="bg-gray-50 p-4 rounded-lg">
+                                                    <div className="flex items-center">
+                                                        <DocumentText
+                                                            size="18"
+                                                            className="text-gray-500 mr-2"
                                                             />
                                                             <div>
                                                                 <p className="text-xs text-gray-500">
@@ -168,6 +164,19 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                                                     }
                                                                 </p>
                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-gray-50 p-4 rounded-lg">
+                                                    <div className="flex items-center gap-2">
+                                                        <Timer1 size="18" className="text-gray-500" />
+                                                        <div>
+                                                            <p className="text-xs text-gray-500">Waktu</p>
+                                                            <p className="text-sm font-medium text-gray-800">
+                                                                {session.start_time
+                                                                    ? `${session.start_time} - ${session.expires_at}`
+                                                                    : session.expires_at}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>

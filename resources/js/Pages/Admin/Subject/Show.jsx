@@ -11,7 +11,7 @@ import {
 
 const SubjectShow = ({ subject }) => {
     return (
-        <AuthenticatedLayout title={`Subject: ${subject.name}`}>
+        <AuthenticatedLayout title={`Mata Pelajaran: ${subject.name}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -27,7 +27,7 @@ const SubjectShow = ({ subject }) => {
                                 />
                             </Link>
                             <h1 className="font-bold text-xl text-gray-800">
-                                Subject Details
+                                Detail Mata Pelajaran
                             </h1>
                         </div>
                         <Link
@@ -35,7 +35,7 @@ const SubjectShow = ({ subject }) => {
                             className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                         >
                             <Edit2 size="20" />
-                            <span>Edit Subject</span>
+                            <span>Edit Mata Pelajaran</span>
                         </Link>
                     </div>
 
@@ -45,14 +45,14 @@ const SubjectShow = ({ subject }) => {
                             {/* Subject Overview Section */}
                             <div className="md:col-span-2">
                                 <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b">
-                                    Subject Overview
+                                    Ringkasan Mata Pelajaran
                                 </h2>
                             </div>
 
                             {/* Info boxes */}
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Subject Name
+                                    Nama Mata Pelajaran
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {subject.name}
@@ -61,7 +61,7 @@ const SubjectShow = ({ subject }) => {
 
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Class
+                                    Kelas
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {subject.class.name}
@@ -70,7 +70,7 @@ const SubjectShow = ({ subject }) => {
 
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Teacher
+                                    Guru
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {subject.teacher.name}
@@ -79,7 +79,7 @@ const SubjectShow = ({ subject }) => {
 
                             <div className="bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Created
+                                    Dibuat
                                 </h3>
                                 <p className="text-lg font-medium text-gray-900">
                                     {subject.created_at}
@@ -89,18 +89,18 @@ const SubjectShow = ({ subject }) => {
                             {/* Description */}
                             <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
                                 <h3 className="text-sm font-medium text-gray-500 mb-1">
-                                    Description
+                                    Deskripsi
                                 </h3>
                                 <p className="text-gray-900">
                                     {subject.description ||
-                                        "No description provided."}
+                                        "Belum ada deskripsi."}
                                 </p>
                             </div>
 
                             {/* Stats Section */}
                             <div className="md:col-span-2 mt-4">
                                 <h2 className="text-lg font-semibold text-gray-700 pb-2 border-b">
-                                    Content Statistics
+                                    Statistik Konten
                                 </h2>
                             </div>
 
@@ -113,12 +113,12 @@ const SubjectShow = ({ subject }) => {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-500">
-                                        Materials
+                                        Materi
                                     </h3>
                                     <p className="text-xl font-semibold text-gray-900">
                                         {subject.materials_count}
                                         <span className="text-sm font-normal text-gray-500 ml-1">
-                                            items
+                                            materi
                                         </span>
                                     </p>
                                 </div>
@@ -133,12 +133,12 @@ const SubjectShow = ({ subject }) => {
                                 </div>
                                 <div>
                                     <h3 className="text-sm font-medium text-gray-500">
-                                        Assignments
+                                        Tugas
                                     </h3>
                                     <p className="text-xl font-semibold text-gray-900">
                                         {subject.assignments_count}
                                         <span className="text-sm font-normal text-gray-500 ml-1">
-                                            tasks
+                                            tugas
                                         </span>
                                     </p>
                                 </div>
@@ -150,7 +150,7 @@ const SubjectShow = ({ subject }) => {
                                     href={route("admin.subjects.index")}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Back to List
+                                    Kembali ke Daftar
                                 </Link>
                                 <Link
                                     href={route(
@@ -159,7 +159,7 @@ const SubjectShow = ({ subject }) => {
                                     )}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
                                 >
-                                    Edit Subject
+                                    Edit Mata Pelajaran
                                 </Link>
                             </div>
                         </div>

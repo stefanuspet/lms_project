@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import {
     NotificationBing,
     MessageQuestion,
@@ -7,9 +7,18 @@ import {
     User,
 } from "iconsax-reactjs";
 
-const HeaderTeacher = ({ toggleSidebar }) => {
+const HeaderTeacher = ({ toggleSidebar, title }) => {
+    const { auth } = usePage().props;
+    const user = auth?.user;
+
+    // Gunakan foto profil guru jika ada, fallback ke avatar default
+    const profilePicture =
+        user?.teacher?.profile_picture ||
+        user?.profile_picture ||
+        "/assets/images/default-avatar.png";
+
     return (
-        <header className="bg-white border-b border-gray-200 py-2 px-4">
+        <header className="bg-white border-b border-gray-200 pt-5 pb-4 px-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     {/* Mobile only menu toggle */}
@@ -35,7 +44,7 @@ const HeaderTeacher = ({ toggleSidebar }) => {
 
                     {/* Page Title - show on larger screens */}
                     <h1 className="text-xl font-semibold text-gray-800 hidden md:block">
-                        Dashboard
+                        {title || "Dashboard"}
                     </h1>
                 </div>
 
@@ -65,16 +74,21 @@ const HeaderTeacher = ({ toggleSidebar }) => {
                       </button> */}
 
                     {/* User Profile */}
-                    <div className="flex items-center">
+                    <Link
+                        href={route("teacher.profile.edit")}
+                        className="flex items-center"
+                    >
                         <button className="flex items-center gap-2 hover:bg-gray-100 rounded-full p-1 pl-1 pr-2">
-                            <div className="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white">
-                                <User size="20" />
-                            </div>
+                            <img
+                                src={profilePicture}
+                                alt={user?.name || "Guru"}
+                                className="w-8 h-8 rounded-full object-cover"
+                            />
                             <span className="text-sm font-medium text-gray-700 hidden sm:block">
-                                Guru
+                                {user?.name || "Guru"}
                             </span>
                         </button>
-                    </div>
+                    </Link>
                 </div>
             </div>
         </header>

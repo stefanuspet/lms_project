@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Validator;
 class AttendanceController extends Controller
 {
     /**
-     * Submit absensi dengan PIN
+     * Submit absensi dengan QR yang dipindai dari web.
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -23,7 +23,9 @@ class AttendanceController extends Controller
     public function submit(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'pin' => 'required|string|size:6',
+            'qr_token' => 'required|string',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -36,8 +38,10 @@ class AttendanceController extends Controller
 
         // Log request data for debugging
         Log::debug('Attendance submission attempt', [
-            'pin' => $request->pin,
-            'user_id' => $request->user()->id ?? 'null'
+            'qr_token' => $request->qr_token,
+            'user_id' => $request->user()->id ?? 'null',
+            'lat' => $request->latitude,
+            'lng' => $request->longitude,
         ]);
 
         // Ambil user yang sedang login
@@ -53,21 +57,21 @@ class AttendanceController extends Controller
 
         Log::debug('Student found', ['student_id' => $student->id]);
 
-        // Cari sesi absensi dengan PIN yang diberikan
-        $session = AttendanceSession::where('pin', $request->pin)
-            ->where('expires_at', '>', now())
+        // Cari sesi absensi dengan QR token yang diberikan
+        $session = AttendanceSession::where('qr_token', $request->qr_token)
+            ->active()
             ->first();
 
         if (!$session) {
             return response()->json([
                 'success' => false,
-                'message' => 'PIN tidak valid atau sesi absensi sudah berakhir'
+                'message' => 'QR tidak valid atau sesi absensi sudah berakhir'
             ], 404);
         }
 
         Log::debug('Session found', [
             'session_id' => $session->id,
-            'pin' => $session->pin,
+            'qr_token' => $session->qr_token,
             'expires_at' => $session->expires_at
         ]);
 
@@ -108,7 +112,15 @@ class AttendanceController extends Controller
         if (!$studentInSemester) {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda tidak terdaftar pada semester saat ini'
+            'message' => 'Anda tidak terdaftar pada semester saat ini'
+        ], 403);
+    }
+
+        // Validasi lokasi
+        if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lokasi Anda berada di luar area yang diizinkan untuk absensi'
             ], 403);
         }
 
@@ -356,5 +368,26 @@ class AttendanceController extends Controller
                 ]
             ]
         ]);
+    }
+
+    private function isWithinRadius(float $latitude, float $longitude, int $radiusMeters = 150): bool
+    {
+        $targetLat = -7.780518240646772;
+        $targetLng = 110.41577003973752;
+
+        $earthRadius = 6371000; // meters
+        $latFrom = deg2rad($latitude);
+        $lonFrom = deg2rad($longitude);
+        $latTo = deg2rad($targetLat);
+        $lonTo = deg2rad($targetLng);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+            cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+        $distance = $angle * $earthRadius;
+
+        return $distance <= $radiusMeters;
     }
 }

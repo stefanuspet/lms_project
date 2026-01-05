@@ -19,7 +19,8 @@ class Teacher extends Model
         'name',
         'nip',
         'phone',
-        'address'
+        'address',
+        'profile_picture',
     ];
 
     /**
@@ -56,5 +57,13 @@ class Teacher extends Model
         return $this->belongsToMany(Semester::class, 'teacher_subjects')
             ->withPivot('subject_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Get schedules owned by the teacher.
+     */
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class);
     }
 }

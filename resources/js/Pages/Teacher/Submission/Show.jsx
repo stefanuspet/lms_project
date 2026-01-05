@@ -67,7 +67,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
     };
 
     return (
-        <TeacherLayout title={`Grade Submission - ${assignment.title}`}>
+        <TeacherLayout title={`Nilai Pengumpulan - ${assignment.title}`}>
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -87,7 +87,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                             </Link>
                             <div>
                                 <h1 className="font-bold text-xl text-gray-800">
-                                    Student Submission
+                                    Pengumpulan Siswa
                                 </h1>
                                 <div className="text-sm text-gray-600 flex items-center gap-2">
                                     <span>
@@ -102,7 +102,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                 : "text-green-500"
                                         }
                                     />
-                                    <span>Deadline: {assignment.deadline}</span>
+                                    <span>Batas waktu: {assignment.deadline}</span>
                                 </div>
                             </div>
                         </div>
@@ -111,21 +111,21 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                     {/* Content */}
                     <div className="p-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Student and Submission Information */}
+                            {/* Informasi Siswa dan Pengumpulan */}
                             <div className="md:col-span-2 space-y-6">
-                                {/* Student Info */}
+                                {/* Informasi Siswa */}
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h3 className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-3">
                                         <Profile2User
                                             size="20"
                                             className="text-blue-600"
                                         />
-                                        <span>Student Information</span>
+                                        <span>Informasi Siswa</span>
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-sm text-gray-500">
-                                                Name
+                                                Nama
                                             </p>
                                             <p className="text-base font-medium">
                                                 {submission.student.name}
@@ -142,14 +142,14 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                     </div>
                                 </div>
 
-                                {/* Submission Info */}
+                                {/* Informasi Pengumpulan */}
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h3 className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-3">
                                         <ClipboardTick
                                             size="20"
                                             className="text-green-600"
                                         />
-                                        <span>Submission Details</span>
+                                        <span>Detail Pengumpulan</span>
                                     </h3>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
@@ -159,14 +159,14 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                     className="text-gray-600"
                                                 />
                                                 <span className="text-sm text-gray-500">
-                                                    Submitted On:
+                                                    Dikumpulkan pada:
                                                 </span>
                                             </div>
                                             <span className="text-base font-medium">
                                                 {submission.submitted_at}
                                                 {submission.is_late && (
                                                     <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-800">
-                                                        Late
+                                                        Terlambat
                                                     </span>
                                                 )}
                                             </span>
@@ -174,14 +174,14 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                     </div>
                                 </div>
 
-                                {/* Submission Content */}
+                                {/* Konten Pengumpulan */}
                                 <div>
                                     <h3 className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-3">
                                         <MessageText
                                             size="20"
                                             className="text-purple-600"
                                         />
-                                        <span>Submission Content</span>
+                                        <span>Konten Pengumpulan</span>
                                     </h3>
 
                                     {submission.submission_text ? (
@@ -199,12 +199,12 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                         </div>
                                     ) : (
                                         <p className="text-gray-500 italic">
-                                            No text submission provided.
+                                            Tidak ada teks yang dikumpulkan.
                                         </p>
                                     )}
                                 </div>
 
-                                {/* Submission File */}
+                                {/* Berkas Pengumpulan */}
                                 {submission.file_path && (
                                     <div className="bg-gray-50 p-4 rounded-lg">
                                         <h3 className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-3">
@@ -212,7 +212,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                 size="20"
                                                 className="text-amber-600"
                                             />
-                                            <span>Submitted File</span>
+                                            <span>Berkas yang Dikumpulkan</span>
                                         </h3>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
@@ -231,15 +231,15 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                 className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                                             >
                                                 <DocumentDownload size="18" />
-                                                <span>Download</span>
+                                                <span>Unduh</span>
                                             </a>
                                         </div>
 
-                                        {/* Preview for supported file types */}
+                                        {/* Pratinjau untuk tipe berkas yang didukung */}
                                         {submission.file_path && (
                                             <div className="mt-4">
                                                 <h4 className="text-sm font-medium text-gray-600 mb-2">
-                                                    Preview:
+                                                    Pratinjau:
                                                 </h4>
                                                 {submission.file_path.includes(
                                                     ".pdf"
@@ -321,11 +321,12 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                         ".mov"
                                                     ) && (
                                                         <p className="text-gray-500 italic">
-                                                            Preview not
-                                                            available for this
-                                                            file type. Please
-                                                            download the file to
-                                                            view it.
+                                                            Pratinjau tidak
+                                                            tersedia untuk
+                                                            tipe berkas ini.
+                                                            Silakan unduh
+                                                            berkas untuk
+                                                            melihatnya.
                                                         </p>
                                                     )}
                                             </div>
@@ -334,7 +335,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                 )}
                             </div>
 
-                            {/* Grading Form */}
+                            {/* Form Penilaian */}
                             <div className="space-y-6">
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h3 className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-3">
@@ -342,16 +343,16 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                             size="20"
                                             className="text-amber-600"
                                         />
-                                        <span>Grade Submission</span>
+                                        <span>Nilai Pengumpulan</span>
                                     </h3>
 
                                     <form onSubmit={handleSubmit}>
                                         <div className="space-y-4">
-                                            {/* Grade Input */}
+                                            {/* Input Nilai */}
                                             <div>
                                                 <InputLabel
                                                     htmlFor="grade"
-                                                    value="Grade (0-100)"
+                                                    value="Nilai (0-100)"
                                                     className="text-base mb-1"
                                                 />
                                                 <TextInput
@@ -371,11 +372,11 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                 />
                                             </div>
 
-                                            {/* Feedback Input */}
+                                            {/* Input Umpan Balik */}
                                             <div>
                                                 <InputLabel
                                                     htmlFor="message_eval"
-                                                    value="Feedback to Student"
+                                                    value="Umpan balik untuk siswa"
                                                     className="text-base mb-1"
                                                 />
                                                 <textarea
@@ -385,7 +386,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                     className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                                     onChange={handleChange}
                                                     rows={6}
-                                                    placeholder="Provide feedback on this submission..."
+                                                    placeholder="Berikan umpan balik untuk pengumpulan ini..."
                                                 />
                                                 <InputError
                                                     message={
@@ -395,7 +396,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                 />
                                             </div>
 
-                                            {/* Submit Button */}
+                                            {/* Tombol Simpan Nilai */}
                                             <div className="flex justify-end">
                                                 <button
                                                     type="submit"
@@ -403,39 +404,40 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                                     className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-75"
                                                 >
                                                     {submission.grade !== null
-                                                        ? "Update Grade"
-                                                        : "Submit Grade"}
+                                                        ? "Perbarui Nilai"
+                                                        : "Simpan Nilai"}
                                                 </button>
                                             </div>
                                         </div>
                                     </form>
                                 </div>
 
-                                {/* Grading Info */}
+                                {/* Informasi Penilaian */}
                                 <div className="bg-blue-50 p-4 rounded-lg">
                                     <h3 className="text-sm font-medium text-blue-800 mb-2">
-                                        Grading Tips
+                                        Tips Penilaian
                                     </h3>
                                     <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
                                         <li>
-                                            Provide clear and constructive
-                                            feedback
+                                            Berikan umpan balik yang jelas dan
+                                            membangun
                                         </li>
                                         <li>
-                                            Consider both effort and accuracy
+                                            Pertimbangkan usaha dan ketepatan
                                         </li>
-                                        <li>Grade on a scale of 0-100</li>
+                                        <li>Nilai dalam rentang 0-100</li>
                                         <li>
-                                            Students will be notified when
-                                            graded
+                                            Siswa akan diberi notifikasi saat
+                                            nilai diberikan
                                         </li>
                                         <li>
-                                            You can update grades at any time
+                                            Anda dapat memperbarui nilai kapan
+                                            saja
                                         </li>
                                     </ul>
                                 </div>
 
-                                {/* Navigation */}
+                                {/* Navigasi */}
                                 <div className="space-y-2">
                                     <Link
                                         href={route(
@@ -444,7 +446,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                         )}
                                         className="block w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-center"
                                     >
-                                        Back to All Submissions
+                                        Kembali ke Semua Pengumpulan
                                     </Link>
                                     <Link
                                         href={route(
@@ -453,7 +455,7 @@ const TeacherSubmissionShow = ({ submission, assignment, subject }) => {
                                         )}
                                         className="block w-full px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors text-center"
                                     >
-                                        View Assignment Details
+                                        Lihat Detail Tugas
                                     </Link>
                                 </div>
                             </div>
