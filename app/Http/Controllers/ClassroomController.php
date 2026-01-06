@@ -150,11 +150,21 @@ class ClassroomController extends Controller
     public function store(Request $request)
     {
         // Validate input
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'semester_id' => 'nullable|exists:semesters,id',
-        ]);
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'semester_id' => 'nullable|exists:semesters,id',
+            ],
+            [
+                'name.required' => 'Nama kelas wajib diisi.',
+                'name.max' => 'Nama kelas maksimal :max karakter.',
+
+                'description.string' => 'Deskripsi kelas harus berupa teks.',
+
+                'semester_id.exists' => 'Semester yang dipilih tidak ditemukan.',
+            ]
+        );
 
         DB::beginTransaction();
 
@@ -176,11 +186,14 @@ class ClassroomController extends Controller
             // Log activity
             $this->logActivity(auth()->id(), 'create', 'Created a new class: ' . $classroom->name);
 
-            return redirect()->route('admin.classrooms.index')->with('success', 'Class created successfully');
+            return redirect()->route('admin.classrooms.index')
+                ->with('success', 'Kelas berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating class: ' . $e->getMessage());
-            return redirect()->back()->withErrors(['error' => 'Failed to create class: ' . $e->getMessage()])->withInput();
+            return redirect()->back()
+                ->withErrors(['error' => 'Gagal menambahkan kelas. Mohon periksa kembali data yang diisi.'])
+                ->withInput();
         }
     }
 
@@ -282,11 +295,21 @@ class ClassroomController extends Controller
     public function update(Request $request, Classroom $classroom)
     {
         // Validate input
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'semester_id' => 'nullable|exists:semesters,id',
-        ]);
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'semester_id' => 'nullable|exists:semesters,id',
+            ],
+            [
+                'name.required' => 'Nama kelas wajib diisi.',
+                'name.max' => 'Nama kelas maksimal :max karakter.',
+
+                'description.string' => 'Deskripsi kelas harus berupa teks.',
+
+                'semester_id.exists' => 'Semester yang dipilih tidak ditemukan.',
+            ]
+        );
 
         DB::beginTransaction();
 
@@ -306,12 +329,12 @@ class ClassroomController extends Controller
             $this->logActivity(auth()->id(), 'update', 'Updated class: ' . $classroom->name);
 
             return redirect()->route('admin.classrooms.index')
-                ->with('success', 'Class updated successfully');
+                ->with('success', 'Kelas berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating class: ' . $e->getMessage());
             return redirect()->back()
-                ->withErrors(['error' => 'Failed to update class: ' . $e->getMessage()])
+                ->withErrors(['error' => 'Gagal memperbarui kelas. Mohon periksa kembali data yang diisi.'])
                 ->withInput();
         }
     }
@@ -328,16 +351,18 @@ class ClassroomController extends Controller
         try {
             // Check if class has subjects
             if ($classroom->subjects()->count() > 0) {
-                return redirect()->back()->withErrors([
-                    'error' => 'Cannot delete class because it has associated subjects. Please remove subjects first.'
-                ]);
+                $message = 'Kelas tidak dapat dihapus karena masih memiliki mata pelajaran. Silakan hapus atau pindahkan mata pelajaran terlebih dahulu.';
+                return redirect()->back()
+                    ->withErrors(['error' => $message])
+                    ->with('error', $message);
             }
 
             // Check if class has students
             if ($classroom->students()->count() > 0) {
-                return redirect()->back()->withErrors([
-                    'error' => 'Cannot delete class because it has enrolled students. Please unenroll students first.'
-                ]);
+                $message = 'Kelas tidak dapat dihapus karena masih memiliki siswa terdaftar. Silakan keluarkan siswa dari kelas ini terlebih dahulu.';
+                return redirect()->back()
+                    ->withErrors(['error' => $message])
+                    ->with('error', $message);
             }
 
             // Remove class from semesters_students if any
@@ -353,10 +378,14 @@ class ClassroomController extends Controller
             // Log activity
             $this->logActivity(auth()->id(), 'delete', 'Deleted class: ' . $className);
 
-            return redirect()->route('admin.classrooms.index')->with('success', 'Class deleted successfully');
+            return redirect()->route('admin.classrooms.index')
+                ->with('success', 'Kelas berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to delete class: ' . $e->getMessage()]);
+            $message = 'Gagal menghapus kelas: ' . $e->getMessage();
+            return redirect()->back()
+                ->withErrors(['error' => $message])
+                ->with('error', $message);
         }
     }
 
@@ -378,15 +407,17 @@ class ClassroomController extends Controller
             // Check which classes have subjects or students
             $classroomsWithDependencies = Classroom::whereIn('id', $classroomIds)
                 ->withCount(['subjects', 'students'])
-                ->having('subjects_count', '>', 0)
-                ->orHaving('students_count', '>', 0)
-                ->get();
+                ->get()
+                ->filter(function ($classroom) {
+                    return $classroom->subjects_count > 0 || $classroom->students_count > 0;
+                });
 
             if ($classroomsWithDependencies->count() > 0) {
                 $classNames = $classroomsWithDependencies->pluck('name')->implode(', ');
-                return redirect()->back()->withErrors([
-                    'error' => "Cannot delete classes with existing subjects or students: {$classNames}"
-                ]);
+                $message = "Beberapa kelas tidak dapat dihapus karena masih memiliki siswa atau mata pelajaran: {$classNames}. Silakan pindahkan terlebih dahulu.";
+                return redirect()->back()
+                    ->withErrors(['error' => $message])
+                    ->with('error', $message);
             }
 
             // Remove entries from semesters_students
@@ -402,10 +433,14 @@ class ClassroomController extends Controller
             // Log activity
             $this->logActivity(auth()->id(), 'bulk_delete', 'Bulk deleted ' . count($classroomIds) . ' classes');
 
-            return redirect()->route('admin.classrooms.index')->with('success', count($classroomIds) . ' classes deleted successfully');
+            return redirect()->route('admin.classrooms.index')
+                ->with('success', count($classroomIds) . ' kelas berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to delete classes: ' . $e->getMessage()]);
+            $message = 'Gagal menghapus beberapa kelas: ' . $e->getMessage();
+            return redirect()->back()
+                ->withErrors(['error' => $message])
+                ->with('error', $message);
         }
     }
 

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import React, { useState, useEffect } from "react";
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
+import Toast from "@/Components/Toast";
 import {
     Edit2,
     Trash,
@@ -20,12 +21,18 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
     const [searchTerm, setSearchTerm] = useState(filters?.search || "");
     const [selectedClassrooms, setSelectedClassrooms] = useState([]);
     const [processing, setProcessing] = useState(false);
+    const [toast, setToast] = useState(null);
     const [currentPage, setCurrentPage] = useState(
         pagination?.current_page || 1
     );
     const [showFilters, setShowFilters] = useState(false);
     const [sortBy, setSortBy] = useState(filters?.sort_by || "name");
     const [sortOrder, setSortOrder] = useState(filters?.sort_order || "asc");
+
+    // Ambil errors global dari Inertia (mis. withErrors)
+    const {
+        props: { errors },
+    } = usePage();
 
     // Function to delete classroom
     const handleDelete = (classroomId) => {
@@ -38,9 +45,18 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                     setProcessing(false);
                     setSelectedClassrooms([]);
                 },
-                onError: () => {
+                onError: (errors) => {
+                    console.error(
+                        "Gagal menghapus kelas (single):",
+                        errors
+                    );
                     setProcessing(false);
-                    alert("Terjadi kesalahan saat menghapus kelas.");
+                    setToast({
+                        type: "error",
+                        message:
+                            errors?.error ||
+                            "Terjadi kesalahan saat menghapus kelas.",
+                    });
                 },
             });
         }
@@ -182,10 +198,17 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
                         setSelectedClassrooms([]);
                     },
                     onError: (errors) => {
-                        setProcessing(false);
-                        alert(
-                            errors.error || "Failed to delete selected classes"
+                        console.error(
+                            "Gagal menghapus kelas (bulk):",
+                            errors
                         );
+                        setProcessing(false);
+                        setToast({
+                            type: "error",
+                            message:
+                                errors?.error ||
+                                "Gagal menghapus kelas yang dipilih.",
+                        });
                     },
                 }
             );
@@ -209,6 +232,21 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
         return [1, "...", current - 1, current, current + 1, "...", total];
     };
 
+    // Tampilkan toast ketika ada flash message sukses / error
+    useEffect(() => {
+        console.log("Flash props (ClassroomIndex):", flash);
+        console.log("Errors props (ClassroomIndex):", errors);
+
+        if (flash?.success) {
+            setToast({ type: "success", message: flash.success });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        } else if (errors?.error) {
+            // Jika backend hanya mengirim withErrors(['error' => ...])
+            setToast({ type: "error", message: errors.error });
+        }
+    }, [flash, errors]);
+
     // Generate page numbers
     const pageNumbers = generatePageNumbers(
         currentPage,
@@ -224,16 +262,11 @@ const ClassroomIndex = ({ classes, pagination, filters, flash }) => {
 
     return (
         <AuthenticatedLayout title="Manajemen Kelas">
-            {/* Flash message */}
-            {flash?.success && (
-                <div
-                    className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
-                    role="alert"
-                >
-                    <p>{flash.success}</p>
-                </div>
-            )}
-
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             {flash?.error && (
                 <div
                     className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"

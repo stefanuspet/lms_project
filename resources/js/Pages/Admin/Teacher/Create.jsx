@@ -4,9 +4,10 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
+import Toast from "@/Components/Toast";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
-const TeacherCreate = () => {
+const TeacherCreate = ({ flash }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         email: "",
@@ -19,11 +20,21 @@ const TeacherCreate = () => {
 
     const [clientErrors, setClientErrors] = useState({});
     const [isFormValid, setIsFormValid] = useState(false);
+    const [toast, setToast] = useState(null);
 
     // Validate form whenever data changes
     useEffect(() => {
         validateForm();
     }, [data]);
+
+    // Tampilkan toast jika ada error global dari server (mis. NIP/email sudah dipakai)
+    useEffect(() => {
+        if (errors?.error) {
+            setToast({ type: "error", message: errors.error });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        }
+    }, [errors, flash]);
 
     // Form validation logic
     const validateForm = () => {
@@ -83,6 +94,11 @@ const TeacherCreate = () => {
 
     return (
         <AuthenticatedLayout title="Kelola Data Guru">
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             <div className="w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}

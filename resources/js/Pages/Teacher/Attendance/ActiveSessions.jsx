@@ -107,29 +107,39 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                         <div className="p-6">
                                             <div className="grid grid-cols-1 gap-4">
                                                 {/* QR Code */}
-                                                <div className="bg-amber-50 p-4 rounded-lg flex justify-between items-center">
-                                                    <div>
-                                                        <p className="text-sm text-amber-700 font-medium">
-                                                            QR Absensi
-                                                        </p>
-                                                        <p className="text-3xl font-bold font-mono text-amber-800 mt-1 break-all">
-                                                            {session.qr_token}
-                                                        </p>
-                                                    </div>
-                                                    <button
-                                                        onClick={() =>
-                                                            copyToClipboard(
+                                                <div className="bg-amber-50 p-4 rounded-lg flex flex-col items-center gap-3">
+                                                    <p className="text-sm text-amber-700 font-medium self-start">
+                                                        QR Absensi
+                                                    </p>
+                                                    <div className="bg-white rounded-lg p-2 border border-amber-100">
+                                                        <img
+                                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
                                                                 session.qr_token
-                                                            )
-                                                        }
-                                                        className="p-2 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
-                                                        title="Salin token"
-                                                    >
-                                                        <Copy
-                                                            size="24"
-                                                            className="text-amber-700"
+                                                            )}`}
+                                                            alt="QR Absensi"
+                                                            className="w-40 h-40 object-contain"
                                                         />
-                                                    </button>
+                                                    </div>
+                                                    <div className="w-full flex items-center justify-between gap-2">
+                                                        <span className="text-[10px] font-mono bg-gray-100 px-2 py-1 rounded text-gray-700 break-all">
+                                                            {session.qr_token}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                copyToClipboard(
+                                                                    session.qr_token
+                                                                )
+                                                            }
+                                                            className="p-2 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
+                                                            title="Salin token"
+                                                        >
+                                                            <Copy
+                                                                size="18"
+                                                                className="text-amber-700"
+                                                            />
+                                                        </button>
+                                                    </div>
                                                 </div>
 
                                                 {/* Session Info */}

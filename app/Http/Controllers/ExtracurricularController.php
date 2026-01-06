@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Extracurricular;
 use App\Models\Teacher;
 use App\Models\Semester;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -181,6 +182,8 @@ class ExtracurricularController extends Controller
 
     public function edit(Extracurricular $extracurricular)
     {
+        $extracurricular->load('students');
+
         return Inertia::render('Admin/Extracurricular/Edit', [
             'extracurricular' => [
                 'id' => $extracurricular->id,
@@ -259,5 +262,49 @@ class ExtracurricularController extends Controller
                 ->back()
                 ->withErrors(['error' => 'Gagal menghapus ekstrakurikuler: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Show member management page for an extracurricular.
+     */
+    public function editMembers(Extracurricular $extracurricular)
+    {
+        $extracurricular->load('students');
+
+        return Inertia::render('Admin/Extracurricular/Members', [
+            'extracurricular' => [
+                'id' => $extracurricular->id,
+                'name' => $extracurricular->name,
+                'student_ids' => $extracurricular->students->pluck('id'),
+            ],
+            'students' => Student::orderBy('name')->get(['id', 'name', 'nisn']),
+        ]);
+    }
+
+    /**
+     * Update members for an extracurricular.
+     */
+    public function updateMembers(Request $request, Extracurricular $extracurricular)
+    {
+        $validated = $request->validate([
+            'student_ids' => 'nullable|array',
+            'student_ids.*' => 'integer|exists:students,id',
+        ]);
+
+        $syncData = [];
+        if (!empty($validated['student_ids'])) {
+            foreach ($validated['student_ids'] as $studentId) {
+                $syncData[$studentId] = [
+                    'joined_at' => now()->toDateString(),
+                    'role' => 'anggota',
+                ];
+            }
+        }
+
+        $extracurricular->students()->sync($syncData);
+
+        return redirect()
+            ->route('admin.extracurriculars.index')
+            ->with('success', 'Anggota ekstrakurikuler berhasil diperbarui.');
     }
 }

@@ -145,19 +145,52 @@ class StudentController extends Controller
     public function store(Request $request)
     {
         // Validasi input
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'nisn' => 'required|string|max:20|unique:students',
-            'gender' => 'nullable|in:male,female',
-            'birth_date' => 'nullable|date',
-            'birth_place' => 'nullable|string|max:255',
-            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'class_id' => 'nullable|array',
-            'class_id.*' => 'exists:classes,id',
-            'semester_id' => 'nullable|exists:semesters,id',
-        ]);
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'nisn' => 'required|string|max:20|unique:students',
+                'gender' => 'nullable|in:male,female',
+                'birth_date' => 'nullable|date',
+                'birth_place' => 'nullable|string|max:255',
+                'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+                'class_id' => 'nullable|array',
+                'class_id.*' => 'exists:classes,id',
+                'semester_id' => 'nullable|exists:semesters,id',
+            ],
+            [
+                'name.required' => 'Nama siswa wajib diisi.',
+                'name.max' => 'Nama siswa maksimal :max karakter.',
+
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'email.max' => 'Email maksimal :max karakter.',
+                'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
+
+                'password.required' => 'Password wajib diisi.',
+                'password.min' => 'Password minimal :min karakter.',
+                'password.confirmed' => 'Konfirmasi password tidak sama.',
+
+                'nisn.required' => 'NISN wajib diisi.',
+                'nisn.max' => 'NISN maksimal :max karakter.',
+                'nisn.unique' => 'NISN sudah digunakan oleh siswa lain.',
+
+                'gender.in' => 'Jenis kelamin tidak valid.',
+
+                'birth_date.date' => 'Tanggal lahir tidak valid.',
+                'birth_place.max' => 'Tempat lahir maksimal :max karakter.',
+
+                'profile_picture.image' => 'Foto profil harus berupa gambar.',
+                'profile_picture.mimes' => 'Foto profil harus berformat jpg, jpeg, png, atau gif.',
+                'profile_picture.max' => 'Ukuran foto profil maksimal :max kilobyte.',
+
+                'class_id.array' => 'Kelas tidak valid.',
+                'class_id.*.exists' => 'Kelas yang dipilih tidak ditemukan.',
+
+                'semester_id.exists' => 'Semester yang dipilih tidak ditemukan.',
+            ]
+        );
 
         DB::beginTransaction();
 
@@ -208,10 +241,13 @@ class StudentController extends Controller
             // Log aktivitas
             $this->logActivity($user->id, 'create', 'Created a new student: ' . $student->name);
 
-            return redirect()->route('admin.students.index')->with('success', 'Student created successfully');
+            return redirect()->route('admin.students.index')
+                ->with('success', 'Data siswa berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to create student: ' . $e->getMessage()])->withInput();
+            return redirect()->back()
+                ->withErrors(['error' => 'Gagal menambahkan siswa. Mohon periksa kembali data yang diisi.'])
+                ->withInput();
         }
     }
 
@@ -416,14 +452,14 @@ class StudentController extends Controller
                 DB::commit();
 
                 return redirect()->route('admin.students.index')
-                    ->with('success', 'Student updated successfully');
+                    ->with('success', 'Data siswa berhasil diperbarui.');
             } catch (\Exception $e) {
                 DB::rollBack();
                 Log::error('Error in transaction: ' . $e->getMessage());
                 Log::error($e->getTraceAsString());
 
                 return redirect()->back()
-                    ->withErrors(['error' => 'Terjadi kesalahan saat update data: ' . $e->getMessage()])
+                    ->withErrors(['error' => 'Gagal memperbarui data siswa. Mohon periksa kembali data yang diisi.'])
                     ->withInput();
             }
         } catch (\Exception $e) {
@@ -521,10 +557,12 @@ class StudentController extends Controller
             // Log aktivitas (menggunakan ID admin yang sedang login)
             $this->logActivity(auth()->id(), 'delete', 'Deleted student: ' . $studentName);
 
-            return redirect()->route('admin.students.index')->with('success', 'Student deleted successfully');
+            return redirect()->route('admin.students.index')
+                ->with('success', 'Data siswa berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to delete student: ' . $e->getMessage()]);
+            return redirect()->back()
+                ->withErrors(['error' => 'Gagal menghapus siswa: ' . $e->getMessage()]);
         }
     }
 
@@ -572,10 +610,12 @@ class StudentController extends Controller
             // Log aktivitas
             $this->logActivity(auth()->id(), 'bulk_delete', 'Bulk deleted ' . count($studentIds) . ' students');
 
-            return redirect()->route('admin.students.index')->with('success', count($studentIds) . ' students deleted successfully');
+            return redirect()->route('admin.students.index')
+                ->with('success', count($studentIds) . ' siswa berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Failed to delete students: ' . $e->getMessage()]);
+            return redirect()->back()
+                ->withErrors(['error' => 'Gagal menghapus beberapa siswa: ' . $e->getMessage()]);
         }
     }
 

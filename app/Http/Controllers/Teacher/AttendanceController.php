@@ -340,7 +340,7 @@ class AttendanceController extends Controller
     public function createExtracurricularSession(Request $request, Extracurricular $extracurricular)
     {
         $request->validate([
-            'session_type' => 'required|string|max:50',
+            'session_type' => 'required|string|in:arrival,departure,ekskul_berangkat,ekskul_pulang',
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'duration_minutes' => 'required|integer|min:5|max:240',
@@ -348,9 +348,32 @@ class AttendanceController extends Controller
 
         $expiresAt = now()->addMinutes($request->input('duration_minutes'));
 
+        // Map nilai khusus ekskul ke enum yang disimpan di database
+        $rawType = $request->input('session_type');
+        $sessionType = $rawType;
+
+        if ($rawType === 'ekskul_berangkat') {
+            $sessionType = 'arrival';
+        } elseif ($rawType === 'ekskul_pulang') {
+            $sessionType = 'departure';
+        }
+
+        // Cegah duplikasi sesi ekskul dengan tipe yang sama di hari yang sama
+        $today = now()->toDateString();
+        $alreadyExists = AttendanceSession::where('extracurricular_id', $extracurricular->id)
+            ->where('date', $today)
+            ->where('session_type', $sessionType)
+            ->exists();
+
+        if ($alreadyExists) {
+            return redirect()
+                ->route('teacher.extracurriculars.show', $extracurricular->id)
+                ->with('error', 'Sesi presensi ' . ($sessionType === 'arrival' ? 'berangkat' : 'pulang') . ' untuk hari ini sudah dibuat.');
+        }
+
         $session = AttendanceSession::create([
             'qr_token' => $this->generateUniqueQrToken(),
-            'session_type' => $request->input('session_type'),
+            'session_type' => $sessionType,
             'title' => $request->input('title') ?: $extracurricular->name,
             'description' => $request->input('description'),
             'date' => now()->toDateString(),

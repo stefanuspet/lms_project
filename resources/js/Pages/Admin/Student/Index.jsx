@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import React, { useState, useEffect } from "react";
 import { Link, router } from "@inertiajs/react";
+import Toast from "@/Components/Toast";
 import {
     Edit2,
     Trash,
@@ -16,6 +17,7 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
     const [searchTerm, setSearchTerm] = useState(filters?.search || "");
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [processing, setProcessing] = useState(false);
+    const [toast, setToast] = useState(null);
     const [currentPage, setCurrentPage] = useState(
         pagination?.current_page || 1
     );
@@ -30,9 +32,14 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
                 onSuccess: () => {
                     setProcessing(false);
                 },
-                onError: () => {
+                onError: (errors) => {
                     setProcessing(false);
-                    alert("Terjadi kesalahan saat menghapus siswa.");
+                    setToast({
+                        type: "error",
+                        message:
+                            errors?.error ||
+                            "Terjadi kesalahan saat menghapus siswa.",
+                    });
                 },
             });
         }
@@ -110,6 +117,15 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
         pagination?.last_page || 1
     );
 
+    // Tampilkan toast ketika ada flash message sukses / error
+    useEffect(() => {
+        if (flash?.success) {
+            setToast({ type: "success", message: flash.success });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        }
+    }, [flash]);
+
     // Update currentPage when pagination changes
     useEffect(() => {
         if (pagination?.current_page) {
@@ -119,16 +135,11 @@ const StudentsIndex = ({ students, pagination, filters, flash }) => {
 
     return (
         <AuthenticatedLayout title="Manajemen Siswa">
-            {/* Flash message */}
-            {flash?.success && (
-                <div
-                    className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
-                    role="alert"
-                >
-                    <p>{flash.success}</p>
-                </div>
-            )}
-
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             <div className="py-8 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}

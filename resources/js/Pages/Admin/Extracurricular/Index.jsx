@@ -9,6 +9,7 @@ import {
     Calendar,
     Setting4,
     Printer,
+    People,
 } from "iconsax-reactjs";
 
 const ExtracurricularIndex = ({
@@ -271,6 +272,16 @@ const ExtracurricularIndex = ({
                                                     className="text-amber-600 hover:text-amber-900 inline-block"
                                                 >
                                                     <Edit2 size="18" />
+                                                </Link>
+                                                <Link
+                                                    href={route(
+                                                        "admin.extracurriculars.members.edit",
+                                                        item.id
+                                                    )}
+                                                    className="text-blue-600 hover:text-blue-900 inline-flex items-center"
+                                                    title="Kelola Anggota"
+                                                >
+                                                    <People size="18" />
                                                 </Link>
                                                 <button
                                                     type="button"

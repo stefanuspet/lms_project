@@ -112,9 +112,9 @@ class AttendanceController extends Controller
         if (!$studentInSemester) {
             return response()->json([
                 'success' => false,
-            'message' => 'Anda tidak terdaftar pada semester saat ini'
-        ], 403);
-    }
+                'message' => 'Anda tidak terdaftar pada semester saat ini'
+            ], 403);
+        }
 
         // Validasi lokasi
         if (!$this->isWithinRadius($request->latitude, $request->longitude)) {
@@ -370,11 +370,13 @@ class AttendanceController extends Controller
         ]);
     }
 
-    private function isWithinRadius(float $latitude, float $longitude, int $radiusMeters = 150): bool
+    private function isWithinRadius(float $latitude, float $longitude, int $radiusMeters = 50): bool
     {
-        $targetLat = -7.780518240646772;
-        $targetLng = 110.41577003973752;
+        // Koordinat lokasi sekolah (WIB) sebagai pusat radius absensi
+        $targetLat = -6.354487091462199;
+        $targetLng = 106.83506076044225;
 
+        // Radius bumi dalam meter
         $earthRadius = 6371000; // meters
         $latFrom = deg2rad($latitude);
         $lonFrom = deg2rad($longitude);

@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useForm } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
+import Toast from "@/Components/Toast";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
-const StaffCreate = () => {
+const StaffCreate = ({ flash }) => {
     const { data, setData, post, processing, errors } = useForm({
         name: "",
         email: "",
@@ -21,6 +22,59 @@ const StaffCreate = () => {
         is_active: true,
     });
 
+    const [clientErrors, setClientErrors] = useState({});
+    const [isFormValid, setIsFormValid] = useState(true);
+    const [toast, setToast] = useState(null);
+
+    // Tampilkan toast jika ada error global dari server (mis. email sudah dipakai)
+    useEffect(() => {
+        if (errors?.error) {
+            setToast({ type: "error", message: errors.error });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        }
+    }, [errors, flash]);
+
+    // Validasi sederhana di sisi client agar user dapat feedback cepat
+    useEffect(() => {
+        validateForm();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data]);
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!data.name) newErrors.name = "Nama wajib diisi.";
+        if (!data.email) {
+            newErrors.email = "Email wajib diisi.";
+        } else {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.email)) {
+                newErrors.email = "Masukkan alamat email yang valid.";
+            }
+        }
+
+        if (!data.password) {
+            newErrors.password = "Password wajib diisi.";
+        } else if (data.password.length < 8) {
+            newErrors.password = "Password minimal 8 karakter.";
+        }
+
+        if (data.password && !data.password_confirmation) {
+            newErrors.password_confirmation =
+                "Konfirmasi password wajib diisi.";
+        } else if (
+            data.password &&
+            data.password_confirmation &&
+            data.password !== data.password_confirmation
+        ) {
+            newErrors.password_confirmation = "Konfirmasi password tidak sama.";
+        }
+
+        setClientErrors(newErrors);
+        setIsFormValid(Object.keys(newErrors).length === 0);
+    };
+
     const handleChange = (e) => {
         const { name, type, checked, value } = e.target;
         setData(name, type === "checkbox" ? checked : value);
@@ -28,11 +82,36 @@ const StaffCreate = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("admin.staff.store"));
+        validateForm();
+
+        if (isFormValid) {
+            post(route("admin.staff.store"));
+        }
+    };
+
+    const getErrorMessage = (field) => {
+        // Error dari server didahulukan
+        if (errors[field]) {
+            return errors[field];
+        }
+
+        // Rule "confirmed" di Laravel menempelkan error ke field "password"
+        // jadi kita tampilkan juga di bawah konfirmasi password
+        if (field === "password_confirmation" && errors.password) {
+            return errors.password;
+        }
+
+        // Fallback ke validasi client-side
+        return clientErrors[field];
     };
 
     return (
         <AuthenticatedLayout title="Kelola Staf & Security">
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             <div className="w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -80,7 +159,7 @@ const StaffCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.name}
+                                        message={getErrorMessage("name")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -100,7 +179,7 @@ const StaffCreate = () => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.nip}
+                                        message={getErrorMessage("nip")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -120,7 +199,7 @@ const StaffCreate = () => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.phone}
+                                        message={getErrorMessage("phone")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -140,7 +219,7 @@ const StaffCreate = () => {
                                         onChange={handleChange}
                                     />
                                     <InputError
-                                        message={errors.join_date}
+                                        message={getErrorMessage("join_date")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -161,7 +240,7 @@ const StaffCreate = () => {
                                         placeholder="Contoh: Tata Usaha, Satpam"
                                     />
                                     <InputError
-                                        message={errors.position}
+                                        message={getErrorMessage("position")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -185,7 +264,7 @@ const StaffCreate = () => {
                                         </option>
                                     </select>
                                     <InputError
-                                        message={errors.category}
+                                        message={getErrorMessage("category")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -205,7 +284,7 @@ const StaffCreate = () => {
                                         rows={3}
                                     />
                                     <InputError
-                                        message={errors.address}
+                                        message={getErrorMessage("address")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -251,7 +330,7 @@ const StaffCreate = () => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.email}
+                                        message={getErrorMessage("email")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -273,7 +352,7 @@ const StaffCreate = () => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password}
+                                        message={getErrorMessage("password")}
                                         className="mt-2"
                                     />
                                 </div>
@@ -295,7 +374,9 @@ const StaffCreate = () => {
                                         autoComplete="new-password"
                                     />
                                     <InputError
-                                        message={errors.password_confirmation}
+                                        message={getErrorMessage(
+                                            "password_confirmation"
+                                        )}
                                         className="mt-2"
                                     />
                                 </div>

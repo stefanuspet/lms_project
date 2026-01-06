@@ -131,19 +131,52 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'nip' => 'nullable|string|max:20|unique:staff,nip',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'position' => 'nullable|string|max:255',
-            'category' => 'required|in:staff,security',
-            'join_date' => 'nullable|date',
-            'is_active' => 'nullable|boolean',
-            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-        ]);
+        $validated = $request->validate(
+            [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'nip' => 'nullable|string|max:20|unique:staff,nip',
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+                'position' => 'nullable|string|max:255',
+                'category' => 'required|in:staff,security',
+                'join_date' => 'nullable|date',
+                'is_active' => 'nullable|boolean',
+                'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+            ],
+            [
+                'name.required' => 'Nama wajib diisi.',
+                'name.max' => 'Nama maksimal :max karakter.',
+
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'email.max' => 'Email maksimal :max karakter.',
+                'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
+
+                'password.required' => 'Password wajib diisi.',
+                'password.min' => 'Password minimal :min karakter.',
+                'password.confirmed' => 'Konfirmasi password tidak sama.',
+
+                'nip.max' => 'NIP maksimal :max karakter.',
+                'nip.unique' => 'NIP sudah digunakan oleh staf lain.',
+
+                'phone.max' => 'Nomor telepon maksimal :max karakter.',
+
+                'address.max' => 'Alamat maksimal :max karakter.',
+
+                'position.max' => 'Jabatan maksimal :max karakter.',
+
+                'category.required' => 'Kategori wajib dipilih.',
+                'category.in' => 'Kategori tidak valid.',
+
+                'join_date.date' => 'Tanggal bergabung tidak valid.',
+
+                'profile_picture.image' => 'Foto profil harus berupa gambar.',
+                'profile_picture.mimes' => 'Foto profil harus berformat jpg, jpeg, png, atau gif.',
+                'profile_picture.max' => 'Ukuran foto profil maksimal :max kilobyte.',
+            ]
+        );
 
         try {
             DB::beginTransaction();
@@ -236,20 +269,49 @@ class StaffController extends Controller
 
     public function update(Request $request, Staff $staff)
     {
-        $validated = $request->validate([
-            // Untuk update, field boleh tidak dikirim (akan mempertahankan nilai lama)
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $staff->user_id,
-            'password' => 'nullable|string|min:8|confirmed',
-            'nip' => 'nullable|string|max:20|unique:staff,nip,' . $staff->id,
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'position' => 'nullable|string|max:255',
-            'category' => 'sometimes|in:staff,security',
-            'join_date' => 'nullable|date',
-            'is_active' => 'nullable|boolean',
-            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-        ]);
+        $validated = $request->validate(
+            [
+                // Untuk update, field boleh tidak dikirim (akan mempertahankan nilai lama)
+                'name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|string|email|max:255|unique:users,email,' . $staff->user_id,
+                'password' => 'nullable|string|min:8|confirmed',
+                'nip' => 'nullable|string|max:20|unique:staff,nip,' . $staff->id,
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+                'position' => 'nullable|string|max:255',
+                'category' => 'sometimes|in:staff,security',
+                'join_date' => 'nullable|date',
+                'is_active' => 'nullable|boolean',
+                'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
+            ],
+            [
+                'name.max' => 'Nama maksimal :max karakter.',
+
+                'email.email' => 'Format email tidak valid.',
+                'email.max' => 'Email maksimal :max karakter.',
+                'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
+
+                'password.min' => 'Password minimal :min karakter.',
+                'password.confirmed' => 'Konfirmasi password tidak sama.',
+
+                'nip.max' => 'NIP maksimal :max karakter.',
+                'nip.unique' => 'NIP sudah digunakan oleh staf lain.',
+
+                'phone.max' => 'Nomor telepon maksimal :max karakter.',
+
+                'address.max' => 'Alamat maksimal :max karakter.',
+
+                'position.max' => 'Jabatan maksimal :max karakter.',
+
+                'category.in' => 'Kategori tidak valid.',
+
+                'join_date.date' => 'Tanggal bergabung tidak valid.',
+
+                'profile_picture.image' => 'Foto profil harus berupa gambar.',
+                'profile_picture.mimes' => 'Foto profil harus berformat jpg, jpeg, png, atau gif.',
+                'profile_picture.max' => 'Ukuran foto profil maksimal :max kilobyte.',
+            ]
+        );
 
         try {
             DB::beginTransaction();

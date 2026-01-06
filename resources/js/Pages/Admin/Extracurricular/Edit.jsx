@@ -194,6 +194,7 @@ const ExtracurricularEdit = ({ extracurricular, teachers, semesters }) => {
                                     />
                                 </div>
 
+
                                 <div className="md:col-span-2 flex items-center gap-2 mt-2">
                                     <input
                                         id="is_active"

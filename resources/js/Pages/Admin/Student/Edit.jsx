@@ -5,9 +5,10 @@ import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import SelectInput from "@/Components/SelectInput";
+import Toast from "@/Components/Toast";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
-const StudentEdit = ({ student }) => {
+const StudentEdit = ({ student, flash }) => {
     const { data, setData, post, processing, errors } = useForm({
         name: student.name || "",
         email: student.user?.email || "",
@@ -26,6 +27,16 @@ const StudentEdit = ({ student }) => {
 
     const [clientErrors, setClientErrors] = useState({});
     const [isFormValid, setIsFormValid] = useState(true); // Default to true for edit form since password is optional
+    const [toast, setToast] = useState(null);
+
+    // Tampilkan toast jika ada error global dari server (mis. email/NISN sudah dipakai)
+    useEffect(() => {
+        if (errors?.error) {
+            setToast({ type: "error", message: errors.error });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        }
+    }, [errors, flash]);
 
     // Validate form whenever data changes
     useEffect(() => {
@@ -99,11 +110,24 @@ const StudentEdit = ({ student }) => {
 
     // Get displayed error (priority to server-side errors)
     const getErrorMessage = (field) => {
-        return errors[field] || clientErrors[field];
+        if (errors[field]) {
+            return errors[field];
+        }
+
+        if (field === "password_confirmation" && errors.password) {
+            return errors.password;
+        }
+
+        return clientErrors[field];
     };
 
     return (
         <AuthenticatedLayout title="Edit Data Siswa">
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}

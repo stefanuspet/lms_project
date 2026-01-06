@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // Default timezone (set to WIB / Asia/Jakarta)
+    'timezone' => 'Asia/Jakarta',
 
     /*
     |--------------------------------------------------------------------------

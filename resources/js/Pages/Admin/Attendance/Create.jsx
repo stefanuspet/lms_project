@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
@@ -19,6 +19,40 @@ const AttendanceCreate = ({ semesters }) => {
         departure_start_time: "15:00",
         departure_duration: "45",
     });
+
+    // Auto-generate default title & description based on date & semester
+    useEffect(() => {
+        const formatDate = (value) => {
+            const d = new Date(value);
+            if (Number.isNaN(d.getTime())) return value;
+
+            const day = String(d.getDate()).padStart(2, "0");
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const year = d.getFullYear();
+
+            return `${day}-${month}-${year}`;
+        };
+
+        const formattedDate = formatDate(data.date);
+
+        const semester = semesters.find(
+            (item) => String(item.id) === String(data.semester_id)
+        );
+
+        const baseTitle = `Presensi Harian ${formattedDate}`;
+        const defaultDescription = `Presensi harian tanggal ${formattedDate}${
+            semester ? ` - ${semester.name}` : ""
+        }`;
+
+        if (data.title !== baseTitle) {
+            setData("title", baseTitle);
+        }
+
+        if (data.description !== defaultDescription) {
+            setData("description", defaultDescription);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.date, data.semester_id, semesters]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -74,11 +108,11 @@ const AttendanceCreate = ({ semesters }) => {
                                     </h2>
                                 </div>
 
-                                {/* Title */}
+                                {/* Title (opsional, akan diisi otomatis jika dikosongkan) */}
                                 <div className="md:col-span-2">
                                     <InputLabel
                                         htmlFor="title"
-                                        value="Judul Sesi"
+                                        value="Judul Sesi (opsional)"
                                     />
                                     <TextInput
                                         id="title"
@@ -87,8 +121,8 @@ const AttendanceCreate = ({ semesters }) => {
                                         value={data.title}
                                         className="mt-1 block w-full"
                                         onChange={handleChange}
-                                        placeholder="Masukkan judul yang jelas untuk sesi presensi (misalnya 'Apel Pagi', 'Pertemuan Kelas')"
-                                        required
+                                        disabled
+                                        placeholder="Kosongkan untuk judul otomatis, atau isi jika ingin judul khusus (misalnya 'Apel Pagi')."
                                     />
                                     <InputError
                                         message={errors.title}
@@ -108,7 +142,8 @@ const AttendanceCreate = ({ semesters }) => {
                                         value={data.description}
                                         className="mt-1 block w-full"
                                         onChange={handleChange}
-                                        placeholder="Add additional information about this attendance session"
+                                        disabled
+                                        placeholder="Kosongkan untuk deskripsi otomatis sesuai tanggal & semester."
                                         rows={3}
                                     />
                                     <InputError

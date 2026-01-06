@@ -1,22 +1,54 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
 import SelectInput from "@/Components/SelectInput";
+import Toast from "@/Components/Toast";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
-const ClassroomCreate = ({ semesters }) => {
+const ClassroomCreate = ({ semesters, flash }) => {
     const { data, setData, post, processing, errors } = useForm({
         name: "",
         description: "",
         semester_id: "",
     });
 
+    const [clientErrors, setClientErrors] = useState({});
+    const [isFormValid, setIsFormValid] = useState(true);
+    const [toast, setToast] = useState(null);
+
+    // Tampilkan toast jika ada error global dari server
+    useEffect(() => {
+        if (errors?.error) {
+            setToast({ type: "error", message: errors.error });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        }
+    }, [errors, flash]);
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!data.name) newErrors.name = "Nama kelas wajib diisi.";
+
+        setClientErrors(newErrors);
+        setIsFormValid(Object.keys(newErrors).length === 0);
+    };
+
+    useEffect(() => {
+        validateForm();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("admin.classrooms.store"));
+        validateForm();
+
+        if (isFormValid) {
+            post(route("admin.classrooms.store"));
+        }
     };
 
     const handleChange = (e) => {
@@ -24,8 +56,17 @@ const ClassroomCreate = ({ semesters }) => {
         setData(name, value);
     };
 
+    const getErrorMessage = (field) => {
+        return errors[field] || clientErrors[field];
+    };
+
     return (
         <AuthenticatedLayout title="Tambah Kelas Baru">
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             <div className="py-6 w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
@@ -73,7 +114,7 @@ const ClassroomCreate = ({ semesters }) => {
                                         required
                                     />
                                     <InputError
-                                        message={errors.name}
+                                        message={getErrorMessage("name")}
                                         className="mt-2"
                                     />
                                 </div>

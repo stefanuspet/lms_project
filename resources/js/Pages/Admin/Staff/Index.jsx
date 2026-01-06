@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import React, { useState, useEffect } from "react";
 import { Link, router } from "@inertiajs/react";
+import Toast from "@/Components/Toast";
 import {
     Edit2,
     Trash,
@@ -21,6 +22,16 @@ const StaffIndex = ({ staff, pagination, filters, flash }) => {
         pagination?.current_page || 1
     );
     const [processing, setProcessing] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    // Tampilkan toast ketika ada flash message sukses / error
+    useEffect(() => {
+        if (flash?.success) {
+            setToast({ type: "success", message: flash.success });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        }
+    }, [flash]);
 
     const goToPage = (page) => {
         if (
@@ -109,17 +120,11 @@ const StaffIndex = ({ staff, pagination, filters, flash }) => {
 
     return (
         <AuthenticatedLayout title="Kelola Data Staf">
-            {flash?.success && (
-                <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4">
-                    <p>{flash.success}</p>
-                </div>
-            )}
-            {flash?.error && (
-                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-                    <p>{flash.error}</p>
-                </div>
-            )}
-
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             <div className="w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     <div className="flex justify-between items-center px-6 py-5 border-b">

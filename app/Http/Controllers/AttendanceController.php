@@ -150,7 +150,7 @@ class AttendanceController extends Controller
     {
         // Validate input
         $validated = $request->validate([
-            'title' => 'required|string|max:100',
+            'title' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:500',
             'date' => 'required|date',
             'semester_id' => 'required|exists:semesters,id',
@@ -160,10 +160,34 @@ class AttendanceController extends Controller
             'departure_duration' => 'required|integer|min:5|max:300', // menit
         ]);
 
+        // Cegah duplikasi sesi presensi harian di tanggal & semester yang sama
+        $existingArrival = AttendanceSession::where('date', $request->date)
+            ->where('semester_id', $request->semester_id)
+            ->where('session_type', 'arrival')
+            ->exists();
+
+        $existingDeparture = AttendanceSession::where('date', $request->date)
+            ->where('semester_id', $request->semester_id)
+            ->where('session_type', 'departure')
+            ->exists();
+
+        if ($existingArrival || $existingDeparture) {
+            return redirect()->back()
+                ->withErrors([
+                    'error' => 'Sesi presensi berangkat dan/atau pulang untuk tanggal dan semester ini sudah ada. Tidak bisa membuat dua kali dalam satu hari.'
+                ])
+                ->withInput();
+        }
+
         DB::beginTransaction();
 
         try {
-            $baseTitle = $request->title;
+            // Siapkan judul & deskripsi default jika tidak diisi
+            $semester = Semester::find($request->semester_id);
+            $formattedDate = Carbon::parse($request->date)->format('d-m-Y');
+            $baseTitle = $request->title ?: 'Presensi Harian ' . $formattedDate;
+            $description = $request->description
+                ?: 'Presensi harian tanggal ' . $formattedDate . ($semester ? ' - ' . $semester->name : '');
 
             $payloads = [
                 [
@@ -188,7 +212,7 @@ class AttendanceController extends Controller
                     'qr_token' => $this->generateUniqueQrToken(),
                     'session_type' => $payload['session_type'],
                     'title' => $payload['title'],
-                    'description' => $request->description,
+                    'description' => $description,
                     'date' => $request->date,
                     'start_time' => $payload['start_time'],
                     'semester_id' => $request->semester_id,

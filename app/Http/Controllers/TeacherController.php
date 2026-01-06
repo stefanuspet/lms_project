@@ -200,13 +200,14 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.teachers.index')->with('success', 'Teacher created successfully');
+            return redirect()->route('admin.teachers.index')
+                ->with('success', 'Guru berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating teacher: ' . $e->getMessage());
 
             return redirect()->back()
-                ->withErrors(['error' => 'Failed to create teacher: ' . $e->getMessage()])
+                ->withErrors(['error' => 'Gagal menambahkan guru. Mohon periksa kembali data yang diisi (NIP dan email harus unik).'])
                 ->withInput();
         }
     }
@@ -344,13 +345,14 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.teachers.index')->with('success', 'Teacher updated successfully');
+            return redirect()->route('admin.teachers.index')
+                ->with('success', 'Data guru berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating teacher: ' . $e->getMessage());
 
             return redirect()->back()
-                ->withErrors(['error' => 'Failed to update teacher: ' . $e->getMessage()])
+                ->withErrors(['error' => 'Gagal memperbarui data guru. Mohon periksa kembali data yang diisi.'])
                 ->withInput();
         }
     }
@@ -374,7 +376,7 @@ class TeacherController extends Controller
             $subjectsCount = $teacher->subjects()->count();
             if ($subjectsCount > 0) {
                 return redirect()->back()->withErrors([
-                    'error' => "Cannot delete teacher because they have {$subjectsCount} subjects assigned. Please reassign the subjects first."
+                    'error' => "Guru tidak dapat dihapus karena masih memiliki {$subjectsCount} mata pelajaran. Silakan pindahkan mata pelajaran tersebut terlebih dahulu."
                 ]);
             }
 
@@ -405,12 +407,14 @@ class TeacherController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.teachers.index')->with('success', 'Teacher deleted successfully');
+            return redirect()->route('admin.teachers.index')
+                ->with('success', 'Guru berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error deleting teacher: ' . $e->getMessage());
 
-            return redirect()->back()->withErrors(['error' => 'Failed to delete teacher: ' . $e->getMessage()]);
+            return redirect()->back()
+                ->withErrors(['error' => 'Gagal menghapus guru. Silakan coba lagi atau hubungi administrator.']);
         }
     }
 
@@ -438,7 +442,7 @@ class TeacherController extends Controller
             if ($teachersWithSubjects->count() > 0) {
                 $teacherNames = $teachersWithSubjects->pluck('name')->implode(', ');
                 return redirect()->back()->withErrors([
-                    'error' => "Cannot delete teachers with assigned subjects: {$teacherNames}"
+                    'error' => "Beberapa guru tidak dapat dihapus karena masih memiliki mata pelajaran: {$teacherNames}. Pindahkan mata pelajaran mereka terlebih dahulu."
                 ]);
             }
 
@@ -471,13 +475,13 @@ class TeacherController extends Controller
             DB::commit();
 
             return redirect()->route('admin.teachers.index')
-                ->with('success', count($teacherIds) . ' teachers deleted successfully');
+                ->with('success', count($teacherIds) . ' guru berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error bulk deleting teachers: ' . $e->getMessage());
 
             return redirect()->back()
-                ->withErrors(['error' => 'Failed to delete teachers: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Gagal menghapus beberapa guru. Silakan coba lagi atau hubungi administrator.']);
         }
     }
 

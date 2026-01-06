@@ -121,6 +121,8 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
     Route::get('/extracurriculars/{extracurricular}/edit', [ExtracurricularController::class, 'edit'])->name('extracurriculars.edit');
     Route::put('/extracurriculars/{extracurricular}', [ExtracurricularController::class, 'update'])->name('extracurriculars.update');
     Route::delete('/extracurriculars/{extracurricular}', [ExtracurricularController::class, 'destroy'])->name('extracurriculars.destroy');
+    Route::get('/extracurriculars/{extracurricular}/members', [ExtracurricularController::class, 'editMembers'])->name('extracurriculars.members.edit');
+    Route::post('/extracurriculars/{extracurricular}/members', [ExtracurricularController::class, 'updateMembers'])->name('extracurriculars.members.update');
 
     Route::get('/classrooms', [ClassroomController::class, 'index'])->name('classrooms.index');
     Route::get('/classrooms/create', [ClassroomController::class, 'create'])->name('classrooms.create');

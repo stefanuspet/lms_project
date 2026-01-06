@@ -1,6 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import React, { useState, useEffect } from "react";
 import { Link, router, useForm } from "@inertiajs/react";
+import Toast from "@/Components/Toast";
 import {
     Edit2,
     Trash,
@@ -19,6 +20,17 @@ const TeachersIndex = ({ teachers, pagination, filters, flash }) => {
     const [currentPage, setCurrentPage] = useState(
         pagination?.current_page || 1
     );
+
+    const [toast, setToast] = useState(null);
+
+    // Tampilkan toast saat ada flash message
+    useEffect(() => {
+        if (flash?.success) {
+            setToast({ type: "success", message: flash.success });
+        } else if (flash?.error) {
+            setToast({ type: "error", message: flash.error });
+        }
+    }, [flash]);
 
     // Fungsi untuk menghapus guru
     const handleDelete = (teacherId) => {
@@ -121,16 +133,11 @@ const TeachersIndex = ({ teachers, pagination, filters, flash }) => {
 
     return (
         <AuthenticatedLayout title="Kelola Data Guru">
-            {/* Flash message */}
-            {flash?.success && (
-                <div
-                    className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
-                    role="alert"
-                >
-                    <p>{flash.success}</p>
-                </div>
-            )}
-
+            <Toast
+                type={toast?.type}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
             <div className="w-full">
                 <div className="w-full bg-white rounded-xl shadow-sm">
                     {/* Header */}
