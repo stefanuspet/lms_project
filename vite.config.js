@@ -10,12 +10,12 @@ export default defineConfig({
         }),
         react(),
     ],
-    server: {
-        host: "0.0.0.0",
-        port: 5173,
-        hmr: {
-            host: "10.49.129.225", // IP laptopmu
-        },
-        cors: true,
-    },
+    // server: {
+    //     host: "0.0.0.0",
+    //     port: 5173,
+    //     hmr: {
+    //         host: "10.49.129.225", // IP laptopmu
+    //     },
+    //     cors: true,
+    // },
 });

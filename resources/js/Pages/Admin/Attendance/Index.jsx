@@ -15,22 +15,25 @@ import {
     Timer1,
     People,
     ChartSuccess,
+    Edit2,
+    Trash,
+    Printer,
 } from "iconsax-reactjs";
 
 const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
     const [searchTerm, setSearchTerm] = useState(filters?.search || "");
     const [currentPage, setCurrentPage] = useState(
-        pagination?.current_page || 1
+        pagination?.current_page || 1,
     );
     const [showFilters, setShowFilters] = useState(false);
     const [filterDateFrom, setFilterDateFrom] = useState(
-        filters?.filter_date_from || ""
+        filters?.filter_date_from || "",
     );
     const [filterDateTo, setFilterDateTo] = useState(
-        filters?.filter_date_to || ""
+        filters?.filter_date_to || "",
     );
     const [filterStatus, setFilterStatus] = useState(
-        filters?.filter_status || ""
+        filters?.filter_status || "",
     );
     const [sortBy, setSortBy] = useState(filters?.sort_by || "date");
     const [sortOrder, setSortOrder] = useState(filters?.sort_order || "desc");
@@ -50,9 +53,9 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
         router.get(
             route("admin.attendance.index"),
             {
-                page: page,
-                search: searchTerm,
+                page,
                 per_page: pagination.per_page,
+                search: searchTerm,
                 sort_by: sortBy,
                 sort_order: sortOrder,
                 filter_date_from: filterDateFrom,
@@ -62,9 +65,20 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
             {
                 preserveState: true,
                 preserveScroll: true,
-                only: ["sessions", "pagination"],
-            }
+                only: ["sessions", "pagination", "filters"],
+            },
         );
+    };
+
+    // Handle delete session
+    const handleDeleteSession = (sessionId, sessionTitle) => {
+        if (
+            window.confirm(
+                `Are you sure you want to delete the session "${sessionTitle}"? This will also delete all attendance records for this session.`,
+            )
+        ) {
+            router.delete(route("admin.attendance.destroy", sessionId));
+        }
     };
 
     // Handle search form submit
@@ -87,7 +101,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                 preserveState: true,
                 preserveScroll: true,
                 only: ["sessions", "pagination", "filters"],
-            }
+            },
         );
     };
 
@@ -109,7 +123,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                 preserveState: true,
                 preserveScroll: true,
                 only: ["sessions", "pagination", "filters"],
-            }
+            },
         );
     };
 
@@ -137,7 +151,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                 preserveState: true,
                 preserveScroll: true,
                 only: ["sessions", "pagination", "filters"],
-            }
+            },
         );
     };
 
@@ -161,7 +175,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
     // Generate page numbers
     const pageNumbers = generatePageNumbers(
         currentPage,
-        pagination?.last_page || 1
+        pagination?.last_page || 1,
     );
 
     // Update currentPage when pagination changes
@@ -210,7 +224,9 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                 </button>
                             </div>
                             <p className="mt-1 text-xs text-gray-500">
-                                Daftar sesi QR untuk absensi harian. Gunakan pencarian dan filter di kanan untuk menemukan sesi tertentu.
+                                Daftar sesi QR untuk absensi harian. Gunakan
+                                pencarian dan filter di kanan untuk menemukan
+                                sesi tertentu.
                             </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -251,7 +267,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                 href={route("admin.attendance.reports")}
                                 className="p-2 rounded-full bg-[#A6F4C5] text-green-600 hover:bg-green-200 transition-colors"
                             >
-                                <ChartSuccess color="green" size="24" />
+                                <Printer color="green" size="24" />
                             </Link>
 
                             {/* Add button */}
@@ -287,9 +303,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                 </li>
                                 <li>
                                     Status{" "}
-                                    <span className="font-semibold">
-                                        Aktif
-                                    </span>{" "}
+                                    <span className="font-semibold">Aktif</span>{" "}
                                     artinya sesi masih bisa dipakai siswa untuk
                                     absen.{" "}
                                     <span className="font-semibold">
@@ -419,7 +433,7 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Tanggal, Waktu & QR
+                                        Tanggal, Waktu & QR
                                     </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Judul & Deskripsi
@@ -444,27 +458,35 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                         >
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex flex-col">
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
-                                                        <Calendar size="16" className="text-blue-500" />
-                                                        <span>{session.date}</span>
-                                                        <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 capitalize">
-                                                            {session.session_type === "arrival"
-                                                                ? "Berangkat"
-                                                                : "Pulang"}
-                                                        </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                                            <Calendar
+                                                                size="16"
+                                                                className="text-blue-500"
+                                                            />
+                                                            <span>
+                                                                {session.date}
+                                                            </span>
+                                                            <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 capitalize">
+                                                                {session.session_type ===
+                                                                "arrival"
+                                                                    ? "Berangkat"
+                                                                    : "Pulang"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-600">
+                                                            {session.start_time
+                                                                ? `${session.start_time} - ${session.expires_at}`
+                                                                : session.expires_at}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500 mt-1">
+                                                            <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700 break-all">
+                                                                {
+                                                                    session.qr_token
+                                                                }
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-xs text-gray-600">
-                                                        {session.start_time
-                                                            ? `${session.start_time} - ${session.expires_at}`
-                                                            : session.expires_at}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500 mt-1">
-                                                        <span className="font-mono bg-gray-100 px-2 py-1 rounded text-gray-700 break-all">
-                                                            {session.qr_token}
-                                                        </span>
-                                                    </div>
-                                                </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -476,27 +498,27 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                                         />
                                                         {session.title}
                                                     </div>
-                                                    {session.description && (
+                                                    {/* {session.description && (
                                                         <div className="text-sm text-gray-500 mt-1 line-clamp-2">
                                                             {
                                                                 session.description
                                                             }
                                                         </div>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 {session.is_active ? (
-                                                    <div className="flex items-center">
+                                                    <div className="items-center">
                                                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                                             Aktif
                                                         </span>
                                                         <div className="ml-2 text-xs text-gray-500 flex items-center">
-                                                            <Timer1
+                                                            {/* <Timer1
                                                                 size="14"
                                                                 className="mr-1"
-                                                            />
-                                                            Berakhir:{" "}
+                                                            /> */}
+                                                            Berakhir: <br />
                                                             {session.expires_at}
                                                         </div>
                                                     </div>
@@ -538,12 +560,35 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                                 <Link
                                                     href={route(
                                                         "admin.attendance.show",
-                                                        session.id
+                                                        session.id,
                                                     )}
-                                                    className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                                    className="text-indigo-600 hover:text-indigo-900 mr-3 inline-block"
+                                                    title="View"
                                                 >
                                                     <Eye size="20" />
                                                 </Link>
+                                                <Link
+                                                    href={route(
+                                                        "admin.attendance.edit",
+                                                        session.id,
+                                                    )}
+                                                    className="text-blue-600 hover:text-blue-900 mr-3 inline-block"
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size="20" />
+                                                </Link>
+                                                <button
+                                                    onClick={() =>
+                                                        handleDeleteSession(
+                                                            session.id,
+                                                            session.title,
+                                                        )
+                                                    }
+                                                    className="text-red-600 hover:text-red-900 inline-block"
+                                                    title="Delete"
+                                                >
+                                                    <Trash size="20" />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -553,7 +598,8 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                             colSpan="5"
                                             className="px-6 py-4 text-center text-gray-500"
                                         >
-                                            Tidak ada sesi absensi yang sesuai dengan filter ini.
+                                            Tidak ada sesi absensi yang sesuai
+                                            dengan filter ini.
                                         </td>
                                     </tr>
                                 )}
@@ -585,8 +631,8 @@ const AttendanceIndex = ({ sessions, pagination, filters, flash }) => {
                                                     number === currentPage
                                                         ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
                                                         : number === "..."
-                                                        ? "bg-white border-gray-300 text-gray-500 cursor-default"
-                                                        : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50 cursor-pointer"
+                                                          ? "bg-white border-gray-300 text-gray-500 cursor-default"
+                                                          : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50 cursor-pointer"
                                                 }`}
                                                 disabled={number === "..."}
                                             >

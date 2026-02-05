@@ -133,7 +133,7 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                                                         classItem.count
                                                                     }
                                                                 </td>
-                                                                <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
+                                                                {/* <td className="px-4 py-2 whitespace-nowrap text-sm text-right">
                                                                     <Link
                                                                         href={route(
                                                                             "admin.classes.show",
@@ -144,7 +144,7 @@ const SemesterShow = ({ semester, students_by_class, teacher_subjects }) => {
                                                                         Lihat
                                                                         Kelas
                                                                     </Link>
-                                                                </td>
+                                                                </td> */}
                                                             </tr>
                                                         )
                                                     )}

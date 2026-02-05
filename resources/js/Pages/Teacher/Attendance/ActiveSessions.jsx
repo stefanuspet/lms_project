@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Link } from "@inertiajs/react";
 import TeacherLayout from "@/Layouts/TeacherLayout";
 import {
@@ -10,6 +10,7 @@ import {
     People,
     Copy,
     Eye,
+    DocumentDownload,
 } from "iconsax-reactjs";
 
 const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
@@ -17,6 +18,37 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
         alert(`QR token ${text} berhasil disalin!`);
+    };
+
+    // Function to download QR code
+    const downloadQRCode = async (qrToken, sessionTitle) => {
+        try {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrToken)}`;
+
+            // Fetch the QR code image
+            const response = await fetch(qrUrl);
+            const blob = await response.blob();
+
+            // Create a temporary URL for the blob
+            const url = window.URL.createObjectURL(blob);
+
+            // Create and trigger download
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `QR_${sessionTitle.replace(/\s+/g, "_")}_${qrToken.substring(0, 8)}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up the temporary URL
+            window.URL.revokeObjectURL(url);
+
+            // Show success message
+            alert("QR Code berhasil didownload!");
+        } catch (error) {
+            console.error("Error downloading QR code:", error);
+            alert("Gagal mendownload QR Code. Silakan coba lagi.");
+        }
     };
 
     return (
@@ -114,7 +146,7 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                                     <div className="bg-white rounded-lg p-2 border border-amber-100">
                                                         <img
                                                             src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                                                                session.qr_token
+                                                                session.qr_token,
                                                             )}`}
                                                             alt="QR Absensi"
                                                             className="w-40 h-40 object-contain"
@@ -124,45 +156,76 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                                         <span className="text-[10px] font-mono bg-gray-100 px-2 py-1 rounded text-gray-700 break-all">
                                                             {session.qr_token}
                                                         </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                copyToClipboard(
-                                                                    session.qr_token
-                                                                )
-                                                            }
-                                                            className="p-2 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
-                                                            title="Salin token"
-                                                        >
-                                                            <Copy
-                                                                size="18"
-                                                                className="text-amber-700"
-                                                            />
-                                                        </button>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    downloadQRCode(
+                                                                        session.qr_token,
+                                                                        session.title,
+                                                                    )
+                                                                }
+                                                                className="p-2 bg-blue-100 rounded-full hover:bg-blue-200 transition-colors"
+                                                                title="Download QR"
+                                                            >
+                                                                <DocumentDownload
+                                                                    size="18"
+                                                                    className="text-blue-700"
+                                                                />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    copyToClipboard(
+                                                                        session.qr_token,
+                                                                    )
+                                                                }
+                                                                className="p-2 bg-amber-100 rounded-full hover:bg-amber-200 transition-colors"
+                                                                title="Salin token"
+                                                            >
+                                                                <Copy
+                                                                    size="18"
+                                                                    className="text-amber-700"
+                                                                />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Session Info */}
                                                 <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-gray-50 p-4 rounded-lg">
-                                                    <div className="flex items-center gap-2">
-                                                        <Calendar size="18" className="text-gray-500" />
-                                                        <div>
-                                                            <p className="text-xs text-gray-500">Tanggal / Jenis</p>
-                                                            <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                                                                <span>{session.date}</span>
-                                                                <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 capitalize">
-                                                                    {session.session_type === "arrival" ? "Berangkat" : "Pulang"}
-                                                                </span>
-                                                            </p>
+                                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <Calendar
+                                                                size="18"
+                                                                className="text-gray-500"
+                                                            />
+                                                            <div>
+                                                                <p className="text-xs text-gray-500">
+                                                                    Tanggal /
+                                                                    Jenis
+                                                                </p>
+                                                                <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
+                                                                    <span>
+                                                                        {
+                                                                            session.date
+                                                                        }
+                                                                    </span>
+                                                                    <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-700 capitalize">
+                                                                        {session.session_type ===
+                                                                        "arrival"
+                                                                            ? "Berangkat"
+                                                                            : "Pulang"}
+                                                                    </span>
+                                                                </p>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div className="bg-gray-50 p-4 rounded-lg">
-                                                    <div className="flex items-center">
-                                                        <DocumentText
-                                                            size="18"
-                                                            className="text-gray-500 mr-2"
+                                                    <div className="bg-gray-50 p-4 rounded-lg">
+                                                        <div className="flex items-center">
+                                                            <DocumentText
+                                                                size="18"
+                                                                className="text-gray-500 mr-2"
                                                             />
                                                             <div>
                                                                 <p className="text-xs text-gray-500">
@@ -179,9 +242,14 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                                 </div>
                                                 <div className="bg-gray-50 p-4 rounded-lg">
                                                     <div className="flex items-center gap-2">
-                                                        <Timer1 size="18" className="text-gray-500" />
+                                                        <Timer1
+                                                            size="18"
+                                                            className="text-gray-500"
+                                                        />
                                                         <div>
-                                                            <p className="text-xs text-gray-500">Waktu</p>
+                                                            <p className="text-xs text-gray-500">
+                                                                Waktu
+                                                            </p>
                                                             <p className="text-sm font-medium text-gray-800">
                                                                 {session.start_time
                                                                     ? `${session.start_time} - ${session.expires_at}`
@@ -248,7 +316,7 @@ const TeacherAttendanceActiveSessions = ({ activeSessions, flash }) => {
                                                                 date: session.date,
                                                                 session_id:
                                                                     session.id,
-                                                            }
+                                                            },
                                                         )}
                                                         className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                                                     >

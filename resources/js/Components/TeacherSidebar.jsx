@@ -31,6 +31,12 @@ const TeacherSidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     active: url === "/teacher/dashboard",
                     path: "/teacher/dashboard",
                 },
+                {
+                    label: "Presensi Guru",
+                    icon: ClipboardTick,
+                    active: url.startsWith("/teacher/employee-attendance"),
+                    path: "/teacher/employee-attendance",
+                },
             ],
         },
         {
@@ -161,7 +167,9 @@ const TeacherSidebar = ({ isOpen, setIsOpen, isMobile }) => {
                                         label={item.label}
                                         active={item.active}
                                         path={item.path}
-                                        onClick={isMobile ? closeSidebar : undefined}
+                                        onClick={
+                                            isMobile ? closeSidebar : undefined
+                                        }
                                     />
                                 ))}
                             </div>

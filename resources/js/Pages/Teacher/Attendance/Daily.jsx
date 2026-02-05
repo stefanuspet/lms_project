@@ -12,6 +12,7 @@ import {
     People,
     MessageEdit,
     Timer,
+    DocumentDownload,
 } from "iconsax-reactjs";
 
 const TeacherAttendanceDaily = ({
@@ -25,6 +26,37 @@ const TeacherAttendanceDaily = ({
 }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("all");
+
+    // Function to download QR code
+    const downloadQRCode = async (qrToken, sessionTitle) => {
+        try {
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrToken)}`;
+
+            // Fetch the QR code image
+            const response = await fetch(qrUrl);
+            const blob = await response.blob();
+
+            // Create a temporary URL for the blob
+            const url = window.URL.createObjectURL(blob);
+
+            // Create and trigger download
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `QR_${sessionTitle.replace(/\s+/g, "_")}_${qrToken.substring(0, 8)}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up the temporary URL
+            window.URL.revokeObjectURL(url);
+
+            // Show success message
+            alert("QR Code berhasil didownload!");
+        } catch (error) {
+            console.error("Error downloading QR code:", error);
+            alert("Gagal mendownload QR Code. Silakan coba lagi.");
+        }
+    };
 
     // Format date for display
     const formatDate = (dateString) => {
@@ -55,23 +87,23 @@ const TeacherAttendanceDaily = ({
     const filteredStudents = students.filter(
         (student) =>
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.nisn.toLowerCase().includes(searchTerm.toLowerCase())
+            student.nisn.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
     // Group students by attendance status
     const groupedStudents = {
         present: filteredStudents.filter(
-            (student) => student.status === "hadir"
+            (student) => student.status === "hadir",
         ),
         absent: filteredStudents.filter(
-            (student) => student.status === "alpha"
+            (student) => student.status === "alpha",
         ),
         sick: filteredStudents.filter((student) => student.status === "sakit"),
         excused: filteredStudents.filter(
-            (student) => student.status === "izin"
+            (student) => student.status === "izin",
         ),
         not_submitted: filteredStudents.filter(
-            (student) => student.status === null
+            (student) => student.status === null,
         ),
     };
 
@@ -162,7 +194,7 @@ const TeacherAttendanceDaily = ({
                             </div>
                             <Link
                                 href={route(
-                                    "teacher.attendance.active_sessions"
+                                    "teacher.attendance.active_sessions",
                                 )}
                                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                             >
@@ -198,8 +230,13 @@ const TeacherAttendanceDaily = ({
                                                 key={session.id}
                                                 value={session.id}
                                             >
-                                                {session.title} ({session.session_type === "arrival" ? "Berangkat" : "Pulang"}) -{" "}
-                                                {session.start_time || "??"} (QR: {session.qr_token})
+                                                {session.title} (
+                                                {session.session_type ===
+                                                "arrival"
+                                                    ? "Berangkat"
+                                                    : "Pulang"}
+                                                ) - {session.start_time || "??"}{" "}
+                                                (QR: {session.qr_token})
                                             </option>
                                         ))}
                                     </>
@@ -271,7 +308,8 @@ const TeacherAttendanceDaily = ({
                                                                 : "text-red-600"
                                                         }`}
                                                     >
-                                                        {attendanceData.session_type === "arrival"
+                                                        {attendanceData.session_type ===
+                                                        "arrival"
                                                             ? "Berangkat"
                                                             : "Pulang"}{" "}
                                                         {attendanceData.start_time
@@ -283,12 +321,44 @@ const TeacherAttendanceDaily = ({
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-start">
-                                                <div className="bg-gray-100 px-2 py-1 rounded text-gray-700 font-mono">
-                                                    {attendanceData.qr_token}
-                                                </div>
-                                                <div className="ml-2 text-sm text-gray-500">
-                                                    QR Token
+                                            <div className="flex flex-col gap-3 items-start">
+                                                <div className="w-full bg-purple-50 p-4 rounded-lg flex flex-col items-center gap-2">
+                                                    <p className="text-sm text-purple-500 font-medium self-start">
+                                                        QR Absensi
+                                                    </p>
+                                                    <div className="bg-white p-2 rounded border border-purple-100">
+                                                        <img
+                                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                                                                attendanceData.qr_token,
+                                                            )}`}
+                                                            alt="QR Absensi"
+                                                            className="w-32 h-32 object-contain"
+                                                        />
+                                                    </div>
+                                                    <p className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-700 break-all w-full text-center">
+                                                        {
+                                                            attendanceData.qr_token
+                                                        }
+                                                    </p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            downloadQRCode(
+                                                                attendanceData.qr_token,
+                                                                `Absensi_${date}`,
+                                                            )
+                                                        }
+                                                        className="mt-2 flex items-center justify-center gap-2 w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors font-medium"
+                                                        title="Download QR Code"
+                                                    >
+                                                        <DocumentDownload size="16" />
+                                                        Download QR
+                                                    </button>
+                                                    <p className="text-xs text-purple-600">
+                                                        {attendanceData.is_active
+                                                            ? " (Aktif)"
+                                                            : " (Berakhir)"}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -525,7 +595,7 @@ const TeacherAttendanceDaily = ({
                                                             student.status ===
                                                                 null) ||
                                                         student.status ===
-                                                            selectedStatus
+                                                            selectedStatus,
                                                 )
                                                 .map((student) => (
                                                     <tr
@@ -544,12 +614,12 @@ const TeacherAttendanceDaily = ({
                                                             {student.status ? (
                                                                 <span
                                                                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
-                                                                        student.status
+                                                                        student.status,
                                                                     )}`}
                                                                 >
                                                                     <span className="flex items-center">
                                                                         {getStatusIcon(
-                                                                            student.status
+                                                                            student.status,
                                                                         )}
                                                                         <span className="ml-1 capitalize">
                                                                             {
@@ -579,7 +649,7 @@ const TeacherAttendanceDaily = ({
                                                         student.status ===
                                                             null) ||
                                                     student.status ===
-                                                        selectedStatus
+                                                        selectedStatus,
                                             ).length === 0 && (
                                                 <tr>
                                                     <td

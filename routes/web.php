@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClassroomController;
+use App\Http\Controllers\EmployeeAttendanceControllerAdmin;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SemesterController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\Teacher\ScheduleController as TeacherScheduleController
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Teacher\QuizController as TeacherQuizController;
 use App\Http\Controllers\Student\QuizController as StudentQuizController;
+use App\Http\Controllers\Teacher\EmployeeAttendanceController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -158,7 +160,11 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
         // gunakan GET untuk export agar browser langsung mengunduh file
         Route::get('/export-report', [AttendanceController::class, 'exportReport'])->name('export-report');
         Route::get('/{session}', [AttendanceController::class, 'show'])->name('show');
+        Route::get('/{session}/edit', [AttendanceController::class, 'edit'])->name('edit');
+        Route::put('/{session}', [AttendanceController::class, 'update'])->name('update');
+        Route::delete('/{session}', [AttendanceController::class, 'destroy'])->name('destroy');
         Route::post('/{session}/update-attendance', [AttendanceController::class, 'updateAttendance'])->name('update-attendance');
+        Route::delete('/{session}/delete-attendance/{attendance}', [AttendanceController::class, 'deleteAttendance'])->name('delete-attendance');
         Route::post('/{session}/extend', [AttendanceController::class, 'extendSession'])->name('extend-session');
         Route::post('/{session}/close', [AttendanceController::class, 'closeSession'])->name('close-session');
         // Hapus route get-subjects-for-class karena sudah tidak digunakan
@@ -170,6 +176,23 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
     //     Route::post('/submit', [StudentAttendanceController::class, 'submit'])->name('submit');
     //     Route::get('/history', [StudentAttendanceController::class, 'history'])->name('history');
     // });
+
+    Route::get(
+        '/employee-attendance',
+        [EmployeeAttendanceControllerAdmin::class, 'index']
+    )->name('employee-attendance.index');
+
+    // UPDATE STATUS ABSENSI
+    Route::patch(
+        '/employee-attendance/{id}/status',
+        [EmployeeAttendanceControllerAdmin::class, 'updateStatus']
+    )->name('employee-attendance.update-status');
+
+    // PRINT / EXPORT REPORT
+    Route::get(
+        '/employee-attendance/print',
+        [EmployeeAttendanceControllerAdmin::class, 'exportReport']
+    )->name('employee-attendance.print');
 
     Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
         Route::get('/', [ActivityLogController::class, 'index'])->name('index');
@@ -226,9 +249,21 @@ Route::prefix('teacher')->middleware(['auth', 'role:guru'])->name("teacher.")->g
 
     // Attendance routes
     Route::get('attendance', [TeacherAttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('attendance/reports', [TeacherAttendanceController::class, 'reports'])->name('attendance.reports');
+    Route::get('attendance/export-report', [TeacherAttendanceController::class, 'exportReport'])->name('attendance.export-report');
+    Route::get('attendance/create', [TeacherAttendanceController::class, 'create'])->name('attendance.create');
+    Route::post('attendance', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('attendance/{session}', [TeacherAttendanceController::class, 'show'])->name('attendance.show');
+    Route::get('attendance/{session}/edit', [TeacherAttendanceController::class, 'edit'])->name('attendance.edit');
+    Route::put('attendance/{session}', [TeacherAttendanceController::class, 'update'])->name('attendance.update');
+    Route::delete('attendance/{session}', [TeacherAttendanceController::class, 'destroy'])->name('attendance.destroy');
+    Route::post('attendance/{session}/update-attendance', [TeacherAttendanceController::class, 'updateAttendance'])->name('attendance.update-attendance');
+    Route::delete('attendance/{session}/delete-attendance/{attendance}', [TeacherAttendanceController::class, 'deleteAttendance'])->name('attendance.delete-attendance');
     Route::get('attendance/daily', [TeacherAttendanceController::class, 'dailyView'])->name('attendance.daily');
     Route::get('attendance/active-sessions', [TeacherAttendanceController::class, 'activeSessions'])->name('attendance.active_sessions');
     Route::post('attendance/extracurriculars/{extracurricular}', [TeacherAttendanceController::class, 'createExtracurricularSession'])->name('attendance.extracurriculars.create');
+    Route::post('/{session}/extend', [TeacherAttendanceController::class, 'extendSession'])->name('attendance.extend-session');
+    Route::post('/{session}/close', [TeacherAttendanceController::class, 'closeSession'])->name('attendance.close-session');
 
     // Quizzes
     Route::get('quizzes', [TeacherQuizController::class, 'index'])->name('quizzes.index');
@@ -253,6 +288,18 @@ Route::prefix('teacher')->middleware(['auth', 'role:guru'])->name("teacher.")->g
     Route::get('notifications', [App\Http\Controllers\Teacher\NotificationController::class, 'index'])->name('notifications.index');
     Route::post('notifications/mark-read', [App\Http\Controllers\Teacher\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::delete('notifications/{notification}', [App\Http\Controllers\Teacher\NotificationController::class, 'destroy'])->name('notifications.destroy');
+
+    Route::get('employee-attendance', [EmployeeAttendanceController::class, 'index'])
+        ->name('employee-attendance.index');
+
+    Route::post('employee-attendance/check-in', [EmployeeAttendanceController::class, 'checkIn'])
+        ->name('employee-attendance.check-in');
+
+    Route::post('employee-attendance/check-out', [EmployeeAttendanceController::class, 'checkOut'])
+        ->name('employee-attendance.check-out');
+
+    Route::get('employee-attendance/history', [EmployeeAttendanceController::class, 'history'])
+        ->name('employee-attendance.history');
 });
 
 Route::prefix('student')->middleware(['auth', 'role:siswa'])->name("student.")->group(function () {

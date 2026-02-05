@@ -239,48 +239,88 @@ class AttendanceController extends Controller
     /**
      * Display the specified attendance session.
      */
-    public function show(AttendanceSession $session)
+    public function show(Request $request, AttendanceSession $session)
     {
-        // Load relations
-        $session->load(['semester']);
+        // Load relasi penting
+        $session->load('semester');
+
         if (empty($session->qr_token)) {
             $session->update(['qr_token' => $this->generateUniqueQrToken()]);
         }
 
-        // Get all students
-        $allStudents = Student::orderBy('name')->get();
+        // 🔹 Ambil filter kelas dari query
+        $classId = $request->query('class_id');
 
-        // Get attendances for this session
+        /**
+         * =========================
+         * STUDENTS QUERY
+         * =========================
+         */
+        $studentsQuery = Student::with('classes')
+            ->orderBy('name');
+
+        if ($classId) {
+            $studentsQuery->whereHas('classes', function ($q) use ($classId) {
+                $q->where('classes.id', $classId);
+            });
+        }
+
+        $students = $studentsQuery->get();
+
+        /**
+         * =========================
+         * ATTENDANCES
+         * =========================
+         */
         $attendances = Attendance::where('attendance_sessions_id', $session->id)
-            ->with('student')
-            ->get();
+            ->whereIn('student_id', $students->pluck('id'))
+            ->get()
+            ->keyBy('student_id');
 
-        // Prepare student attendance data
-        $studentAttendances = $allStudents->map(function ($student) use ($attendances) {
-            $attendance = $attendances->where('student_id', $student->id)->first();
+        /**
+         * =========================
+         * MAP STUDENTS → FRONTEND
+         * =========================
+         */
+        $studentAttendances = $students->map(function ($student) use ($attendances) {
+            $attendance = $attendances->get($student->id);
 
             return [
                 'id' => $student->id,
                 'name' => $student->name,
                 'nisn' => $student->nisn,
-                'status' => $attendance ? $attendance->status : null,
-                'submitted_at' => $attendance && $attendance->submitted_at ?
-                    Carbon::parse($attendance->submitted_at)->format('d-m-Y H:i:s') : null,
-                'attendance_id' => $attendance ? $attendance->id : null,
+                'gender' => $student->gender ?? '-',
+                'status' => $attendance?->status,
+                'submitted_at' => $attendance?->submitted_at
+                    ? Carbon::parse($attendance->submitted_at)->format('d-m-Y H:i:s')
+                    : null,
+                'attendance_id' => $attendance?->id,
+                'classes' => $student->classes->map(fn($c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                ]),
             ];
         });
 
-        // Count statistics
+        /**
+         * =========================
+         * STATISTICS (BASED ON FILTER)
+         * =========================
+         */
         $stats = [
-            'total' => $allStudents->count(),
+            'total' => $students->count(),
             'present' => $attendances->where('status', 'hadir')->count(),
             'sick' => $attendances->where('status', 'sakit')->count(),
             'excused' => $attendances->where('status', 'izin')->count(),
             'absent' => $attendances->where('status', 'alpha')->count(),
-            'not_submitted' => $allStudents->count() - $attendances->count(),
+            'not_submitted' => $students->count() - $attendances->count(),
         ];
 
-        // Prepare data for frontend
+        /**
+         * =========================
+         * SESSION FORMAT
+         * =========================
+         */
         $formattedSession = [
             'id' => $session->id,
             'qr_token' => $session->qr_token,
@@ -302,6 +342,9 @@ class AttendanceController extends Controller
             'session' => $formattedSession,
             'students' => $studentAttendances,
             'stats' => $stats,
+            'filters' => [
+                'class_id' => $classId,
+            ],
         ]);
     }
 
@@ -762,6 +805,149 @@ class AttendanceController extends Controller
         }
 
         return redirect()->back()->with('error', 'Pilih minimal semester atau siswa sebelum melakukan export.');
+    }
+
+    /**
+     * Delete attendance record
+     */
+    public function deleteAttendance(Request $request, AttendanceSession $session, Attendance $attendance)
+    {
+        try {
+            // Verify that the attendance belongs to this session
+            if ($attendance->attendance_sessions_id !== $session->id) {
+                return redirect()->back()->with('error', 'Attendance record not found in this session.');
+            }
+
+            // Delete the attendance record
+            $attendance->delete();
+
+            // Log activity
+            $this->logActivity(
+                auth()->id(),
+                'delete_attendance',
+                "Deleted attendance for student {$attendance->student->name} in session {$session->title}"
+            );
+
+            return redirect()->back()->with('success', 'Attendance record deleted successfully.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting attendance: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete attendance record.');
+        }
+    }
+
+    /**
+     * Show edit form for attendance session
+     */
+    public function edit(AttendanceSession $session)
+    {
+        // Verify session belongs to authenticated user (teacher)
+        if ($session->teacher_id !== auth()->id() && auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.attendance.index')->with('error', 'Unauthorized');
+        }
+
+        return Inertia::render('Admin/Attendance/Edit', [
+            'session' => [
+                'id' => $session->id,
+                'title' => $session->title,
+                'description' => $session->description,
+                'date' => $session->date,
+                'start_time' => $session->start_time,
+                'duration_minutes' => $session->duration_minutes,
+                'ends_at' => $session->ends_at,
+                'expires_at' => $session->expires_at,
+            ],
+        ]);
+    }
+
+    /**
+     * Update attendance session
+     */
+    public function update(Request $request, AttendanceSession $session)
+    {
+        // Verify session belongs to authenticated user
+        if ($session->teacher_id !== auth()->id() && auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.attendance.index')->with('error', 'Unauthorized');
+        }
+
+        // Validate input
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'date' => 'required|date',
+            'start_time' => 'required|date_format:H:i',
+            'duration_minutes' => 'required|integer|min:1|max:480',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Parse date and time
+            $dateTime = Carbon::createFromFormat('Y-m-d H:i', $validated['date'] . ' ' . $validated['start_time']);
+            $endsAt = $dateTime->copy()->addMinutes($validated['duration_minutes']);
+
+            // Update session
+            $session->update([
+                'title' => $validated['title'],
+                'description' => $validated['description'],
+                'date' => $validated['date'],
+                'start_time' => $validated['start_time'],
+                'duration_minutes' => $validated['duration_minutes'],
+                'ends_at' => $endsAt,
+                'expires_at' => $endsAt->addHour(),
+            ]);
+
+            // Log activity
+            $this->logActivity(
+                auth()->id(),
+                'UPDATE',
+                'Updated attendance session: ' . $session->title . ' (ID: ' . $session->id . ')'
+            );
+
+            DB::commit();
+
+            return redirect()->route('admin.attendance.show', $session->id)
+                ->with('success', 'Attendance session updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating attendance session: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update attendance session.');
+        }
+    }
+
+    /**
+     * Delete attendance session
+     */
+    public function destroy(Request $request, AttendanceSession $session)
+    {
+        // Verify session belongs to authenticated user
+        if ($session->teacher_id !== auth()->id() && auth()->user()->role !== 'admin') {
+            return redirect()->route('admin.attendance.index')->with('error', 'Unauthorized');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Delete all related attendance records
+            Attendance::where('attendance_sessions_id', $session->id)->delete();
+
+            // Delete the session
+            $sessionTitle = $session->title;
+            $session->delete();
+
+            // Log activity
+            $this->logActivity(
+                auth()->id(),
+                'DELETE',
+                'Deleted attendance session: ' . $sessionTitle . ' (ID: ' . $session->id . ')'
+            );
+
+            DB::commit();
+
+            return redirect()->route('admin.attendance.index')
+                ->with('success', 'Attendance session deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting attendance session: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete attendance session.');
+        }
     }
 
     /**

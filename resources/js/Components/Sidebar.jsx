@@ -29,6 +29,12 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     active: url === "/admin/dashboard",
                     path: "/admin/dashboard",
                 },
+                {
+                    label: "Presensi Guru & Staf",
+                    icon: Activity,
+                    active: url === "/admin/employee-attendance",
+                    path: "/admin/employee-attendance",
+                },
             ],
         },
         {
@@ -185,7 +191,9 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                                         label={item.label}
                                         active={item.active}
                                         path={item.path}
-                                        onClick={isMobile ? closeSidebar : undefined}
+                                        onClick={
+                                            isMobile ? closeSidebar : undefined
+                                        }
                                     />
                                 ))}
                             </div>
