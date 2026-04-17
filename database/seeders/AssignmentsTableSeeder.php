@@ -4,65 +4,92 @@ namespace Database\Seeders;
 
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
-use App\Models\Student;
+use App\Models\Semester;
 use App\Models\Subject;
 use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class AssignmentsTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Get all subjects
-        $subjects = Subject::all();
+        // Semester aktif: Genap 2025/2026 (5 Jan - 13 Jun 2026)
+        $currentSemester = Semester::latest('start_date')->first();
+        $semStart = Carbon::parse($currentSemester->start_date);
 
-        // Define assignment types
-        $assignmentTypes = [
-            'Tugas Harian' => 'Tugas harian untuk memperdalam pemahaman materi yang sudah dipelajari di kelas.',
-            'Proyek Kelompok' => 'Proyek kelompok untuk melatih kemampuan bekerja sama dan menerapkan konsep yang sudah dipelajari.',
-            'Ujian Tengah Semester' => 'Ujian tengah semester untuk mengevaluasi pemahaman siswa terhadap materi yang sudah dipelajari.',
-            'Ujian Akhir Semester' => 'Ujian akhir semester untuk mengevaluasi pemahaman siswa terhadap seluruh materi yang sudah dipelajari.',
+        // Deadline per tipe tugas (relatif dari awal semester)
+        $assignmentDeadlines = [
+            'Tugas Harian'          => $semStart->copy()->addWeeks(3),   // ~26 Jan 2026 (sudah lewat)
+            'Proyek Kelompok'       => $semStart->copy()->addWeeks(7),   // ~23 Feb 2026 (sudah lewat)
+            'Ujian Tengah Semester' => $semStart->copy()->addWeeks(11),  // ~23 Mar 2026 (sudah lewat)
+            'Ujian Akhir Semester'  => $semStart->copy()->addWeeks(20),  // ~25 Mei 2026 (belum lewat)
         ];
 
-        // Create assignments for each subject
-        foreach ($subjects as $subject) {
-            foreach ($assignmentTypes as $type => $description) {
-                // Create deadline (random days in the future)
-                $deadline = Carbon::now()->addDays(rand(7, 30));
+        $evalMessages = [
+            'Sangat baik! Pertahankan prestasi ini.',
+            'Bagus, teruskan belajarnya.',
+            'Cukup baik, perlu sedikit peningkatan.',
+            'Perlu lebih teliti dalam pengerjaan.',
+            'Kerja keras kamu sudah terlihat, terus berlatih.',
+        ];
 
-                // Create assignment
+        $subjects = Subject::all();
+
+        foreach ($subjects as $subject) {
+            // Ambil siswa yang terdaftar di kelas ini pada semester aktif
+            $studentIds = DB::table('semesters_students')
+                ->where('semesters_id', $currentSemester->id)
+                ->where('class_id', $subject->class_id)
+                ->pluck('students_id')
+                ->toArray();
+
+            if (empty($studentIds)) continue;
+
+            foreach ($assignmentDeadlines as $type => $deadline) {
                 $assignment = Assignment::create([
-                    'subject_id' => $subject->id,
-                    'title' => "$type: {$subject->name}",
-                    'description' => $description,
-                    'file_path' => null, // Dummy file path could be added here
-                    'deadline' => $deadline,
+                    'subject_id'  => $subject->id,
+                    'title'       => "{$type}: {$subject->name}",
+                    'description' => $this->getDescription($type, $subject->name),
+                    'file_path'   => null,
+                    'deadline'    => $deadline,
                 ]);
 
-                // Create submissions for some students (random)
-                $students = Student::inRandomOrder()->take(rand(5, 10))->get();
+                $isPast = $deadline->isPast();
 
-                foreach ($students as $student) {
-                    // Determine if submission is on time or late
-                    $submittedAt = Carbon::now()->subDays(rand(1, 10));
-                    $isLate = $submittedAt->gt($deadline);
+                // Untuk tugas yang sudah lewat, buat submission dari sebagian besar siswa
+                if ($isPast && !empty($studentIds)) {
+                    // 70-90% siswa mengumpulkan
+                    $submitCount = (int) ceil(count($studentIds) * (rand(70, 90) / 100));
+                    $submittingStudents = array_slice($studentIds, 0, $submitCount);
 
-                    // Create submission
-                    AssignmentSubmission::create([
-                        'assignment_id' => $assignment->id,
-                        'student_id' => $student->id,
-                        'submission_text' => "Jawaban untuk tugas {$assignment->title} oleh {$student->name}",
-                        'file_path' => null, // Dummy file path could be added here
-                        'grade' => rand(60, 100), // Random grade between 60-100
-                        'message_eval' => rand(0, 1) ? "Bagus, teruskan!" : "Perlu ditingkatkan lagi.",
-                        'submitted_at' => $submittedAt,
-                    ]);
+                    foreach ($submittingStudents as $studentId) {
+                        // Waktu submit: 1-3 hari sebelum deadline
+                        $submittedAt = $deadline->copy()->subDays(rand(1, 3))->subHours(rand(1, 8));
+
+                        AssignmentSubmission::create([
+                            'assignment_id'  => $assignment->id,
+                            'student_id'     => $studentId,
+                            'submission_text' => "Berikut adalah jawaban tugas {$subject->name} - {$type}.",
+                            'file_path'      => null,
+                            'grade'          => rand(65, 100),
+                            'message_eval'   => $evalMessages[array_rand($evalMessages)],
+                            'submitted_at'   => $submittedAt,
+                        ]);
+                    }
                 }
             }
         }
+    }
+
+    private function getDescription(string $type, string $subjectName): string
+    {
+        return match ($type) {
+            'Tugas Harian'          => "Kerjakan soal-soal latihan {$subjectName} untuk memperdalam pemahaman materi yang telah dipelajari.",
+            'Proyek Kelompok'       => "Buat proyek kelompok (3-4 orang) yang menerapkan konsep {$subjectName} dalam kehidupan nyata.",
+            'Ujian Tengah Semester' => "Ujian Tengah Semester mata pelajaran {$subjectName}. Kerjakan secara individu dan jujur.",
+            'Ujian Akhir Semester'  => "Ujian Akhir Semester mata pelajaran {$subjectName}. Mencakup seluruh materi semester ini.",
+            default                 => "Tugas {$subjectName}.",
+        };
     }
 }

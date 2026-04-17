@@ -2,28 +2,27 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         $this->call([
-            UsersTableSeeder::class,
-            SemestersTableSeeder::class,
-            ClassesTableSeeder::class,
-            TeachersTableSeeder::class,
-            StudentsTableSeeder::class,
-            SubjectsTableSeeder::class,
-            TeacherSubjectsTableSeeder::class,
-            SemestersStudentsTableSeeder::class,
-            MaterialsTableSeeder::class,
-            AssignmentsTableSeeder::class,
+            AcademicYearsTableSeeder::class,   // academic_years
+            UsersTableSeeder::class,            // users
+            SemestersTableSeeder::class,        // semesters (→ academic_years)
+            ClassesTableSeeder::class,          // classes
+            TeachersTableSeeder::class,         // teachers (→ users)
+            StudentsTableSeeder::class,         // students (→ users)
+            StaffTableSeeder::class,            // staff (→ users)
+            SubjectsTableSeeder::class,         // subjects (→ classes, teachers)
+            TeacherSubjectsTableSeeder::class,  // teachers_subjects (→ teachers, subjects, semesters)
+            SemestersStudentsTableSeeder::class,// semesters_students (→ semesters, students, classes)
+            MaterialsTableSeeder::class,        // materials (→ subjects)
+            AssignmentsTableSeeder::class,      // assignments + submissions (→ subjects, students)
+            SchedulesTableSeeder::class,        // schedules (→ classes, subjects, teachers, semesters)
+            ExtracurricularsTableSeeder::class, // extracurriculars + members (→ teachers, semesters, students)
         ]);
     }
 }

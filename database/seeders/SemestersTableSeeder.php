@@ -2,40 +2,44 @@
 
 namespace Database\Seeders;
 
+use App\Models\AcademicYear;
 use App\Models\Semester;
-use Carbon\Carbon;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class SemestersTableSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Create semesters for the current and next academic year
-        $currentYear = Carbon::now()->year;
+        $ay2425 = AcademicYear::where('name', '2024/2025')->first();
+        $ay2526 = AcademicYear::where('name', '2025/2026')->first();
 
-        // Semester 1 of current academic year
         Semester::create([
-            'name' => "Semester Ganjil $currentYear/$currentYear+1",
-            'start_date' => Carbon::createFromDate($currentYear, 7, 15),
-            'end_date' => Carbon::createFromDate($currentYear, 12, 15),
+            'academic_year_id' => $ay2425->id,
+            'name'             => 'Semester Ganjil 2024/2025',
+            'start_date'       => '2024-07-15',
+            'end_date'         => '2024-12-14',
         ]);
 
-        // Semester 2 of current academic year
         Semester::create([
-            'name' => "Semester Genap $currentYear/$currentYear+1",
-            'start_date' => Carbon::createFromDate($currentYear, 12, 16),
-            'end_date' => Carbon::createFromDate($currentYear + 1, 6, 15),
+            'academic_year_id' => $ay2425->id,
+            'name'             => 'Semester Genap 2024/2025',
+            'start_date'       => '2025-01-06',
+            'end_date'         => '2025-06-14',
         ]);
 
-        // Semester 1 of next academic year
         Semester::create([
-            'name' => "Semester Ganjil " . ($currentYear + 1) . "/" . ($currentYear + 2),
-            'start_date' => Carbon::createFromDate($currentYear + 1, 7, 15),
-            'end_date' => Carbon::createFromDate($currentYear + 1, 12, 15),
+            'academic_year_id' => $ay2526->id,
+            'name'             => 'Semester Ganjil 2025/2026',
+            'start_date'       => '2025-07-14',
+            'end_date'         => '2025-12-13',
+        ]);
+
+        // Semester aktif saat ini (April 2026)
+        Semester::create([
+            'academic_year_id' => $ay2526->id,
+            'name'             => 'Semester Genap 2025/2026',
+            'start_date'       => '2026-01-05',
+            'end_date'         => '2026-06-13',
         ]);
     }
 }
