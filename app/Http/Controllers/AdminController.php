@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Student;
 use App\Models\Teacher;
-use App\Models\ClassRoom;
+use App\Models\Classroom;
 use App\Models\Subject;
 use App\Models\Material;
 use App\Models\Assignment;
@@ -31,7 +31,7 @@ class AdminController extends Controller
         $girlsCount = Student::where('gender', 'female')->count();
 
         // Dapatkan data jumlah kelas dan mata pelajaran
-        $classesCount = ClassRoom::count();
+        $classesCount = Classroom::count();
         $subjectsCount = Subject::count();
 
         // Dapatkan statistik sistem
@@ -385,7 +385,7 @@ class AdminController extends Controller
         elseif (strpos($description, 'Kelas ID:') !== false) {
             preg_match('/Kelas ID: (\d+)/', $description, $matches);
             if (isset($matches[1])) {
-                $class = ClassRoom::find($matches[1]);
+                $class = Classroom::find($matches[1]);
                 if ($class) {
                     return "Kelas " . $class->name;
                 }
