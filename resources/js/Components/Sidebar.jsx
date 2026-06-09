@@ -12,6 +12,7 @@ import {
     Personalcard,
     CloseCircle,
     Calendar,
+    MessageText,
 } from "iconsax-reactjs";
 import SidebarItem from "./SidebarItem";
 import { usePage } from "@inertiajs/react";
@@ -121,6 +122,12 @@ const Sidebar = ({ isOpen, setIsOpen, isMobile }) => {
                     icon: Activity,
                     active: url === "/admin/activity-logs",
                     path: "/admin/activity-logs",
+                },
+                {
+                    label: "WhatsApp Gateway",
+                    icon: MessageText,
+                    active: url.startsWith("/admin/whatsapp"),
+                    path: "/admin/whatsapp",
                 },
             ],
         },

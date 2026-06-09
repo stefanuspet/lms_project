@@ -18,6 +18,8 @@ const StudentEdit = ({ student, flash }) => {
         gender: student.gender || "",
         birth_date: student.birth_date || "",
         birth_place: student.birth_place || "",
+        parent_name: student.parent_name || "",
+        parent_phone: student.parent_phone || "",
         profile_picture: null,
     });
 
@@ -297,6 +299,51 @@ const StudentEdit = ({ student, flash }) => {
                                     />
                                     <InputError
                                         message={getErrorMessage("birth_place")}
+                                        className="mt-2"
+                                    />
+                                </div>
+
+                                {/* Parent Name */}
+                                <div>
+                                    <InputLabel
+                                        htmlFor="parent_name"
+                                        value="Nama Orang Tua / Wali"
+                                    />
+                                    <TextInput
+                                        id="parent_name"
+                                        type="text"
+                                        name="parent_name"
+                                        value={data.parent_name}
+                                        className="mt-1 block w-full"
+                                        onChange={handleChange}
+                                        placeholder="Nama lengkap orang tua"
+                                    />
+                                    <InputError
+                                        message={getErrorMessage("parent_name")}
+                                        className="mt-2"
+                                    />
+                                </div>
+
+                                {/* Parent Phone */}
+                                <div>
+                                    <InputLabel
+                                        htmlFor="parent_phone"
+                                        value="No. WhatsApp Orang Tua"
+                                    />
+                                    <TextInput
+                                        id="parent_phone"
+                                        type="text"
+                                        name="parent_phone"
+                                        value={data.parent_phone}
+                                        className="mt-1 block w-full"
+                                        onChange={handleChange}
+                                        placeholder="628xxxxxxxxxx"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Format: 628xxx atau 08xxx (digunakan untuk notifikasi absensi)
+                                    </p>
+                                    <InputError
+                                        message={getErrorMessage("parent_phone")}
                                         className="mt-2"
                                     />
                                 </div>

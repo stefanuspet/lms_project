@@ -154,6 +154,8 @@ class StudentController extends Controller
                 'gender' => 'nullable|in:male,female',
                 'birth_date' => 'nullable|date',
                 'birth_place' => 'nullable|string|max:255',
+                'parent_name' => 'nullable|string|max:255',
+                'parent_phone' => 'nullable|string|max:20',
                 'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
                 'class_id' => 'nullable|array',
                 'class_id.*' => 'exists:classes,id',
@@ -219,6 +221,8 @@ class StudentController extends Controller
                 'gender' => $request->gender,
                 'birth_date' => $request->birth_date,
                 'birth_place' => $request->birth_place,
+                'parent_name' => $request->parent_name,
+                'parent_phone' => $request->parent_phone,
                 'profile_picture' => $profilePicturePath,
             ]);
 
@@ -277,6 +281,8 @@ class StudentController extends Controller
                 'gender' => $student->gender,
                 'birth_date' => $student->birth_date ? date('Y-m-d', strtotime($student->birth_date)) : null,
                 'birth_place' => $student->birth_place,
+                'parent_name' => $student->parent_name,
+                'parent_phone' => $student->parent_phone,
                 'profile_picture' => $student->profile_picture ?? '/assets/images/default-avatar.png',
                 'user' => [
                     'id' => $student->user->id,
@@ -351,6 +357,8 @@ class StudentController extends Controller
                 'gender' => $student->gender ?? '',
                 'birth_date' => $student->birth_date ? date('Y-m-d', strtotime($student->birth_date)) : null,
                 'birth_place' => $student->birth_place ?? '',
+                'parent_name' => $student->parent_name ?? '',
+                'parent_phone' => $student->parent_phone ?? '',
                 'user' => [
                     'id' => $student->user->id ?? null,
                     'email' => $student->user->email ?? '',
@@ -398,7 +406,8 @@ class StudentController extends Controller
                 'gender' => 'nullable|in:male,female',
                 'birth_date' => 'nullable|date',
                 'birth_place' => 'nullable|string|max:255',
-                // Pakai validasi file image karena update bisa mengubah foto profil
+                'parent_name' => 'nullable|string|max:255',
+                'parent_phone' => 'nullable|string|max:20',
                 'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             ]);
 
@@ -444,6 +453,8 @@ class StudentController extends Controller
                     'gender' => $request->gender,
                     'birth_date' => $request->birth_date,
                     'birth_place' => $request->birth_place,
+                    'parent_name' => $request->parent_name,
+                    'parent_phone' => $request->parent_phone,
                     'profile_picture' => $profilePicturePath,
                 ]);
 

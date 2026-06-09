@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendAttendanceNotification;
 use App\Models\Attendance;
 use App\Models\AttendanceSession;
 use App\Models\Student;
@@ -135,6 +136,17 @@ class AttendanceController extends Controller
         $attendance->save();
 
         Log::debug('Attendance saved', ['attendance_id' => $attendance->id]);
+
+        // Kirim notifikasi WhatsApp ke orang tua secara async
+        if ($student->parent_phone) {
+            SendAttendanceNotification::dispatch(
+                $student->parent_phone,
+                $student->parent_name ?? 'Orang Tua/Wali',
+                $student->name,
+                $session->session_type,
+                now()->setTimezone('Asia/Jakarta')->format('H:i'),
+            );
+        }
 
         // Data sesi
         $sessionData = [

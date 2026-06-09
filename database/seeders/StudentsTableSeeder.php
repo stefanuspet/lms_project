@@ -40,6 +40,20 @@ class StudentsTableSeeder extends Seeder
             'Majalengka', 'Kuningan', 'Cirebon', 'Pangandaran', 'Sumedang',
         ];
 
+        $parentMaleNames = [
+            'Asep Kurniawan', 'Dedi Santoso', 'Ujang Suryadi', 'Hendra Permana',
+            'Agus Setiawan', 'Budi Rahayu', 'Eko Purnama', 'Rudi Hartono',
+            'Wahyu Gunawan', 'Iwan Saputra', 'Cecep Hidayat', 'Dadang Wibowo',
+            'Tatang Iskandar', 'Encep Maulana', 'Yayan Firdaus',
+        ];
+
+        $parentFemaleNames = [
+            'Siti Nurhaliza', 'Euis Rahayu', 'Yati Suryani', 'Neneng Kurniasih',
+            'Tuti Alawiyah', 'Imas Solihat', 'Wati Setiawati', 'Cicih Sumiati',
+            'Ade Fitriani', 'Neng Sumarni', 'Eneng Nurjanah', 'Ai Rohaeni',
+            'Lilis Susilawati', 'Elin Herlina', 'Nani Suparti',
+        ];
+
         $allNames = array_merge($maleNames, $femaleNames);
         shuffle($allNames);
 
@@ -54,13 +68,21 @@ class StudentsTableSeeder extends Seeder
             $birthMonth = rand(1, 12);
             $birthDay   = rand(1, 28);
 
+            $parentName  = $isMale
+                ? $parentMaleNames[array_rand($parentMaleNames)]
+                : $parentFemaleNames[array_rand($parentFemaleNames)];
+            // Format nomor WA orang tua: 628xxxxxxxx (10-11 digit setelah 62)
+            $parentPhone = '628' . rand(10, 99) . rand(10000000, 99999999);
+
             Student::create([
-                'user_id'     => $user->id,
-                'name'        => $name,
-                'nisn'        => $nisn,
-                'gender'      => $gender,
-                'birth_date'  => sprintf('%04d-%02d-%02d', $birthYear, $birthMonth, $birthDay),
-                'birth_place' => $birthPlaces[array_rand($birthPlaces)],
+                'user_id'      => $user->id,
+                'name'         => $name,
+                'nisn'         => $nisn,
+                'gender'       => $gender,
+                'birth_date'   => sprintf('%04d-%02d-%02d', $birthYear, $birthMonth, $birthDay),
+                'birth_place'  => $birthPlaces[array_rand($birthPlaces)],
+                'parent_name'  => $parentName,
+                'parent_phone' => $parentPhone,
             ]);
         }
     }

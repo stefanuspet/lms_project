@@ -19,6 +19,7 @@ use App\Http\Controllers\Teacher\AttendanceController as TeacherAttendanceContro
 use App\Http\Controllers\Teacher\ExtracurricularController as TeacherExtracurricularController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\WhatsAppController;
 use App\Http\Controllers\Teacher\ScheduleController as TeacherScheduleController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Teacher\QuizController as TeacherQuizController;
@@ -198,6 +199,14 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->name("admin.")->grou
         Route::get('/', [ActivityLogController::class, 'index'])->name('index');
         Route::post('/clear-old', [ActivityLogController::class, 'clearOldLogs'])->name('clear-old');
         Route::post('/export', [ActivityLogController::class, 'export'])->name('export');
+    });
+
+    // WhatsApp Gateway
+    Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
+        Route::get('/', [WhatsAppController::class, 'index'])->name('index');
+        Route::get('/status', [WhatsAppController::class, 'status'])->name('status');
+        Route::get('/qr', [WhatsAppController::class, 'qr'])->name('qr');
+        Route::post('/logout', [WhatsAppController::class, 'logout'])->name('logout');
     });
 });
 
