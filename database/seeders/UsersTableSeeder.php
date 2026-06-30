@@ -17,57 +17,42 @@ class UsersTableSeeder extends Seeder
             'role'     => 'admin',
         ]);
 
-        // 15 Teacher accounts
-        $teacherEmails = [
-            'budi.santoso@smkn1.sch.id',
-            'siti.rahayu@smkn1.sch.id',
-            'ahmad.fauzi@smkn1.sch.id',
-            'dewi.kurniawati@smkn1.sch.id',
-            'hendra.wijaya@smkn1.sch.id',
-            'rina.susanti@smkn1.sch.id',
-            'dian.pratama@smkn1.sch.id',
-            'arief.nugroho@smkn1.sch.id',
-            'yuliana.safitri@smkn1.sch.id',
-            'bambang.suryadi@smkn1.sch.id',
-            'eko.prasetyo@smkn1.sch.id',
-            'sri.wahyuni@smkn1.sch.id',
-            'muhammad.ridwan@smkn1.sch.id',
-            'fitria.handayani@smkn1.sch.id',
-            'agus.hermawan@smkn1.sch.id',
-        ];
+        // Teachers & Staff from Guru-clean.csv
+        $csvPath = base_path('docs/Guru-clean.csv');
+        $handle  = fopen($csvPath, 'r');
+        fgetcsv($handle); // skip header
 
-        foreach ($teacherEmails as $email) {
+        while (($row = fgetcsv($handle)) !== false) {
+            [$timestamp, $name, $subject, $divisi, $jamMasuk, $jamKeluar, $phone, $email, $password] = $row;
+            $email = strtolower(trim($email));
+            if (empty($email)) continue;
+
+            $role = $divisi === 'Guru' ? 'guru' : 'staff';
+
             User::create([
                 'email'    => $email,
                 'password' => Hash::make('password'),
-                'role'     => 'guru',
+                'role'     => $role,
             ]);
         }
+        fclose($handle);
 
-        // 90 Student accounts (5 per class × 18 classes)
-        for ($i = 1; $i <= 90; $i++) {
+        // Students from data-siswa-clean.csv
+        $csvPath = base_path('docs/data-siswa-clean.csv');
+        $handle  = fopen($csvPath, 'r');
+        fgetcsv($handle); // skip header
+
+        while (($row = fgetcsv($handle)) !== false) {
+            [$timestamp, $name, $nisn, $email, $parentPhone, $gender, $kelas, $jurusan] = $row;
+            $email = strtolower(trim($email));
+            if (empty($email)) continue;
+
             User::create([
-                'email'    => 'siswa.' . str_pad($i, 3, '0', STR_PAD_LEFT) . '@smkn1.sch.id',
+                'email'    => $email,
                 'password' => Hash::make('password'),
                 'role'     => 'siswa',
             ]);
         }
-
-        // 5 Staff accounts (3 TU + 2 security)
-        $staffEmails = [
-            'tu.01@smkn1.sch.id',
-            'tu.02@smkn1.sch.id',
-            'tu.03@smkn1.sch.id',
-            'satpam.01@smkn1.sch.id',
-            'satpam.02@smkn1.sch.id',
-        ];
-
-        foreach ($staffEmails as $email) {
-            User::create([
-                'email'    => $email,
-                'password' => Hash::make('password'),
-                'role'     => 'staff',
-            ]);
-        }
+        fclose($handle);
     }
 }
