@@ -60,14 +60,15 @@ class GradeController extends Controller
             $sumGrades = 0;
             
             foreach ($subjects as $subject) {
-                // Get assignments for this subject
+                // Get assignments for this subject scoped to current semester
                 $assignments = DB::table('assignments')
                     ->where('subject_id', $subject->id)
+                    ->where('semester_id', $currentSemesterId)
                     ->get();
-                
+
                 $assignmentIds = $assignments->pluck('id')->toArray();
                 $totalAssignments += count($assignmentIds);
-                
+
                 // Get submissions for this student
                 $submissions = DB::table('assignment_submissions')
                     ->whereIn('assignment_id', $assignmentIds)
@@ -107,11 +108,12 @@ class GradeController extends Controller
                 'average_grade' => $overallAverage,
             ];
             
-            // Get recent grades
+            // Get recent grades — scoped to current semester
             $recentGrades = DB::table('assignment_submissions')
                 ->join('assignments', 'assignment_submissions.assignment_id', '=', 'assignments.id')
                 ->join('subjects', 'assignments.subject_id', '=', 'subjects.id')
                 ->where('assignment_submissions.student_id', $student->id)
+                ->where('assignments.semester_id', $currentSemesterId)
                 ->whereNotNull('assignment_submissions.grade')
                 ->select(
                     'assignment_submissions.id',
@@ -181,9 +183,10 @@ class GradeController extends Controller
                 'teacher_name' => $subject->teacher ? $subject->teacher->name : 'Unknown',
             ];
             
-            // Get assignments for this subject
+            // Get assignments for this subject scoped to current semester
             $assignments = DB::table('assignments')
                 ->where('subject_id', $subject->id)
+                ->where('semester_id', $currentSemesterStudent->semesters_id)
                 ->orderBy('deadline')
                 ->get();
             

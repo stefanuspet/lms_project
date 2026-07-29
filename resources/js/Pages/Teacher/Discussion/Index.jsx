@@ -3,10 +3,18 @@ import { router } from "@inertiajs/react";
 import TeacherLayout from "@/Layouts/TeacherLayout";
 import { Add, Message, ArrowRight2 } from "iconsax-reactjs";
 
-const DiscussionIndex = ({ subject, threads, flash }) => {
+const DiscussionIndex = ({ subject, threads, flash, semesters = [], currentSemesterId }) => {
     const [title, setTitle] = useState("");
     const [body, setBody] = useState("");
     const [processing, setProcessing] = useState(false);
+
+    const handleSemesterChange = (semesterId) => {
+        router.get(
+            route("teacher.discussions.index", subject.id),
+            { semester_id: semesterId },
+            { preserveState: false }
+        );
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -46,10 +54,20 @@ const DiscussionIndex = ({ subject, threads, flash }) => {
                                 Diskusi Mata Pelajaran
                             </h1>
                             <p className="text-sm text-gray-500 mt-1">
-                                Buat topik diskusi untuk kelas dan jawab
-                                pertanyaan siswa.
+                                Buat topik diskusi untuk kelas dan jawab pertanyaan siswa.
                             </p>
                         </div>
+                        {semesters.length > 0 && (
+                            <select
+                                value={currentSemesterId || ""}
+                                onChange={(e) => handleSemesterChange(e.target.value)}
+                                className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                {semesters.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                ))}
+                            </select>
+                        )}
                     </div>
 
                     <div className="px-6 py-5 border-b bg-gray-50">

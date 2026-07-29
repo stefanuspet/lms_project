@@ -28,8 +28,18 @@ class StudentDiscussionController extends Controller
             return $this->forbiddenSubject();
         }
 
+        $currentSemesterId = DB::table('semesters_students')
+            ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
+            ->where('semesters_students.students_id', $student->id)
+            ->where('semesters_students.class_id', $subject->class_id)
+            ->orderBy('semesters.end_date', 'desc')
+            ->value('semesters_students.semesters_id');
+
         $threads = DiscussionThread::with('creator')
             ->where('subject_id', $subject->id)
+            ->where(function ($q) use ($currentSemesterId) {
+                $q->where('semester_id', $currentSemesterId);
+            })
             ->orderByDesc('is_pinned')
             ->orderByDesc('created_at')
             ->get();
@@ -100,12 +110,20 @@ class StudentDiscussionController extends Controller
             ], 422);
         }
 
+        $currentSemesterId = DB::table('semesters_students')
+            ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
+            ->where('semesters_students.students_id', $student->id)
+            ->where('semesters_students.class_id', $subject->class_id)
+            ->orderBy('semesters.end_date', 'desc')
+            ->value('semesters_students.semesters_id');
+
         $thread = DiscussionThread::create([
-            'subject_id' => $subject->id,
-            'class_id' => $subject->class_id,
-            'created_by' => $request->user()->id,
-            'title' => $validator->validated()['title'],
-            'body' => $validator->validated()['body'] ?? null,
+            'subject_id'  => $subject->id,
+            'semester_id' => $currentSemesterId,
+            'class_id'    => $subject->class_id,
+            'created_by'  => $request->user()->id,
+            'title'       => $validator->validated()['title'],
+            'body'        => $validator->validated()['body'] ?? null,
         ]);
 
         return response()->json([

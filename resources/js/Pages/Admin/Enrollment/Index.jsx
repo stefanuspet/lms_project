@@ -41,7 +41,6 @@ const EnrollmentIndex = ({
         student_ids: [],
     });
     const [promotionData, setPromotionData] = useState({
-        from_semester_id: currentSemester?.id || "",
         to_semester_id: "",
         class_mapping: [],
         student_ids: [],
@@ -87,16 +86,12 @@ const EnrollmentIndex = ({
         }));
     }, [selectedStudents]);
 
-    // Sync semester/class defaults when props change
+    // Sync enrollment defaults when props change
     useEffect(() => {
         setEnrollmentData((prev) => ({
             ...prev,
             semester_id: currentSemester?.id || "",
             class_id: prev.class_id || selected_class || classes[0]?.id || "",
-        }));
-        setPromotionData((prev) => ({
-            ...prev,
-            from_semester_id: currentSemester?.id || "",
         }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSemester?.id, selected_class, classes]);
@@ -885,53 +880,14 @@ const EnrollmentIndex = ({
                         <form onSubmit={handlePromote}>
                             <div className="p-6">
                                 <div className="mb-4">
-                                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
                                         Siswa Terpilih
-                                      </label>
+                                    </label>
                                     <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                                         <div className="text-sm text-gray-600">
-                                              {selectedStudents.length} siswa
-                                              dipilih
+                                            {selectedStudents.length} siswa dipilih
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="mb-4">
-                                    <label
-                                        htmlFor="from_semester_id"
-                                        className="block text-sm font-medium text-gray-700 mb-1"
-                                    >
-                                        From Semester
-                                    </label>
-                                    <select
-                                        id="from_semester_id"
-                                        name="from_semester_id"
-                                        value={promotionData.from_semester_id}
-                                        onChange={(e) =>
-                                            setPromotionData({
-                                                ...promotionData,
-                                                from_semester_id:
-                                                    e.target.value,
-                                            })
-                                        }
-                                        className="w-full border-gray-300 focus:border-amber-500 focus:ring-amber-500 rounded-md shadow-sm"
-                                        required
-                                    >
-                                          <option value="">
-                                              Pilih Semester
-                                          </option>
-                                        {semesters.map((semester) => (
-                                            <option
-                                                key={semester.id}
-                                                value={semester.id}
-                                            >
-                                                {semester.name}{" "}
-                                                {semester.is_active
-                                                    ? "(Active)"
-                                                    : ""}
-                                            </option>
-                                        ))}
-                                    </select>
                                 </div>
 
                                 <div className="mb-4">
@@ -939,7 +895,7 @@ const EnrollmentIndex = ({
                                         htmlFor="to_semester_id"
                                         className="block text-sm font-medium text-gray-700 mb-1"
                                     >
-                                        To Semester
+                                        Naikkan ke Semester
                                     </label>
                                     <select
                                         id="to_semester_id"
@@ -954,68 +910,52 @@ const EnrollmentIndex = ({
                                         className="w-full border-gray-300 focus:border-amber-500 focus:ring-amber-500 rounded-md shadow-sm"
                                         required
                                     >
-                                        <option value="">
-                                            Select Semester
-                                        </option>
-                                        {semesters
-                                            .filter(
-                                                (semester) =>
-                                                    semester.id !==
-                                                    promotionData.from_semester_id
-                                            )
-                                            .map((semester) => (
-                                                <option
-                                                    key={semester.id}
-                                                    value={semester.id}
-                                                >
-                                                    {semester.name}{" "}
-                                                    {semester.is_active
-                                                        ? "(Active)"
-                                                        : ""}
-                                                </option>
-                                            ))}
+                                        <option value="">Pilih Semester Tujuan</option>
+                                        {semesters.map((semester) => (
+                                            <option key={semester.id} value={semester.id}>
+                                                {semester.name}{semester.is_active ? " (Aktif)" : ""}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
 
-                                {/* Class Mapping */}
-                                {class_stats && class_stats.length > 0 && (
+                                {/* Class Mapping — dari enrollment_details siswa yang dipilih */}
+                                {(() => {
+                                    const fromClasses = Object.values(
+                                        students.data
+                                            .filter(
+                                                (s) =>
+                                                    selectedStudents.includes(s.id) &&
+                                                    s.enrollment_details
+                                            )
+                                            .reduce((acc, s) => {
+                                                const cid = s.enrollment_details.class_id;
+                                                if (!acc[cid]) acc[cid] = { id: cid, name: s.enrollment_details.class_name };
+                                                return acc;
+                                            }, {})
+                                    );
+                                    if (fromClasses.length === 0) return null;
+                                    return (
                                     <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Class Mapping
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Pindah Kelas <span className="text-gray-400 font-normal">(opsional — default: kelas yang sama)</span>
                                         </label>
                                         <div className="space-y-2 max-h-60 overflow-y-auto p-2 border border-gray-200 rounded-lg">
-                                            {class_stats.map((fromClass) => (
-                                                <div
-                                                    key={fromClass.id}
-                                                    className="flex items-center gap-2"
-                                                >
-                                                    <div className="w-1/3 text-sm">
-                                                        {fromClass.name}
-                                                    </div>
-                                                    <ArrowRight
-                                                        size="16"
-                                                        className="text-gray-400"
-                                                    />
+                                            {fromClasses.map((fromClass) => (
+                                                <div key={fromClass.id} className="flex items-center gap-2">
+                                                    <div className="w-1/3 text-sm font-medium">{fromClass.name}</div>
+                                                    <ArrowRight size="16" className="text-gray-400 flex-shrink-0" />
                                                     <div className="flex-1">
                                                         <select
                                                             value={
                                                                 promotionData.class_mapping.find(
-                                                                    (item) =>
-                                                                        item.from_class_id ===
-                                                                        fromClass.id
-                                                                )
-                                                                    ?.to_class_id ||
-                                                                ""
+                                                                    (item) => Number(item.from_class_id) === fromClass.id
+                                                                )?.to_class_id || fromClass.id
                                                             }
                                                             onChange={(e) =>
-                                                                handleClassMappingChange(
-                                                                    fromClass.id,
-                                                                    e.target
-                                                                        .value
-                                                                )
+                                                                handleClassMappingChange(fromClass.id, e.target.value)
                                                             }
                                                             className="w-full border-gray-300 focus:border-amber-500 focus:ring-amber-500 rounded-md shadow-sm text-sm"
-                                                            required
                                                         >
                                                             <option value="">
                                                                 Select Target
@@ -1043,7 +983,8 @@ const EnrollmentIndex = ({
                                             ))}
                                         </div>
                                     </div>
-                                )}
+                                    );
+                                })()}
 
                                 <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 flex items-start">
                                     <InfoCircle
@@ -1051,10 +992,7 @@ const EnrollmentIndex = ({
                                         className="text-amber-500 mr-2 mt-0.5 flex-shrink-0"
                                     />
                                     <div className="text-xs text-amber-800">
-                                        Students will be moved to the selected
-                                        semester with their class mapping. Any
-                                        existing enrollments in the target
-                                        semester will be overwritten.
+                                        Siswa akan dipindahkan ke semester tujuan. Jika mapping kelas tidak diisi, kelas asal akan dipertahankan.
                                     </div>
                                 </div>
                             </div>
@@ -1065,19 +1003,14 @@ const EnrollmentIndex = ({
                                     onClick={() => setShowPromoteModal(false)}
                                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                                 >
-                                    Cancel
+                                    Batal
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={
-                                        processing ||
-                                        !promotionData.from_semester_id ||
-                                        !promotionData.to_semester_id ||
-                                        promotionData.class_mapping.length === 0
-                                    }
+                                    disabled={processing || !promotionData.to_semester_id}
                                     className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Promote Students
+                                    Naikkan Siswa
                                 </button>
                             </div>
                         </form>

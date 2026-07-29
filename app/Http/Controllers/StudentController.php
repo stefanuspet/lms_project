@@ -38,9 +38,17 @@ class StudentController extends Controller
         $filterGender = $request->input('filter_gender');
         $filterClass = $request->input('filter_class');
 
+        // Semester aktif (atau terbaru jika tidak ada yang aktif)
+        $activeSemester = Semester::where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->orderByDesc('start_date')
+            ->first()
+            ?? Semester::orderByDesc('start_date')->first();
+        $activeSemesterId = $activeSemester?->id;
+
         // Query student dengan relasi user
         $query = Student::query()
-            ->with(['user', 'classes.semester']);
+            ->with(['user']);
 
         // Apply search filters
         if (!empty($search)) {
@@ -60,8 +68,11 @@ class StudentController extends Controller
         }
 
         if ($filterClass) {
-            $query->whereHas('classes', function ($q) use ($filterClass) {
-                $q->where('class_id', $filterClass);
+            $query->whereIn('id', function ($q) use ($filterClass, $activeSemesterId) {
+                $q->select('students_id')
+                  ->from('semesters_students')
+                  ->where('class_id', $filterClass)
+                  ->when($activeSemesterId, fn($q) => $q->where('semesters_id', $activeSemesterId));
             });
         }
 
@@ -81,11 +92,17 @@ class StudentController extends Controller
         $classes = Classroom::select('id', 'name')->orderBy('name')->get();
 
         // Format data untuk frontend
-            $formattedStudents = $students->map(function ($student) {
-            // Ambil daftar kelas
-            $classes = $student->classes->map(function ($class) {
-                return $class->name;
-            })->unique()->implode(', ');
+        $formattedStudents = $students->map(function ($student) use ($activeSemesterId) {
+            // Ambil kelas dari semester aktif/terbaru saja
+            $enrollment = $activeSemesterId
+                ? DB::table('semesters_students')
+                    ->join('classes', 'semesters_students.class_id', '=', 'classes.id')
+                    ->where('semesters_students.students_id', $student->id)
+                    ->where('semesters_students.semesters_id', $activeSemesterId)
+                    ->select('classes.name')
+                    ->first()
+                : null;
+            $classes = $enrollment?->name ?? '-';
 
             // Format tanggal lahir
             $birthDate = $student->birth_date ? date('d-m-Y', strtotime($student->birth_date)) : '-';

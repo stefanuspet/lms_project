@@ -17,6 +17,7 @@ class Assignment extends Model
      */
     protected $fillable = [
         'subject_id',
+        'semester_id',
         'title',
         'description',
         'file_path',

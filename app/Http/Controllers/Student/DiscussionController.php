@@ -10,14 +10,32 @@ use App\Models\Subject;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DiscussionController extends Controller
 {
     public function index(Subject $subject)
     {
+        $user    = Auth::user();
+        $student = Student::where('user_id', $user->id)->first();
+
+        $currentSemesterId = null;
+        if ($student) {
+            $row = DB::table('semesters_students')
+                ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
+                ->where('semesters_students.students_id', $student->id)
+                ->where('semesters_students.class_id', $subject->class_id)
+                ->orderBy('semesters.end_date', 'desc')
+                ->value('semesters_students.semesters_id');
+            $currentSemesterId = $row;
+        }
+
         $threads = DiscussionThread::with('creator')
             ->where('subject_id', $subject->id)
+            ->where(function ($q) use ($currentSemesterId) {
+                $q->where('semester_id', $currentSemesterId);
+            })
             ->orderByDesc('is_pinned')
             ->orderByDesc('created_at')
             ->get();
@@ -68,12 +86,24 @@ class DiscussionController extends Controller
             'body' => 'nullable|string',
         ]);
 
+        $currentStudent    = Student::where('user_id', Auth::id())->first();
+        $currentSemesterId = null;
+        if ($currentStudent) {
+            $currentSemesterId = DB::table('semesters_students')
+                ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
+                ->where('semesters_students.students_id', $currentStudent->id)
+                ->where('semesters_students.class_id', $subject->class_id)
+                ->orderBy('semesters.end_date', 'desc')
+                ->value('semesters_students.semesters_id');
+        }
+
         DiscussionThread::create([
-            'subject_id' => $subject->id,
-            'class_id' => $subject->class_id,
-            'created_by' => Auth::id(),
-            'title' => $validated['title'],
-            'body' => $validated['body'] ?? null,
+            'subject_id'  => $subject->id,
+            'semester_id' => $currentSemesterId,
+            'class_id'    => $subject->class_id,
+            'created_by'  => Auth::id(),
+            'title'       => $validated['title'],
+            'body'        => $validated['body'] ?? null,
         ]);
 
         return redirect()

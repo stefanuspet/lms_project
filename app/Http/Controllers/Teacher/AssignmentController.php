@@ -17,6 +17,16 @@ use Inertia\Inertia;
 
 class AssignmentController extends Controller
 {
+    private function activeSemesterForSubject(int $teacherId, int $subjectId): ?int
+    {
+        return DB::table('teachers_subjects')
+            ->join('semesters', 'teachers_subjects.semester_id', '=', 'semesters.id')
+            ->where('teachers_subjects.teacher_id', $teacherId)
+            ->where('teachers_subjects.subject_id', $subjectId)
+            ->orderByDesc('semesters.start_date')
+            ->value('teachers_subjects.semester_id');
+    }
+
     /**
      * Display a listing of the assignments for a subject.
      */
@@ -25,12 +35,13 @@ class AssignmentController extends Controller
         try {
             // Validate request
             $validated = $request->validate([
-                'subject_id' => 'required|exists:subjects,id',
-                'search' => 'nullable|string|max:50',
-                'page' => 'nullable|integer|min:1',
-                'per_page' => 'nullable|integer|min:1|max:100',
-                'sort_by' => 'nullable|string|in:title,deadline,created_at',
-                'sort_order' => 'nullable|string|in:asc,desc',
+                'subject_id'  => 'required|exists:subjects,id',
+                'semester_id' => 'nullable|exists:semesters,id',
+                'search'      => 'nullable|string|max:50',
+                'page'        => 'nullable|integer|min:1',
+                'per_page'    => 'nullable|integer|min:1|max:100',
+                'sort_by'     => 'nullable|string|in:title,deadline,created_at',
+                'sort_order'  => 'nullable|string|in:asc,desc',
             ]);
 
             // Get current teacher
@@ -46,15 +57,27 @@ class AssignmentController extends Controller
                     ->with('error', 'You do not have permission to view assignments for this subject.');
             }
 
-            // Set default values
-            $search = $request->input('search', '');
-            $perPage = $request->input('per_page', 10);
-            $sortBy = $request->input('sort_by', 'deadline');
-            $sortOrder = $request->input('sort_order', 'desc');
-            $page = $request->input('page', 1);
+            // Semester list untuk subject+teacher ini
+            $semesters = DB::table('teachers_subjects')
+                ->join('semesters', 'teachers_subjects.semester_id', '=', 'semesters.id')
+                ->where('teachers_subjects.teacher_id', $teacher->id)
+                ->where('teachers_subjects.subject_id', $subject->id)
+                ->orderByDesc('semesters.start_date')
+                ->select('semesters.id', 'semesters.name', 'semesters.start_date', 'semesters.end_date')
+                ->get();
 
-            // Query assignments for this subject
-            $query = Assignment::where('subject_id', $subject->id);
+            $selectedSemesterId = $request->filled('semester_id')
+                ? (int) $request->semester_id
+                : ($semesters->first()->id ?? $this->activeSemesterForSubject($teacher->id, $subject->id));
+
+            // Set default values
+            $search    = $request->input('search', '');
+            $perPage   = $request->input('per_page', 10);
+            $sortBy    = $request->input('sort_by', 'deadline');
+            $sortOrder = $request->input('sort_order', 'desc');
+
+            $query = Assignment::where('subject_id', $subject->id)
+                ->where('semester_id', $selectedSemesterId);
 
             // Apply search if provided
             if (!empty($search)) {
@@ -108,19 +131,21 @@ class AssignmentController extends Controller
 
             // Return view with data
             return Inertia::render('Teacher/Assignment/Index', [
-                'assignments' => $formattedAssignments,
-                'subject' => $formattedSubject,
+                'assignments'        => $formattedAssignments,
+                'subject'            => $formattedSubject,
+                'semesters'          => $semesters,
+                'currentSemesterId'  => $selectedSemesterId,
                 'pagination' => [
-                    'total' => $assignments->total(),
-                    'per_page' => $assignments->perPage(),
+                    'total'        => $assignments->total(),
+                    'per_page'     => $assignments->perPage(),
                     'current_page' => $assignments->currentPage(),
-                    'last_page' => $assignments->lastPage(),
-                    'from' => $assignments->firstItem(),
-                    'to' => $assignments->lastItem(),
+                    'last_page'    => $assignments->lastPage(),
+                    'from'         => $assignments->firstItem(),
+                    'to'           => $assignments->lastItem(),
                 ],
                 'filters' => [
-                    'search' => $search,
-                    'sort_by' => $sortBy,
+                    'search'     => $search,
+                    'sort_by'    => $sortBy,
                     'sort_order' => $sortOrder,
                 ],
             ]);
@@ -207,10 +232,11 @@ class AssignmentController extends Controller
 
             // Prepare assignment data
             $assignmentData = [
-                'subject_id' => $subject->id,
-                'title' => $request->title,
+                'subject_id'  => $subject->id,
+                'semester_id' => $this->activeSemesterForSubject($teacher->id, $subject->id),
+                'title'       => $request->title,
                 'description' => $request->description,
-                'deadline' => $request->deadline,
+                'deadline'    => $request->deadline,
             ];
 
             // Handle file upload if present

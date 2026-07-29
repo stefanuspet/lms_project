@@ -60,7 +60,8 @@ class AssignmentController extends Controller
                 ]);
             }
 
-            $currentClassId = $currentSemesterStudent->class_id;
+            $currentClassId    = $currentSemesterStudent->class_id;
+            $currentSemesterId = $currentSemesterStudent->semesters_id;
 
             // Get all subjects for this student's class
             $subjects = Subject::where('class_id', $currentClassId)
@@ -74,8 +75,11 @@ class AssignmentController extends Controller
 
             $subjectIds = $subjects->pluck('id')->toArray();
 
-            // Base query for assignments
-            $query = Assignment::whereIn('subject_id', $subjectIds);
+            // Base query for assignments scoped to active semester
+            $query = Assignment::whereIn('subject_id', $subjectIds)
+                ->where(function ($q) use ($currentSemesterId) {
+                    $q->where('semester_id', $currentSemesterId);
+                });
 
             // Apply filters
             if (!empty($search)) {

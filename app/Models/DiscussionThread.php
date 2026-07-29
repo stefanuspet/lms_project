@@ -11,6 +11,7 @@ class DiscussionThread extends Model
 
     protected $fillable = [
         'subject_id',
+        'semester_id',
         'class_id',
         'created_by',
         'title',

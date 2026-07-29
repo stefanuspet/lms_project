@@ -4,15 +4,13 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
-import SelectInput from "@/Components/SelectInput";
 import Toast from "@/Components/Toast";
 import { ArrowLeft2 } from "iconsax-reactjs";
 
-const ClassroomEdit = ({ classroom, semesters, flash }) => {
+const ClassroomEdit = ({ classroom, flash }) => {
     const { data, setData, put, processing, errors } = useForm({
         name: classroom.name || "",
         description: classroom.description || "",
-        semester_id: classroom.active_semester_id || "",
     });
 
     const [clientErrors, setClientErrors] = useState({});
@@ -120,36 +118,12 @@ const ClassroomEdit = ({ classroom, semesters, flash }) => {
 
                                 {/* Active Semester */}
                                 <div>
-                                    <InputLabel
-                                        htmlFor="semester_id"
-                                        value="Semester Aktif (opsional)"
-                                    />
-                                    <SelectInput
-                                        id="semester_id"
-                                        name="semester_id"
-                                        value={data.semester_id}
-                                        className="mt-1 block w-full"
-                                        onChange={handleChange}
-                                    >
-                                        <option value="">
-                                            Tidak ada Semester Aktif
-                                        </option>
-                                        {semesters.map((semester) => (
-                                            <option
-                                                key={semester.id}
-                                                value={semester.id}
-                                            >
-                                                {semester.name}
-                                            </option>
-                                        ))}
-                                    </SelectInput>
-                                    <InputError
-                                        message={errors.semester_id}
-                                        className="mt-2"
-                                    />
+                                    <InputLabel value="Semester Aktif" />
+                                    <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700">
+                                        {classroom.active_semester_name ?? "Tidak ada semester aktif"}
+                                    </div>
                                     <p className="mt-1 text-xs text-gray-500">
-                                        Semester aktif diperlukan untuk
-                                        pendaftaran siswa.
+                                        Semester aktif ditentukan otomatis berdasarkan tanggal.
                                     </p>
                                 </div>
 

@@ -17,6 +17,7 @@ class Material extends Model
      */
     protected $fillable = [
         'subject_id',
+        'semester_id',
         'title',
         'content',
         'file_path',

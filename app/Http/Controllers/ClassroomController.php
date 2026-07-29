@@ -33,9 +33,24 @@ class ClassroomController extends Controller
         $sortOrder = $request->input('sort_order', 'asc');
         $page = $request->input('page', 1);
 
-        // Query classes with relations
+        // Ambil semester aktif sekali di luar loop
+        $activeSemester = Semester::where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->orderByDesc('start_date')
+            ->first() ?? Semester::orderBy('start_date', 'desc')->first();
+
+        $activeSemesterId = $activeSemester?->id;
+
+        // Query classes — students_count hanya dari semester aktif
         $query = Classroom::query()
-            ->withCount(['students', 'subjects']);
+            ->withCount([
+                'students as students_count' => function ($q) use ($activeSemesterId) {
+                    if ($activeSemesterId) {
+                        $q->where('semesters_students.semesters_id', $activeSemesterId);
+                    }
+                },
+                'subjects',
+            ]);
 
         // Apply search filters
         if (!empty($search)) {
@@ -52,24 +67,18 @@ class ClassroomController extends Controller
         $classes = $query->paginate($perPage)->withQueryString();
 
         // Format data for frontend
-        $formattedClasses = $classes->map(function ($class) {
-            // Use globally active semester (or latest) for enrollment context
-            $activeSemester = Semester::where('start_date', '<=', now())
-                ->where('end_date', '>=', now())
-                ->orderByDesc('start_date')
-                ->first() ?? Semester::orderBy('start_date', 'desc')->first();
-
+        $formattedClasses = $classes->map(function ($class) use ($activeSemester) {
             return [
-                'id' => $class->id,
-                'name' => $class->name,
-                'description' => $class->description,
-                'students_count' => $class->students_count,
-                'subjects_count' => $class->subjects_count,
+                'id'              => $class->id,
+                'name'            => $class->name,
+                'description'     => $class->description,
+                'students_count'  => $class->students_count,
+                'subjects_count'  => $class->subjects_count,
                 'active_semester' => $activeSemester ? [
-                    'id' => $activeSemester->id,
+                    'id'   => $activeSemester->id,
                     'name' => $activeSemester->name,
                 ] : null,
-                'created_at' => $class->created_at->format('d-m-Y H:i'),
+                'created_at'      => $class->created_at->format('d-m-Y H:i'),
             ];
         });
 
@@ -152,13 +161,14 @@ class ClassroomController extends Controller
         // Validate input
         $validated = $request->validate(
             [
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:classes,name',
                 'description' => 'nullable|string',
                 'semester_id' => 'nullable|exists:semesters,id',
             ],
             [
                 'name.required' => 'Nama kelas wajib diisi.',
                 'name.max' => 'Nama kelas maksimal :max karakter.',
+                'name.unique' => 'Nama kelas sudah digunakan, pilih nama lain.',
 
                 'description.string' => 'Deskripsi kelas harus berupa teks.',
 
@@ -203,61 +213,91 @@ class ClassroomController extends Controller
     public function show(Classroom $classroom)
     {
         try {
-            // Load necessary relationships
-            $classroom->load(['subjects.teacher', 'students' => function ($query) {
-                $query->select('students.id', 'students.name', 'students.nisn');
-            }]);
+            $classroom->load('subjects.teacher');
 
-            // Use globally active semester (or latest) for enrollment context
+            // Semester aktif
             $activeSemester = Semester::where('start_date', '<=', now())
                 ->where('end_date', '>=', now())
                 ->orderByDesc('start_date')
                 ->first() ?? Semester::orderBy('start_date', 'desc')->first();
 
-            // Format data for frontend
+            $activeSemesterId = $activeSemester?->id;
+
+            // Siswa semester aktif saja
+            $currentStudents = $classroom->students()
+                ->where('semesters_students.semesters_id', $activeSemesterId)
+                ->select('students.id', 'students.name', 'students.nisn')
+                ->get()
+                ->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'nisn' => $s->nisn]);
+
+            // Riwayat: semua semester yang pernah punya siswa di kelas ini
+            $history = DB::table('semesters_students')
+                ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
+                ->join('students', 'semesters_students.students_id', '=', 'students.id')
+                ->where('semesters_students.class_id', $classroom->id)
+                ->where('semesters_students.semesters_id', '!=', $activeSemesterId)
+                ->select(
+                    'semesters.id as semester_id',
+                    'semesters.name as semester_name',
+                    'semesters.start_date',
+                    'semesters.end_date',
+                    'students.id as student_id',
+                    'students.name as student_name',
+                    'students.nisn',
+                )
+                ->orderByDesc('semesters.start_date')
+                ->get()
+                ->groupBy('semester_id')
+                ->map(function ($rows) {
+                    $first = $rows->first();
+                    return [
+                        'semester_id'   => $first->semester_id,
+                        'semester_name' => $first->semester_name,
+                        'start_date'    => $first->start_date,
+                        'end_date'      => $first->end_date,
+                        'students'      => $rows->map(fn($r) => [
+                            'id'   => $r->student_id,
+                            'name' => $r->student_name,
+                            'nisn' => $r->nisn,
+                        ])->values(),
+                    ];
+                })
+                ->values();
+
             $formattedClassroom = [
-                'id' => $classroom->id,
-                'name' => $classroom->name,
-                'description' => $classroom->description,
-                'students_count' => $classroom->students->count(),
-                'subjects_count' => $classroom->subjects->count(),
+                'id'              => $classroom->id,
+                'name'            => $classroom->name,
+                'description'     => $classroom->description,
+                'students_count'  => $currentStudents->count(),
+                'subjects_count'  => $classroom->subjects->count(),
                 'active_semester' => $activeSemester ? [
-                    'id' => $activeSemester->id,
-                    'name' => $activeSemester->name,
+                    'id'         => $activeSemester->id,
+                    'name'       => $activeSemester->name,
                     'start_date' => $activeSemester->start_date,
-                    'end_date' => $activeSemester->end_date,
+                    'end_date'   => $activeSemester->end_date,
                 ] : null,
-                'subjects' => $classroom->subjects->map(function ($subject) {
-                    return [
-                        'id' => $subject->id,
-                        'name' => $subject->name,
-                        'description' => $subject->description,
-                        'teacher' => $subject->teacher ? [
-                            'id' => $subject->teacher->id,
-                            'name' => $subject->teacher->name,
-                        ] : null,
-                    ];
-                }),
-                'students' => $classroom->students->map(function ($student) {
-                    return [
-                        'id' => $student->id,
-                        'name' => $student->name,
-                        'nisn' => $student->nisn,
-                    ];
-                }),
-                'created_at' => $classroom->created_at->format('d-m-Y H:i'),
-                'updated_at' => $classroom->updated_at->format('d-m-Y H:i'),
+                'subjects' => $classroom->subjects->map(fn($subject) => [
+                    'id'          => $subject->id,
+                    'name'        => $subject->name,
+                    'description' => $subject->description,
+                    'teacher'     => $subject->teacher ? [
+                        'id'   => $subject->teacher->id,
+                        'name' => $subject->teacher->name,
+                    ] : null,
+                ]),
+                'students'        => $currentStudents,
+                'history'         => $history,
+                'created_at'      => $classroom->created_at->format('d-m-Y H:i'),
+                'updated_at'      => $classroom->updated_at->format('d-m-Y H:i'),
             ];
 
         return Inertia::render('Admin/Classroom/Show', [
             'classroom' => $formattedClassroom,
-            'semesters' => Semester::orderBy('start_date', 'desc')->get()->map(function ($semester) {
-                return [
-                    'id' => $semester->id,
-                    'name' => $semester->name,
-                    'is_active' => $semester->isActive(),
-                ];
-            }),
+            'semesters' => Semester::orderBy('start_date', 'desc')->get()->map(fn($s) => [
+                'id'        => $s->id,
+                'name'      => $s->name,
+                'is_active' => $s->isActive(),
+            ]),
         ]);
         } catch (\Exception $e) {
             Log::error('Error in classroom show method: ' . $e->getMessage());
@@ -271,21 +311,18 @@ class ClassroomController extends Controller
      */
     public function edit(Classroom $classroom)
     {
-        $semesters = Semester::orderBy('start_date', 'desc')->get();
-
-        // Get active semester if any
-        $activeSemester = $classroom->semesters()
-            ->orderBy('start_date', 'desc')
+        $activeSemester = Semester::where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->orderByDesc('start_date')
             ->first();
 
         return Inertia::render('Admin/Classroom/Edit', [
             'classroom' => [
-                'id' => $classroom->id,
-                'name' => $classroom->name,
-                'description' => $classroom->description,
-                'active_semester_id' => $activeSemester ? $activeSemester->id : null,
+                'id'                   => $classroom->id,
+                'name'                 => $classroom->name,
+                'description'          => $classroom->description,
+                'active_semester_name' => $activeSemester?->name,
             ],
-            'semesters' => $semesters,
         ]);
     }
 
@@ -297,17 +334,14 @@ class ClassroomController extends Controller
         // Validate input
         $validated = $request->validate(
             [
-                'name' => 'required|string|max:255',
+                'name'        => 'required|string|max:255|unique:classes,name,' . $classroom->id,
                 'description' => 'nullable|string',
-                'semester_id' => 'nullable|exists:semesters,id',
             ],
             [
                 'name.required' => 'Nama kelas wajib diisi.',
-                'name.max' => 'Nama kelas maksimal :max karakter.',
-
+                'name.max'      => 'Nama kelas maksimal :max karakter.',
+                'name.unique'   => 'Nama kelas sudah digunakan, pilih nama lain.',
                 'description.string' => 'Deskripsi kelas harus berupa teks.',
-
-                'semester_id.exists' => 'Semester yang dipilih tidak ditemukan.',
             ]
         );
 

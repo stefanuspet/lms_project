@@ -16,6 +16,16 @@ use Inertia\Inertia;
 
 class MaterialController extends Controller
 {
+    private function activeSemesterForSubject(int $teacherId, int $subjectId): ?int
+    {
+        return DB::table('teachers_subjects')
+            ->join('semesters', 'teachers_subjects.semester_id', '=', 'semesters.id')
+            ->where('teachers_subjects.teacher_id', $teacherId)
+            ->where('teachers_subjects.subject_id', $subjectId)
+            ->orderByDesc('semesters.start_date')
+            ->value('teachers_subjects.semester_id');
+    }
+
     /**
      * Display a listing of the materials for a subject.
      */
@@ -24,12 +34,13 @@ class MaterialController extends Controller
         try {
             // Validate request
             $validated = $request->validate([
-                'subject_id' => 'required|exists:subjects,id',
-                'search' => 'nullable|string|max:50',
-                'page' => 'nullable|integer|min:1',
-                'per_page' => 'nullable|integer|min:1|max:100',
-                'sort_by' => 'nullable|string|in:title,created_at,file_type',
-                'sort_order' => 'nullable|string|in:asc,desc',
+                'subject_id'  => 'required|exists:subjects,id',
+                'semester_id' => 'nullable|exists:semesters,id',
+                'search'      => 'nullable|string|max:50',
+                'page'        => 'nullable|integer|min:1',
+                'per_page'    => 'nullable|integer|min:1|max:100',
+                'sort_by'     => 'nullable|string|in:title,created_at,file_type',
+                'sort_order'  => 'nullable|string|in:asc,desc',
             ]);
 
             // Get current teacher
@@ -45,15 +56,28 @@ class MaterialController extends Controller
                     ->with('error', 'You do not have permission to view materials for this subject.');
             }
 
-            // Set default values
-            $search = $request->input('search', '');
-            $perPage = $request->input('per_page', 10);
-            $sortBy = $request->input('sort_by', 'created_at');
-            $sortOrder = $request->input('sort_order', 'desc');
-            $page = $request->input('page', 1);
+            // Semester list untuk subject+teacher ini
+            $semesters = DB::table('teachers_subjects')
+                ->join('semesters', 'teachers_subjects.semester_id', '=', 'semesters.id')
+                ->where('teachers_subjects.teacher_id', $teacher->id)
+                ->where('teachers_subjects.subject_id', $subject->id)
+                ->orderByDesc('semesters.start_date')
+                ->select('semesters.id', 'semesters.name', 'semesters.start_date', 'semesters.end_date')
+                ->get();
 
-            // Query materials for this subject
-            $query = Material::where('subject_id', $subject->id);
+            // Semester yang dipilih: dari request atau default terbaru
+            $selectedSemesterId = $request->filled('semester_id')
+                ? (int) $request->semester_id
+                : ($semesters->first()->id ?? $this->activeSemesterForSubject($teacher->id, $subject->id));
+
+            // Set default values
+            $search    = $request->input('search', '');
+            $perPage   = $request->input('per_page', 10);
+            $sortBy    = $request->input('sort_by', 'created_at');
+            $sortOrder = $request->input('sort_order', 'desc');
+
+            $query = Material::where('subject_id', $subject->id)
+                ->where('semester_id', $selectedSemesterId);
 
             // Apply search if provided
             if (!empty($search)) {
@@ -92,19 +116,21 @@ class MaterialController extends Controller
 
             // Return view with data
             return Inertia::render('Teacher/Material/Index', [
-                'materials' => $formattedMaterials,
-                'subject' => $formattedSubject,
+                'materials'          => $formattedMaterials,
+                'subject'            => $formattedSubject,
+                'semesters'          => $semesters,
+                'currentSemesterId'  => $selectedSemesterId,
                 'pagination' => [
-                    'total' => $materials->total(),
-                    'per_page' => $materials->perPage(),
+                    'total'        => $materials->total(),
+                    'per_page'     => $materials->perPage(),
                     'current_page' => $materials->currentPage(),
-                    'last_page' => $materials->lastPage(),
-                    'from' => $materials->firstItem(),
-                    'to' => $materials->lastItem(),
+                    'last_page'    => $materials->lastPage(),
+                    'from'         => $materials->firstItem(),
+                    'to'           => $materials->lastItem(),
                 ],
                 'filters' => [
-                    'search' => $search,
-                    'sort_by' => $sortBy,
+                    'search'     => $search,
+                    'sort_by'    => $sortBy,
                     'sort_order' => $sortOrder,
                 ],
             ]);
@@ -190,9 +216,10 @@ class MaterialController extends Controller
 
             // Prepare material data
             $materialData = [
-                'subject_id' => $subject->id,
-                'title' => $request->title,
-                'content' => $request->content,
+                'subject_id'  => $subject->id,
+                'semester_id' => $this->activeSemesterForSubject($teacher->id, $subject->id),
+                'title'       => $request->title,
+                'content'     => $request->content,
             ];
 
             // Handle file upload if present

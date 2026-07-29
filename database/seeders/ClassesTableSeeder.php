@@ -17,10 +17,10 @@ class ClassesTableSeeder extends Seeder
 
         foreach (['X', 'XI', 'XII'] as $grade) {
             foreach ($jurusan as $j) {
-                Classroom::create([
-                    'name'        => "$grade {$j['code']} 1",
-                    'description' => "Kelas $grade {$j['name']}",
-                ]);
+                Classroom::firstOrCreate(
+                    ['name' => "$grade {$j['code']} 1"],
+                    ['description' => "Kelas $grade {$j['name']}"]
+                );
             }
         }
     }

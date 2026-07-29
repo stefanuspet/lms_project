@@ -55,7 +55,7 @@ class StudentAssignmentController extends Controller
             ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
             ->where('semesters_students.students_id', $student->id)
             ->orderBy('semesters.end_date', 'desc')
-            ->select('semesters_students.class_id')
+            ->select('semesters_students.class_id', 'semesters_students.semesters_id')
             ->first();
 
         if (!$current) {
@@ -71,9 +71,13 @@ class StudentAssignmentController extends Controller
             ]);
         }
 
+        $currentSemesterId = $current->semesters_id;
         $subjectIds = Subject::where('class_id', $current->class_id)->pluck('id')->toArray();
 
-        $query = Assignment::whereIn('subject_id', $subjectIds);
+        $query = Assignment::whereIn('subject_id', $subjectIds)
+            ->where(function ($q) use ($currentSemesterId) {
+                $q->where('semester_id', $currentSemesterId);
+            });
 
         if ($search !== '') {
             $query->where('title', 'like', "%{$search}%");

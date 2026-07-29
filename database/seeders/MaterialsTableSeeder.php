@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Material;
+use App\Models\Semester;
 use App\Models\Subject;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class MaterialsTableSeeder extends Seeder
@@ -14,8 +14,14 @@ class MaterialsTableSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get all subjects
-        $subjects = Subject::all();
+        $currentSemester = Semester::latest('start_date')->first();
+
+        // Hanya kelas X — XI dan XII tidak di-seed
+        $subjects = Subject::whereHas('classroom', function ($q) {
+            $q->where('name', 'like', 'X %')
+              ->where('name', 'not like', 'XI%')
+              ->where('name', 'not like', 'XII%');
+        })->get();
 
         // Define material titles and content types
         $materialTypes = [
@@ -56,11 +62,12 @@ class MaterialsTableSeeder extends Seeder
                 }
 
                 Material::create([
-                    'subject_id' => $subject->id,
-                    'title' => sprintf($data['title'], $subject->name),
-                    'content' => sprintf($data['content'], $subject->name),
-                    'file_path' => $filePath,
-                    'file_type' => $data['file_type'],
+                    'subject_id'  => $subject->id,
+                    'semester_id' => $currentSemester->id,
+                    'title'       => sprintf($data['title'], $subject->name),
+                    'content'     => sprintf($data['content'], $subject->name),
+                    'file_path'   => $filePath,
+                    'file_type'   => $data['file_type'],
                 ]);
             }
         }

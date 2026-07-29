@@ -91,7 +91,12 @@ class EnrollmentController extends Controller
             $enrolledStudentIds = $enrollmentQuery->pluck('students_id')->toArray();
         }
 
-        // Get all students with enrollment status
+        // Kalau ada filter kelas, hanya tampilkan siswa yang terdaftar di kelas itu
+        if ($selectedClass) {
+            $studentsQuery->whereIn('id', $enrolledStudentIds);
+        }
+
+        // Get students
         $students = $studentsQuery->paginate($perPage);
 
         // Format students data with enrollment info
@@ -372,91 +377,85 @@ class EnrollmentController extends Controller
 
     /**
      * Promote students to the next semester.
+     * Backend auto-deteksi enrollment terakhir tiap siswa — tidak perlu from_semester_id.
      */
     public function promote(Request $request)
     {
-        // Validasi input
         $validated = $request->validate([
-            'from_semester_id' => 'required|exists:semesters,id',
-            'to_semester_id' => 'required|exists:semesters,id|different:from_semester_id',
-            'class_mapping' => 'required|array',
-            'class_mapping.*.from_class_id' => 'required|exists:classes,id',
-            'class_mapping.*.to_class_id' => 'required|exists:classes,id',
-            'student_ids' => 'required|array',
-            'student_ids.*' => 'exists:students,id',
+            'to_semester_id'                => 'required|exists:semesters,id',
+            'student_ids'                   => 'required|array',
+            'student_ids.*'                 => 'exists:students,id',
+            'class_mapping'                 => 'nullable|array',
+            'class_mapping.*.from_class_id' => 'nullable|exists:classes,id',
+            'class_mapping.*.to_class_id'   => 'nullable|exists:classes,id',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $fromSemesterId = $request->from_semester_id;
-            $toSemesterId = $request->to_semester_id;
-            $classMapping = collect($request->class_mapping)->keyBy('from_class_id');
-            $studentIds = $request->student_ids;
-            $now = now();
+            $toSemesterId = (int) $request->to_semester_id;
+            $studentIds   = $request->student_ids;
+            $classMapping = collect($request->class_mapping ?? [])->keyBy('from_class_id');
+            $now          = now();
 
-            // Get current enrollments for these students
+            // Ambil enrollment terakhir tiap siswa (selain semester tujuan)
             $currentEnrollments = DB::table('semesters_students')
-                ->where('semesters_id', $fromSemesterId)
-                ->whereIn('students_id', $studentIds)
-                ->get();
+                ->join('semesters', 'semesters_students.semesters_id', '=', 'semesters.id')
+                ->whereIn('semesters_students.students_id', $studentIds)
+                ->where('semesters_students.semesters_id', '!=', $toSemesterId)
+                ->orderByDesc('semesters.start_date')
+                ->select('semesters_students.students_id', 'semesters_students.class_id')
+                ->get()
+                ->unique('students_id'); // satu record per siswa (yang terbaru)
 
-            // Check if any students are already enrolled in the target semester
-            $existingInTarget = DB::table('semesters_students')
-                ->where('semesters_id', $toSemesterId)
-                ->whereIn('students_id', $studentIds)
-                ->pluck('students_id')
-                ->toArray();
-
-            // If there are existing enrollments, delete them first
-            if (!empty($existingInTarget)) {
-                DB::table('semesters_students')
-                    ->where('semesters_id', $toSemesterId)
-                    ->whereIn('students_id', $existingInTarget)
-                    ->delete();
+            if ($currentEnrollments->isEmpty()) {
+                return redirect()->back()
+                    ->withErrors(['error' => 'Siswa yang dipilih belum terdaftar di semester manapun.']);
             }
 
-            // Create new enrollments in the target semester
-            $newEnrollments = [];
+            // Hapus enrollment lama di semester tujuan (kalau sudah ada sebelumnya)
+            DB::table('semesters_students')
+                ->where('semesters_id', $toSemesterId)
+                ->whereIn('students_id', $studentIds)
+                ->delete();
 
+            // Buat enrollment baru di semester tujuan
+            $newEnrollments = [];
             foreach ($currentEnrollments as $enrollment) {
                 $fromClassId = $enrollment->class_id;
-                $toClassId = isset($classMapping[$fromClassId])
-                    ? $classMapping[$fromClassId]->to_class_id
-                    : $fromClassId; // Default to same class if mapping not provided
+                $mapping     = $classMapping->get((string) $fromClassId);
+                $toClassId   = $mapping
+                    ? (int) ($mapping['to_class_id'] ?? $fromClassId)
+                    : $fromClassId; // default: kelas yang sama
 
                 $newEnrollments[] = [
                     'semesters_id' => $toSemesterId,
-                    'students_id' => $enrollment->students_id,
-                    'class_id' => $toClassId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
+                    'students_id'  => $enrollment->students_id,
+                    'class_id'     => $toClassId,
+                    'created_at'   => $now,
+                    'updated_at'   => $now,
                 ];
             }
 
-            if (!empty($newEnrollments)) {
-                DB::table('semesters_students')->insert($newEnrollments);
-            }
+            DB::table('semesters_students')->insert($newEnrollments);
 
             DB::commit();
 
-            // Log activity
-            $fromSemester = Semester::find($fromSemesterId)->name;
             $toSemester = Semester::find($toSemesterId)->name;
-            $count = count($newEnrollments);
+            $count      = count($newEnrollments);
             $this->logActivity(
                 auth()->id(),
                 'promote',
-                "Promoted {$count} students from {$fromSemester} to {$toSemester} semester"
+                "Promoted {$count} students to {$toSemester} semester"
             );
 
-            return redirect()->back()->with('success', "{$count} students promoted to {$toSemester} successfully");
+            return redirect()->back()->with('success', "{$count} siswa berhasil dipindahkan ke {$toSemester}");
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error promoting students: ' . $e->getMessage());
 
             return redirect()->back()
-                ->withErrors(['error' => 'Failed to promote students: ' . $e->getMessage()])
+                ->withErrors(['error' => 'Gagal memindahkan siswa: ' . $e->getMessage()])
                 ->withInput();
         }
     }

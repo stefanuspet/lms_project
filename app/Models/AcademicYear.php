@@ -18,12 +18,20 @@ class AcademicYear extends Model
 
     protected $casts = [
         'start_date' => 'date',
-        'end_date' => 'date',
-        'is_active' => 'boolean',
+        'end_date'   => 'date',
     ];
 
     /**
-     * Relasi ke semesters (jika nanti semester dihubungkan dengan tahun ajaran).
+     * is_active dihitung otomatis dari tanggal, bukan dari kolom DB.
+     * Kolom is_active di DB tidak lagi digunakan untuk pembacaan.
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return now()->between($this->start_date, $this->end_date);
+    }
+
+    /**
+     * Relasi ke semesters.
      */
     public function semesters()
     {
@@ -31,10 +39,11 @@ class AcademicYear extends Model
     }
 
     /**
-     * Scope helper untuk mengambil tahun ajaran aktif.
+     * Scope untuk tahun ajaran yang sedang aktif berdasarkan tanggal.
      */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('start_date', '<=', now())
+                     ->where('end_date', '>=', now());
     }
 }

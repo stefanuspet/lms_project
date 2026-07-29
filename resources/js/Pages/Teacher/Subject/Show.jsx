@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import {
     ArrowLeft2,
     DocumentText,
     ClipboardText,
     Calendar,
-    Teacher,
     People,
     Book1,
     Message,
@@ -21,6 +19,9 @@ const TeacherSubjectShow = ({ subject }) => {
     const [showInfo, setShowInfo] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [showStudents, setShowStudents] = useState(false);
+
+    const semesterId = subject.semester_id;
+
     return (
         <TeacherLayout title={`Mata Pelajaran: ${subject.name}`}>
             <div className="py-6 w-full">
@@ -32,49 +33,48 @@ const TeacherSubjectShow = ({ subject }) => {
                                 href={route("teacher.subjects.index")}
                                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                             >
-                                <ArrowLeft2
-                                    size="24"
-                                    className="text-gray-600"
-                                />
+                                <ArrowLeft2 size="24" className="text-gray-600" />
                             </Link>
-                            <h1 className="font-bold text-xl text-gray-800">
-                                Detail Mata Pelajaran
-                            </h1>
+                            <div>
+                                <h1 className="font-bold text-xl text-gray-800">
+                                    Detail Mata Pelajaran
+                                </h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-sm text-gray-500">{subject.semester_name}</span>
+                                    {subject.is_active_semester && (
+                                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                            Aktif
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Quick Actions */}
                         <div className="flex gap-3">
                             <Link
-                                href={route("teacher.materials.index", {
-                                    subject_id: subject.id,
-                                })}
+                                href={route("teacher.materials.index", { subject_id: subject.id, semester_id: semesterId })}
                                 className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                             >
                                 <DocumentText size="20" />
                                 <span>Materi</span>
                             </Link>
                             <Link
-                                href={route("teacher.assignments.index", {
-                                    subject_id: subject.id,
-                                })}
+                                href={route("teacher.assignments.index", { subject_id: subject.id, semester_id: semesterId })}
                                 className="flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors"
                             >
                                 <ClipboardText size="20" />
                                 <span>Tugas</span>
                             </Link>
                             <Link
-                                href={route("teacher.quizzes.index", {
-                                    subject_id: subject.id,
-                                })}
+                                href={route("teacher.quizzes.index", { subject_id: subject.id })}
                                 className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                             >
                                 <NoteText size="20" />
                                 <span>Kuis</span>
                             </Link>
                             <Link
-                                href={route("teacher.discussions.index", {
-                                    subject: subject.id,
-                                })}
+                                href={route("teacher.discussions.index", subject.id) + `?semester_id=${semesterId}`}
                                 className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
                             >
                                 <Message size="20" />
@@ -82,14 +82,7 @@ const TeacherSubjectShow = ({ subject }) => {
                             </Link>
                             <Link
                                 type="button"
-                                onClick={() =>
-                                    window.location.assign(
-                                        route(
-                                            "teacher.subjects.export-grades",
-                                            subject.id
-                                        )
-                                    )
-                                }
+                                onClick={() => window.location.assign(route("teacher.subjects.export-grades", subject.id))}
                                 className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                             >
                                 <Printer size="20" />

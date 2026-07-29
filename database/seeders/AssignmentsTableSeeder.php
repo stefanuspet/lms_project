@@ -34,7 +34,13 @@ class AssignmentsTableSeeder extends Seeder
             'Kerja keras kamu sudah terlihat, terus berlatih.',
         ];
 
-        $subjects = Subject::all();
+        // Hanya kelas X — XI dan XII tidak di-seed
+        // Hanya kelas X — XI dan XII tidak di-seed
+        $subjects = Subject::whereHas('classroom', function ($q) {
+            $q->where('name', 'like', 'X %')
+              ->where('name', 'not like', 'XI%')
+              ->where('name', 'not like', 'XII%');
+        })->get();
 
         foreach ($subjects as $subject) {
             // Ambil siswa yang terdaftar di kelas ini pada semester aktif
@@ -49,6 +55,7 @@ class AssignmentsTableSeeder extends Seeder
             foreach ($assignmentDeadlines as $type => $deadline) {
                 $assignment = Assignment::create([
                     'subject_id'  => $subject->id,
+                    'semester_id' => $currentSemester->id,
                     'title'       => "{$type}: {$subject->name}",
                     'description' => $this->getDescription($type, $subject->name),
                     'file_path'   => null,

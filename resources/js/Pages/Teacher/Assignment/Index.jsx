@@ -25,12 +25,22 @@ const TeacherAssignmentIndex = ({
     pagination,
     filters,
     flash,
+    semesters = [],
+    currentSemesterId,
 }) => {
     const [searchTerm, setSearchTerm] = useState(filters?.search || "");
     const [processing, setProcessing] = useState(false);
     const [currentPage, setCurrentPage] = useState(
         pagination?.current_page || 1
     );
+
+    const handleSemesterChange = (semesterId) => {
+        router.get(
+            route("teacher.assignments.index"),
+            { subject_id: subject.id, semester_id: semesterId, page: 1 },
+            { preserveState: false }
+        );
+    };
 
     // Fungsi untuk menghapus tugas
     const handleDelete = (assignmentId) => {
@@ -71,6 +81,7 @@ const TeacherAssignmentIndex = ({
                 page: page,
                 search: searchTerm,
                 subject_id: subject.id,
+                semester_id: currentSemesterId,
                 per_page: pagination.per_page,
                 sort_by: filters.sort_by,
                 sort_order: filters.sort_order,
@@ -192,6 +203,21 @@ const TeacherAssignmentIndex = ({
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
+                            {/* Semester selector */}
+                            {semesters.length > 0 && (
+                                <select
+                                    value={currentSemesterId || ""}
+                                    onChange={(e) => handleSemesterChange(e.target.value)}
+                                    className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    {semesters.map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+
                             {/* Search box */}
                             <form onSubmit={handleSearch} className="relative">
                                 <SearchNormal1
@@ -203,13 +229,9 @@ const TeacherAssignmentIndex = ({
                                     placeholder="Cari tugas"
                                     className="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 placeholder:text-sm"
                                     value={searchTerm}
-                                    onChange={(e) =>
-                                        setSearchTerm(e.target.value)
-                                    }
+                                    onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <button type="submit" className="hidden">
-                                    Cari
-                                </button>
+                                <button type="submit" className="hidden">Cari</button>
                             </form>
 
                             {/* Add button */}

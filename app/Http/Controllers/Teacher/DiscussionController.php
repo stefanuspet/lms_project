@@ -10,14 +10,45 @@ use App\Models\Subject;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DiscussionController extends Controller
 {
-    public function index(Subject $subject)
+    private function activeSemesterForSubject(int $teacherId, int $subjectId): ?int
     {
+        return DB::table('teachers_subjects')
+            ->join('semesters', 'teachers_subjects.semester_id', '=', 'semesters.id')
+            ->where('teachers_subjects.teacher_id', $teacherId)
+            ->where('teachers_subjects.subject_id', $subjectId)
+            ->orderByDesc('semesters.start_date')
+            ->value('teachers_subjects.semester_id');
+    }
+
+    public function index(Request $request, Subject $subject)
+    {
+        $teacher = Teacher::where('user_id', Auth::id())->first();
+
+        // Semester list untuk subject+teacher ini
+        $semesters = $teacher ? DB::table('teachers_subjects')
+            ->join('semesters', 'teachers_subjects.semester_id', '=', 'semesters.id')
+            ->where('teachers_subjects.teacher_id', $teacher->id)
+            ->where('teachers_subjects.subject_id', $subject->id)
+            ->orderByDesc('semesters.start_date')
+            ->select('semesters.id', 'semesters.name', 'semesters.start_date', 'semesters.end_date')
+            ->get() : collect();
+
+        $defaultSemesterId = $teacher
+            ? $this->activeSemesterForSubject($teacher->id, $subject->id)
+            : null;
+
+        $selectedSemesterId = $request->filled('semester_id')
+            ? (int) $request->semester_id
+            : ($semesters->first()->id ?? $defaultSemesterId);
+
         $threads = DiscussionThread::with(['creator'])
             ->where('subject_id', $subject->id)
+            ->where('semester_id', $selectedSemesterId)
             ->orderByDesc('is_pinned')
             ->orderByDesc('created_at')
             ->get();
@@ -55,10 +86,12 @@ class DiscussionController extends Controller
 
         return Inertia::render('Teacher/Discussion/Index', [
             'subject' => [
-                'id' => $subject->id,
+                'id'   => $subject->id,
                 'name' => $subject->name,
             ],
-            'threads' => $threads,
+            'threads'           => $threads,
+            'semesters'         => $semesters,
+            'currentSemesterId' => $selectedSemesterId,
         ]);
     }
 
@@ -69,12 +102,17 @@ class DiscussionController extends Controller
             'body' => 'nullable|string',
         ]);
 
+        $teacher = Teacher::where('user_id', Auth::id())->first();
+
         DiscussionThread::create([
-            'subject_id' => $subject->id,
-            'class_id' => $subject->class_id,
-            'created_by' => Auth::id(),
-            'title' => $validated['title'],
-            'body' => $validated['body'] ?? null,
+            'subject_id'  => $subject->id,
+            'semester_id' => $teacher
+                ? $this->activeSemesterForSubject($teacher->id, $subject->id)
+                : null,
+            'class_id'    => $subject->class_id,
+            'created_by'  => Auth::id(),
+            'title'       => $validated['title'],
+            'body'        => $validated['body'] ?? null,
         ]);
 
         return redirect()
